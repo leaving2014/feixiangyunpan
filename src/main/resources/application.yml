@@ -1,0 +1,46 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3307/feixiangcloud?useUnicode=true&characterEncoding=utf8
+    username: root
+    password:
+  tengxun:
+    cos:
+      accessKey: AKIDqVt0rSmpb6KHyX3PWNyNa2HGzRdaMs9B
+      secretKey: oMgkY6PTHpEOIxNaXFjz0mIZbOuABwRg
+      bucketRegion: ap-beijing
+      bucketName: fxcloud-1254493079
+      path: https://fxcloud-1254493079.cos.ap-beijing.myqcloud.com
+      qianzui: fxcloud
+    ContentSecurity:
+
+
+  baidu:
+    ocr:
+      APP_ID: 11487965
+      API_KEY: 4RHdwmUxjMYSgSBcUHPhbiQm
+      SECRET_KEY: mGBce6uadRUtDvH1ZtYmqDrNewltWGKW
+  servlet:
+    multipart:
+      enabled: true
+  banner:
+    location: static/logo@fxwp.png
+#  redis:
+#    database: 0
+#    lettuce:
+#      pool:
+#        max-active: 16
+#        max-wait: 5000
+#        max-idle: 30
+#        min-idle: 5
+#    connect-timeout: 5000
+
+#      max-file-size: 10MB
+#      max-request-size: 10MB
+mybatis-plus:
+
+
+server:
+  port: 8080
+
+
