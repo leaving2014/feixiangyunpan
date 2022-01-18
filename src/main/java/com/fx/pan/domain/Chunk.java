@@ -1,4 +1,4 @@
-package com.fx.pan.entity;
+package com.fx.pan.domain;
 
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;

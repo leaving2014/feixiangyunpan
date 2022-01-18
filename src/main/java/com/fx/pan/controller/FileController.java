@@ -3,6 +3,7 @@ package com.fx.pan.controller;
 import com.fx.pan.common.Msg;
 import com.fx.pan.cos.CosClient;
 import com.fx.pan.cos.fileUpload;
+import com.fx.pan.domain.FileBean;
 import com.fx.pan.utils.Md5Utils;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
@@ -24,15 +25,16 @@ import java.io.*;
 import java.net.URLEncoder;
 import java.util.Calendar;
 import java.util.List;
+
 /**
  * @Author leaving
  * @Date 2021/11/24 22:24
  * @Version 1.0
  */
-@Slf4j
 @RequestMapping(value = "/file")
 @RestController
-public class UploadController {
+@Slf4j
+public class FileController {
 
 
     @Value("${spring.tengxun.cos.accessKey}")
@@ -48,11 +50,17 @@ public class UploadController {
     @Value("${spring.tengxun.cos.qianzui}")
     private String qianzui;
 
+    // @Value("${fx.fileStorageType}")
+    // private String fileStorageType;
+    //
+    // @Value("${fx.fileStorageRootPath}")
+    // private String fileStorageRootPath;
+
     @Value("user1001")
     private String user;
 
 
-    public UploadController() {
+    public FileController() {
 
     }
     public COSClient getCosClient(){
@@ -63,23 +71,6 @@ public class UploadController {
         // 3 生成cos客户端
         COSClient cosclient = new COSClient(cred, clientConfig);
         return cosclient;
-    }
-
-
-    private class UploadMsg {
-        public int code;
-        public String msg;
-        public String path;
-
-        public UploadMsg() {
-            super();
-        }
-
-        public UploadMsg(int code, String msg, String path) {
-            this.code = code;
-            this.msg = msg;
-            this.path = path;
-        }
     }
 
 
@@ -96,7 +87,7 @@ public class UploadController {
      *
      * @return
      */
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/uploadtocos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseBody
     public Object Upload(@RequestParam(value = "file") MultipartFile file, HttpSession session) {
         if (file == null) {
@@ -137,13 +128,23 @@ public class UploadController {
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, localFile);
             PutObjectResult putObjectResult = cosclient.putObject(putObjectRequest);
             log.info("FileName:" + oldFileName + "  fileSize:" + fileSize + "  fileHashCode:" + fileHshCode);
-            return new UploadMsg(0, "上传成功", this.path + putObjectRequest.getKey());
+            // return new UploadMsg(0, "上传成功", this.path + putObjectRequest.getKey());
+           return Msg.success("上传成功").put("list", this.path + putObjectRequest.getKey());
         } catch (IOException e) {
-            return new UploadMsg(500, e.getMessage(), null);
+            return Msg.error(500,e.getMessage());
+                    // new UploadMsg(500, e.getMessage(), null);
         } finally {
             // 关闭客户端(关闭后台线程)
-            cosclient.shutdown();
+            // cosclient.shutdown();
         }
+    }
+
+
+    @PostMapping("createfolder")
+    public Msg uploadfile(){
+
+
+        return null;
     }
 
 
@@ -153,9 +154,9 @@ public class UploadController {
      * @param filename
      * @return
      */
-    @PostMapping("/createfolder")
+    @PostMapping("/createfoldercos")
     @ResponseBody
-    public UploadMsg createFolder(String filename) {
+    public Msg createFolder(String filename) {
         // String folderName=jsonObject.get("name").toString()+"/";
         // String bucketName = "examplebucket-1250000000";
         String key = "/user1001/" + filename + "/";
@@ -173,8 +174,7 @@ public class UploadController {
         PutObjectRequest putObjectRequest =
                 new PutObjectRequest(bucketName, key, input, objectMetadata);
         PutObjectResult putObjectResult = cosclient.putObject(putObjectRequest);
-        cosclient.shutdown();
-        return new UploadMsg(0, "创建成功", this.path + putObjectRequest.getKey());
+        return Msg.success("创建成功").put("path", this.path + putObjectRequest.getKey());
     }
 
 
@@ -186,7 +186,7 @@ public class UploadController {
      */
     @PostMapping("/delete")
     @ResponseBody
-    public UploadMsg deleteFile(String filename) {
+    public Msg deleteFile(String filename) {
         // Bucket的命名格式为 BucketName-APPID ，此处填写的存储桶名称必须为此格式
         // String bucketName = "examplebucket-1250000000";
         // 指定被删除的文件在 COS 上的路径，即对象键。例如对象键为folder/picture.jpg，则表示删除位于 folder 路径下的文件 picture.jpg
@@ -199,8 +199,14 @@ public class UploadController {
 
         String key = "/user1001/" + filename + "/";
         cosclient.deleteObject(bucketName, key);
-        return new UploadMsg(0, "删除成功", this.path + "/" + filename + "");
+        return Msg.success("删除成功").put("file",this.path + "/" + filename + "");
+    }
 
+
+    @PostMapping("rename")
+    public Msg rename(@RequestBody FileBean file){
+
+        return Msg.success("重命名成功").put("name", "1");
     }
 
 

@@ -8,6 +8,11 @@ package com.fx.pan;
 
 public class Test {
 
+    /**
+     *
+     * @param rawSize
+     * @return
+     */
     public double fileSizeUnitConversion(long rawSize){
         //26.71KB    fileSize:27352.0
         double conversionSize=0;
@@ -27,6 +32,11 @@ public class Test {
         return conversionSize;
     }
 
+    /**
+     *
+     * @param rawSize
+     * @return
+     */
     public String fileSizeUnitConversionAndUnit(long rawSize){
         //26.71KB    fileSize:27352.0
         double conversionSize=0;

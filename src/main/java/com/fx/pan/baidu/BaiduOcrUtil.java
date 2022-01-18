@@ -3,9 +3,11 @@ package com.fx.pan.baidu;
 import com.alibaba.fastjson.JSON;
 import com.baidu.aip.ocr.AipOcr;
 import com.fx.pan.common.Msg;
+import com.fx.pan.utils.Md5Utils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -100,10 +102,9 @@ public class BaiduOcrUtil {
      * @return
      * @throws IOException
      */
-    public static Msg baiduGeneralOCR(byte[] bytesFile) throws IOException {
+    public static Msg baiduGeneralOcr(byte[] bytesFile) throws IOException {
         AipOcr client = OcrClient.getInstance();
         System.out.println(client);
-
         // 传入可选参数调用接口
         HashMap<String, String> options = new HashMap<String, String>();
         options.put("language_type", "CHN_ENG");
@@ -111,7 +112,8 @@ public class BaiduOcrUtil {
         options.put("detect_language", "true");
 
         JSONObject res = client.basicGeneral(bytesFile, options);
-        return Msg.success("ok").put("ocr_res", JSON.parse(res.toString(2))).put("client",
-                client.toString().substring(25, 33));
+        String fmd = Md5Utils.md5HashCode32(new ByteArrayInputStream(bytesFile));
+        return Msg.success("ok").put("result", JSON.parse(res.toString(2))).put("client",
+                client.toString().substring(25, 33)).put("log_id", fmd);
     }
 }

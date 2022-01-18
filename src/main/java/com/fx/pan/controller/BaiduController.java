@@ -2,7 +2,10 @@ package com.fx.pan.controller;
 
 import com.fx.pan.baidu.BaiduOcrUtil;
 import com.fx.pan.common.Msg;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,15 +27,20 @@ public class BaiduController {
 
 
     /**
-     *
+     *图片文字识别
      * @param file
      * @param request
      * @return
      * @throws IOException
      */
     @PostMapping(value = "/ocr")
-    @ResponseBody
     public Msg generalOcr(@RequestParam(value = "file") MultipartFile file,  HttpServletRequest request) throws IOException {
-        return BaiduOcrUtil.baiduGeneralOCR(file.getBytes());
+
+        if (file.getSize() > 4194304){
+            // 百度图片限制4M
+            return Msg.error(500, "上传图片文件过大");
+        }else {
+            return BaiduOcrUtil.baiduGeneralOcr(file.getBytes());
+        }
     }
 }

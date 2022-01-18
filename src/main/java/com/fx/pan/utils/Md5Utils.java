@@ -123,6 +123,9 @@ public class Md5Utils {
         }
     }
 
+
+
+
     /**
      * 方法md5HashCode32 中     ((int) md5Bytes[i]) & 0xff   操作的解释：
      * 在Java语言中涉及到字节byte数组数据的一些操作时，经常看到 byte[i] & 0xff这样的操作，这里就记录总结一下这里包含的意义：

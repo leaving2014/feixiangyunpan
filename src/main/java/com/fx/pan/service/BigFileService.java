@@ -1,6 +1,6 @@
 package com.fx.pan.service;
 
-import com.fx.pan.entity.Chunk;
+import com.fx.pan.domain.Chunk;
 import com.fx.pan.interfaces.BigFileServiceInterface;
 import com.fx.pan.utils.PathUtils;
 import org.springframework.stereotype.Service;

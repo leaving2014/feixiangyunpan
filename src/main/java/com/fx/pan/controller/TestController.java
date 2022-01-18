@@ -17,4 +17,9 @@ public class TestController {
 
         return Msg.success("获取成功").put("name", "张三").put("sex", "男");
     }
+
+    @GetMapping("/hello")
+    public String hello(){
+        return "hello";
+    }
 }

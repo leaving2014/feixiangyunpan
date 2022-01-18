@@ -8,6 +8,10 @@ import java.util.Map;
  * @Date 2021/10/31 20:58
  * @Version 1.0
  */
+
+/**
+ * 统一返回值
+ */
 public class Msg {
 
     private int code;
@@ -44,12 +48,17 @@ public class Msg {
         return result;
     }
 
-    public static Msg error(){
-        Msg result = new Msg(400,"处理失败");
-        return result;
-    }
-    public static Msg error(String msg){
-        Msg result = new Msg(400,msg);
+    // public static Msg error(){
+    //     Msg result = new Msg(400,"处理失败");
+    //     return result;
+    // }
+    // public static Msg error(String msg){
+    //     Msg result = new Msg(400,msg);
+    //     return result;
+    // }
+
+    public static Msg error(int code,String msg){
+        Msg result = new Msg(code,msg);
         return result;
     }
 

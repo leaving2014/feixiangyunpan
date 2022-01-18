@@ -1,6 +1,6 @@
 package com.fx.pan.controller;
 
-import com.fx.pan.entity.Chunk;
+import com.fx.pan.domain.Chunk;
 import com.fx.pan.interfaces.BigFileServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ModelAttribute;

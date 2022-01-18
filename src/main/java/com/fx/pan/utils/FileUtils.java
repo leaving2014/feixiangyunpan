@@ -6,9 +6,7 @@ import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 import java.util.UUID;
 
 import static org.apache.commons.io.FileUtils.copyInputStreamToFile;
@@ -107,6 +105,102 @@ public class FileUtils {
     }
 
 
+    /**
+     *离线下载获取文件名称
+     * @param link 下载文件url
+     * @return fileName 下载文件名称
+     * @throws IOException
+     */
+    public static String getFileName(String link) throws IOException {
+        String imgurl = link;
+        URL url = new URL(imgurl);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.connect();
+        //获取文件名和扩展名
+        // 先连接一次，解决跳转下载
+        conn.getResponseCode();
+        imgurl = conn.getURL().toString();
+        //第一种方式，针对 img.png
+        String fileName = imgurl.substring(imgurl.lastIndexOf("/") + 1);
+        String extName = null;
+        if (fileName.lastIndexOf(".") > 0) {
+            extName = fileName.substring(fileName.lastIndexOf(".") + 1);
+        }
+        if (extName == null || extName.length() > 4 || extName.indexOf("?") > -1) {
+            //第二种方式，获取header 确定文件名和扩展名
+            fileName = conn.getHeaderField("Content-Disposition");
+            if (fileName == null || fileName.indexOf("file") < 0) {
+                int index = link.indexOf("?");
+                if(index != -1) {
+                    fileName = link.substring(0, index);
+                    String[] fileNameArr = fileName.split("/");
+                    fileName= fileNameArr[fileNameArr.length-1];
+                }
+            } else {
+                if (fileName.indexOf("filename")!=-1){
+                    fileName = URLDecoder.decode(fileName.substring(fileName.indexOf("filename") + 9,
+                            fileName.length() - 1), "UTF-8");
+                    System.out.println("filename:"+fileName);
+                }else if (fileName.indexOf("fileName")!=-1)  {
+                    fileName = URLDecoder.decode(fileName.substring(fileName.indexOf("fileName") + 9,
+                            fileName.length() - 1), "UTF-8");
+                    System.out.println("fileName:"+fileName);
 
+                }
+                extName = fileName.substring(fileName.lastIndexOf(".") + 1);
+            }
+        }
+        return fileName;
+    }
+
+
+    /**
+     *
+     * @param rawSize
+     * @return
+     */
+    public double fileSizeUnitConversion(long rawSize){
+        //26.71KB    fileSize:27352.0
+        double conversionSize=0;
+        if (rawSize<1024){
+            // B
+            conversionSize= rawSize;
+        }else if (rawSize<1024*1024){
+            //KB
+            conversionSize=Double.parseDouble(String.format("%.2f",rawSize / 1024));
+        }else if(rawSize<Math.pow(1024,3)){
+            // MB
+            conversionSize=Double.parseDouble(String.format("%.2f",rawSize / Math.pow(1024,2)));
+        }else if (rawSize<Math.pow(1024,4)){
+            //GB
+            conversionSize= Double.parseDouble(String.format("%.2f",rawSize / Math.pow(1024,3)));
+        }
+        return conversionSize;
+    }
+
+    /**
+     *
+     * @param rawSize
+     * @return
+     */
+    public static String fileSizeUnitConversionAndUnit(long rawSize){
+        //26.71KB    fileSize:27352.0
+        double conversionSize=0;
+        String unit="";
+        if (rawSize<1024){
+            unit="B";
+            conversionSize= rawSize;
+        }else if (rawSize<1024*1024){
+            unit="KB";
+            conversionSize=Double.parseDouble(String.format("%.2f",rawSize*1.00 / 1024));
+        }else if(rawSize<Math.pow(1024,3)){
+            unit="MB";
+            conversionSize=Double.parseDouble(String.format("%.2f",rawSize*1.00/ Math.pow(1024,2)));
+        }else if (rawSize<Math.pow(1024,4)){
+            unit="GB";
+            conversionSize= Double.parseDouble(String.format("%.2f",rawSize*1.00 / Math.pow(1024,3)));
+        }
+        return conversionSize+" "+unit;
+    }
 
 }

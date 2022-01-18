@@ -1,6 +1,6 @@
 package com.fx.pan.interfaces;
 
-import com.fx.pan.entity.Chunk;
+import com.fx.pan.domain.Chunk;
 
 import javax.servlet.http.HttpServletResponse;
 
