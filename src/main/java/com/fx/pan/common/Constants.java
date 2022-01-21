@@ -100,6 +100,10 @@ public class Constants
     public static final String LOGIN_USER_KEY = "login_user_key";
 
     /**
+     * redis登录用户key名称前缀
+     */
+    public static final String REDIS_LOGIN_USER_PREFIX = "fxpanlogin:";
+    /**
      * 用户ID
      */
     public static final String JWT_USERID = "userid";

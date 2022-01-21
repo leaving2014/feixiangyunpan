@@ -48,6 +48,23 @@ public class Msg {
         return result;
     }
 
+
+    // 通用返回失败，未知错误
+    public static Msg fail() {
+        Msg msg = new Msg();
+        msg.setCode(ResultCodeEnum.UNKNOWN_ERROR.getCode());
+        msg.setMsg(ResultCodeEnum.UNKNOWN_ERROR.getMessage());
+        return msg;
+    }
+
+    // 设置结果，形参为结果枚举
+    public static Msg setResult(ResultCodeEnum result) {
+        Msg msg = new Msg();
+        msg.setCode(result.getCode());
+        msg.setMsg(result.getMessage());
+        return msg;
+    }
+
     // public static Msg error(){
     //     Msg result = new Msg(400,"处理失败");
     //     return result;

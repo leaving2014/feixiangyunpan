@@ -1,6 +1,7 @@
 package com.fx.pan.filter;
 
 import com.fx.pan.domain.LoginUser;
+import com.fx.pan.service.TokenService;
 import com.fx.pan.utils.JwtUtil;
 import com.fx.pan.utils.RedisCache;
 import io.jsonwebtoken.Claims;
@@ -18,6 +19,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Objects;
 
+import static com.fx.pan.common.Constants.REDIS_LOGIN_USER_PREFIX;
+
 /**
  * @Author leaving
  * @Date 2022/1/13 20:56
@@ -29,11 +32,13 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     @Resource
     private RedisCache redisCache;
 
+    @Resource
+    private TokenService tokenService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // 获取 token ( 前端，用户登录后，将 token 放到请求头当中。所以这里从请求头中获取 token )
-        String token = request.getHeader("token");
-
+        String token = tokenService.getToken(request);
         if (!StringUtils.hasText(token)) {
             // 如果请求头没有 token ，放行
             filterChain.doFilter(request, response);
@@ -50,7 +55,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             throw new RuntimeException("非法 token");
         }
         // 从 redis 中获取用户信息
-        String redisKey = "fxpanlogin:" + uesrId;
+        String redisKey = REDIS_LOGIN_USER_PREFIX + uesrId;
 
         LoginUser loginUser = redisCache.getCacheObject(redisKey);
 
@@ -68,4 +73,12 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         //放行
         filterChain.doFilter(request, response);
     }
+
+
+    private boolean checkJwtToken(HttpServletRequest request){
+
+        return true;
+    }
+
+
 }

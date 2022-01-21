@@ -12,7 +12,7 @@
             <property name="suppressAllComments" value="true" />
         </commentGenerator>
         <jdbcConnection driverClass="com.mysql.jdbc.Driver"
-                        connectionURL="jdbc:mysql://localhost:3306/feixiangcloud"
+                        connectionURL="jdbc:mysql://localhost:3306/fxyp"
                         userId="root"
                         password="">
         </jdbcConnection>
@@ -44,7 +44,7 @@
         </javaClientGenerator>
 
 
-        <table tableName="user" domainObjectName="User">
+        <table tableName="sys_user" domainObjectName="User">
         </table>
         <table tableName="file" domainObjectName="File">
         </table>
@@ -55,6 +55,8 @@
         <table tableName="share" domainObjectName="Share">
         </table>
         <table tableName="storage" domainObjectName="Storage">
+        </table>
+        <table tableName="role" domainObjectName="ROLE">
         </table>
         <!--<table tableName="store" domainObjectName="Store">-->
         <!--</table>-->

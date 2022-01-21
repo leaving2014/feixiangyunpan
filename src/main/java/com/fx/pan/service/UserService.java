@@ -22,4 +22,7 @@ public interface UserService{
     User seletUserWithUserName(String username);
 
     Msg updateUser(User user);
+
+    User getUserBeanByToken(String token);
+
 }

@@ -1,7 +1,9 @@
 package com.fx.pan.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fx.pan.common.Constants;
 import com.fx.pan.common.Msg;
 import com.fx.pan.component.UserDealComp;
 import com.fx.pan.domain.LoginUser;
@@ -11,6 +13,9 @@ import com.fx.pan.service.UserService;
 import com.fx.pan.utils.JwtUtil;
 import com.fx.pan.utils.RedisCache;
 import com.fx.pan.utils.SysUtil;
+import io.jsonwebtoken.Claims;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,6 +31,7 @@ import java.util.Objects;
  * @Version 1.0
  */
 
+@Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements UserService {
 
@@ -57,7 +63,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         } else {
             boolean flag = userMapper.insertUser(user) > 0;
             if (flag) {
-                code = 200;
+                code = 0;
                 msg = "注册成功";
             } else {
                 msg = "注册失败";
@@ -89,7 +95,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         String userId = loginUser.getUser().getId().toString();
         String jwt = JwtUtil.createJWT(userId);
 
-        redisCache.setCacheObject("fxpanlogin:" + userId, loginUser);
+        redisCache.setCacheObject(Constants.REDIS_LOGIN_USER_PREFIX + userId, loginUser);
         return  Msg.success("登录成功").put("token", jwt).put("ts", SysUtil.getTimeStamp());
     }
 
@@ -105,7 +111,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         LoginUser loginUser = (LoginUser) authenticationToken.getPrincipal();
         Long id = loginUser.getUser().getId();
         // 删除redis中的值
-        redisCache.deleteObject("fxpanlogin:"+id);
+        redisCache.deleteObject(Constants.REDIS_LOGIN_USER_PREFIX+id);
         return  Msg.success("注销成功");
     }
 
@@ -134,7 +140,52 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
 
     }
 
+    @Override
+    public User getUserBeanByToken(String token) {
+        Claims c = null;
+        if (StringUtils.isEmpty(token)) {
+            return null;
+        }
+        System.out.println("getUserBeanByToken:"+token);
+        //        if (!token.startsWith("Bearer ")) {
+//            throw new NotLoginException("token格式错误");
+//        }
+        token = token.replace("Bearer ", "");
+        System.out.println(token);
+        try {
+            c = JwtUtil.parseJWT(token);
+        } catch (Exception e) {
+            log.info("解码异常:" + e);
+            return null;
+        }
+        if (c == null) {
+            log.info("解码为空");
+            return null;
+        }
+        String subject = c.getSubject();
+        log.debug("解析结果：" + subject);
+        User tokenUser = JSON.parseObject(subject, User.class);
 
+        User saveUser = new User();
+        String tokenPassword = "";
+        String savePassword = "";
+        if (StringUtils.isNotEmpty(tokenUser.getPassword())) {
+            saveUser = seletUserWithUserName(tokenUser.getUserName());
+            if (saveUser == null) {
+                return null;
+            }
+            tokenPassword = tokenUser.getPassword();
+            savePassword = saveUser.getPassword();
+        }
+        if (StringUtils.isEmpty(tokenPassword) || StringUtils.isEmpty(savePassword)) {
+            return null;
+        }
+        if (tokenPassword.equals(savePassword)) {
 
+            return saveUser;
+        } else {
+            return null;
+        }
+    }
 
 }

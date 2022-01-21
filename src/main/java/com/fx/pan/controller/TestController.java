@@ -1,6 +1,8 @@
 package com.fx.pan.controller;
 
 import com.fx.pan.common.Msg;
+import com.fx.pan.utils.SysUtil;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,8 +20,9 @@ public class TestController {
         return Msg.success("获取成功").put("name", "张三").put("sex", "男");
     }
 
+    @PreAuthorize("hasAnyAuthority('test')")
     @GetMapping("/hello")
-    public String hello(){
-        return "hello";
+    public Msg hello(){
+        return  Msg.success().put("string", "hello").put("ts", SysUtil.getTimeStamp());
     }
 }

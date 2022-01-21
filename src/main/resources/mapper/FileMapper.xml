@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fx.pan.mapper.FileMapper">
+
+
+    <insert id="insertFile" keyColumn="file_id" keyProperty="fileId" parameterType="com.fx.pan.domain.FileBean"
+            useGeneratedKeys="true">
+        insert into file
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="fileName != null">
+                file_name,
+            </if>
+            <if test="fileStorageType != null">
+                file_storage_type,
+            </if>
+            <if test="filePath != null">
+                file_path,
+            </if>
+            <if test="filePathAbs != null">
+                file_path_abs,
+            </if>
+            <if test="fileIsdir != null">
+                file_isdir,
+            </if>
+            <if test="fileExt != null">
+                file_ext,
+            </if>
+            <if test="fileSize != null">
+                file_size,
+            </if>
+            <if test="fileCategory != null">
+                file_category,
+            </if>
+            <if test="fileMd5 != null">
+                file_md5,
+            </if>
+            <if test="fileSharedType != null">
+                file_shared_type,
+            </if>
+            <if test="fileCollected != null">
+                file_collected,
+            </if>
+            <if test="delete != null">
+                `delete`,
+            </if>
+            <if test="userId != null">
+                user_id,
+            </if>
+            file_create_time,file_update_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="fileName != null">
+                #{fileName,jdbcType=VARCHAR},
+            </if>
+            <if test="fileStorageType != null">
+                #{fileStorageType,jdbcType=VARCHAR},
+            </if>
+            <if test="filePath != null">
+                #{filePath,jdbcType=VARCHAR},
+            </if>
+            <if test="filePathAbs != null">
+                #{filePathAbs,jdbcType=VARCHAR},
+            </if>
+            <if test="fileIsdir != null">
+                #{fileIsdir,jdbcType=INTEGER},
+            </if>
+            <if test="fileExt != null">
+                #{fileExt,jdbcType=VARCHAR},
+            </if>
+            <if test="fileSize != null">
+                #{fileSize,jdbcType=DOUBLE},
+            </if>
+            <if test="fileCategory != null">
+                #{fileCategory,jdbcType=VARCHAR},
+            </if>
+            <if test="fileMd5 != null">
+                #{fileMd5,jdbcType=VARCHAR},
+            </if>
+            <if test="fileSharedType != null">
+                #{fileSharedType,jdbcType=TINYINT},
+            </if>
+            <if test="fileCollected != null">
+                #{fileCollected,jdbcType=VARCHAR},
+            </if>
+            <if test="fileCreateTime != null">
+                #{fileCreateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="fileUpdateTime != null">
+                #{fileUpdateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="delete != null">
+                #{delete,jdbcType=CHAR},
+            </if>
+            <if test="userId != null">
+                #{userId,jdbcType=BIGINT},
+            </if>
+            sysdate(),sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateFileNameById" parameterType="com.fx.pan.domain.FileBean">
+        update file
+        set file_name = #{fileName,jdbcType=VARCHAR}
+        where file_id = #{fileId,jdbcType=BIGINT}
+    </update>
+
+
+</mapper>

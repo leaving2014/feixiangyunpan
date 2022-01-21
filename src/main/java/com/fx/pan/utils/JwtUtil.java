@@ -1,6 +1,9 @@
 package com.fx.pan.utils;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -20,7 +23,9 @@ public class JwtUtil {
      * 有效期为
      * 60 * 60 *1000  一个小时
      */
-    public static final Long JWT_TTL = 60 * 60 * 1000L;
+    public static final Long JWT_TTL = 3 * 60 * 60 * 1000L;
+
+    public static final Long EXPIRE_TIME = 60 * 60 * 1000L * 24 * 1; // 一天
     /**
      * 设置秘钥明文
      */
@@ -62,7 +67,7 @@ public class JwtUtil {
         long nowMillis = System.currentTimeMillis();
         Date now = new Date(nowMillis);
         if (ttlMillis == null) {
-            ttlMillis = JwtUtil.JWT_TTL;
+            ttlMillis = JwtUtil.EXPIRE_TIME;
         }
         long expMillis = nowMillis + ttlMillis;
         Date expDate = new Date(expMillis);
@@ -72,7 +77,7 @@ public class JwtUtil {
                 // 主题  可以是JSON数据
                 .setSubject(subject)
                 // 签发者
-                .setIssuer("sg")
+                .setIssuer("fxpan")
                 // 签发时间
                 .setIssuedAt(now)
                 // 使用 HS256 对称加密算法签名, 第二个参数为秘钥
@@ -135,20 +140,6 @@ public class JwtUtil {
                 .getBody();
     }
 
-    //不管是否过期，都返回claims对象
-    // public static Claims parseJWT(String jwt){
-    //     Claims claims;
-    //     SecretKey secretKey = generalKey();
-    //     try {
-    //         claims = Jwts.parser()
-    //                 .setSigningKey(secretKey) // 设置标识名
-    //                 .parseClaimsJws(jwt)  //解析token
-    //                 .getBody();
-    //     } catch (ExpiredJwtException e) {
-    //         claims = e.getClaims();
-    //     }
-    //     return claims;
-    // }
 
 
 }

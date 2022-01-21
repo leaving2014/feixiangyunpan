@@ -1,6 +1,8 @@
 package com.fx.pan.config;
 
 import com.fx.pan.filter.JwtAuthenticationTokenFilter;
+import com.fx.pan.handle.AccessDeniedHandlerImpl;
+import com.fx.pan.handle.AuthenticationEntryPointImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,11 +21,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * @Date 2022/1/13 17:23
  * @Version 1.0
  */
-// @Configuration(
-//         proxyBeanMethods = false
-// )
-// @EnableWebSecurity
-// @EnableGlobalMethodSecurity(prePostEnabled = true)
 @Configuration(proxyBeanMethods = false)
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -40,6 +37,24 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      */
     @Autowired
     private JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
+
+    /**
+     * 授权失败处理
+     */
+    @Autowired
+    private AuthenticationEntryPointImpl authenticationEntryPoint;
+
+    /**
+     * 授权失败处理
+     */
+    @Autowired
+    private AccessDeniedHandlerImpl accessDeniedHandler;
+
+    /**
+     * 退出处理类
+     */
+    // @Autowired
+    // private LogoutSuccessHandlerImpl logoutSuccessHandler;
 
 
     // 创建BCryptPasswordEncoder 注入容器
@@ -108,16 +123,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
                 // 任意用户，认证之后都可以访问（除上面外的所有请求全部需要鉴权认证）
                 .anyRequest().authenticated();
+        // http.logout().logoutUrl("/logout").logoutSuccessHandler(logoutSuccessHandler);
 
         // 添加 jwt 认证过滤器，在 UsernamePasswordAuthenticationFilter 过滤器之前
         http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // // 配置异常处理器
-        // http.exceptionHandling()
-        //         // 配置认证失败处理器
-        //         .authenticationEntryPoint(authenticationEntryPoint)
-        //         // 配置授权失败处理器
-        //         .accessDeniedHandler(accessDeniedHandler);
+        // 配置异常处理器
+        http.exceptionHandling()
+                // 配置认证失败处理器
+                .authenticationEntryPoint(authenticationEntryPoint)
+                // 配置授权失败处理器
+                .accessDeniedHandler(accessDeniedHandler);
 
         // 允许跨域
         http.cors();
