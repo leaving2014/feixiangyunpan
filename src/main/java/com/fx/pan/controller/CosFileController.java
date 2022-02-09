@@ -31,18 +31,16 @@ import java.util.List;
 @RequestMapping("/cosfile")
 public class CosFileController {
 
-    @Value("${spring.tengxun.cos.accessKey}")
+    @Value("${tengxun.cos.accessKey}")
     private String accessKey;
-    @Value("${spring.tengxun.cos.secretKey}")
+    @Value("${tengxun.cos.secretKey}")
     private String secretKey;
-    @Value("${spring.tengxun.cos.bucketRegion}")
+    @Value("${tengxun.cos.bucketRegion}")
     private String bucketRegion;
-    @Value("${spring.tengxun.cos.bucketName}")
+    @Value("${tengxun.cos.bucketName}")
     private String bucketName;
-    @Value("${spring.tengxun.cos.path}")
+    @Value("${tengxun.cos.path}")
     private String path;
-    @Value("${spring.tengxun.cos.qianzui}")
-    private String qianzui;
 
     /**
      * 创建文件夹(腾讯Cos)

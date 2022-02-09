@@ -1,23 +1,27 @@
 package com.fx.pan.controller;
 
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fx.pan.common.Constants;
 import com.fx.pan.common.Msg;
 import com.fx.pan.domain.LoginUser;
+import com.fx.pan.domain.Storage;
 import com.fx.pan.domain.User;
+import com.fx.pan.service.StorageService;
 import com.fx.pan.service.UserService;
 import com.fx.pan.utils.RedisCache;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.Serializable;
 
 /**
  * @Author leaving
@@ -25,11 +29,15 @@ import javax.servlet.http.HttpServletResponse;
  * @Version 1.0
  */
 
+@Tag(name = "user", description = "该接口为用户接口，主要做用户登录，注册,退出和校验token")
 @RestController
 public class UserController {
 
     @Resource
     private UserService userService;
+
+    @Autowired
+    private StorageService storageService;
 
     @Resource
     private RedisCache redisCache;
@@ -95,6 +103,20 @@ public class UserController {
         // 删除redis中的值
         redisCache.deleteObject(Constants.REDIS_LOGIN_USER_PREFIX +id);
         return  Msg.success("注销成功");
+    }
+
+    /**
+     * 获取用户信息
+     * @param user_id
+     * @return
+     */
+    @GetMapping("/user/userinfo/{user_id}")
+    public Msg userInfo(@PathVariable Serializable user_id){
+        User user = userService.selectUserById(user_id);
+        QueryWrapper<Storage> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", user_id);
+        Storage userStorage = storageService.getUserStorage(user_id);
+        return Msg.success("获取成功").put("userInfo", JSONObject.toJSON(user)).put("userStorage",userStorage);
     }
 
     @PostMapping("/user/token")

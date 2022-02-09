@@ -40,17 +40,17 @@ public class UserDealComp {
      * @param user
      * @return
      */
-    // public Boolean isPhoneExist(User user) {
-    //
-    //     LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-    //     lambdaQueryWrapper.eq(User::getPhoneNumber, user.getPhoneNumber());
-    //     List<User> list = userMapper.selectList(lambdaQueryWrapper);
-    //     if (list != null && !list.isEmpty()) {
-    //         return true;
-    //     } else {
-    //         return false;
-    //     }
-    //
-    // }
+    public Boolean isPhoneExist(User user) {
+
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(User::getPhoneNumber, user.getPhoneNumber());
+        List<User> list = userMapper.selectList(lambdaQueryWrapper);
+        if (list != null && !list.isEmpty()) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
 
 }

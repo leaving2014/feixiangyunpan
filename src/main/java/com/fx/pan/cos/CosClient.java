@@ -18,17 +18,17 @@ import org.springframework.beans.factory.annotation.Value;
  * @author leaving
  */
 public class CosClient {
-    @Value("${spring.tengxun.accessKey}")
+    @Value("${tengxun.accessKey}")
     private static String accessKey;
-    @Value("${spring.tengxun.secretKey}")
+    @Value("${tengxun.secretKey}")
     private static String secretKey;
-    @Value("${spring.tengxun.bucketRegion}")
+    @Value("${tengxun.bucketRegion}")
     private static String bucketRegion;
-    @Value("${spring.tengxun.bucketName}")
+    @Value("${tengxun.bucketName}")
     private static String bucketName;
-    @Value("${spring.tengxun.path}")
+    @Value("${tengxun.path}")
     private static String path;
-    @Value("${spring.tengxun.qianzui}")
+    @Value("${tengxun.qianzui}")
     private static String qianzui;
 
 

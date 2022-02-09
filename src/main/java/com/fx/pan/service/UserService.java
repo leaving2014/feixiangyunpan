@@ -3,6 +3,8 @@ package com.fx.pan.service;
 import com.fx.pan.common.Msg;
 import com.fx.pan.domain.User;
 
+import java.io.Serializable;
+
 /**
  * @Author leaving
  * @Date 2022/1/14 10:47
@@ -25,4 +27,5 @@ public interface UserService{
 
     User getUserBeanByToken(String token);
 
+    User selectUserById(Serializable id);
 }

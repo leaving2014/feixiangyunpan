@@ -1,5 +1,7 @@
 package com.fx.pan.utils;
 
+import com.fx.pan.common.Constants;
+import com.fx.pan.domain.FileBean;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -7,7 +9,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
+import java.nio.charset.Charset;
 import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static org.apache.commons.io.FileUtils.copyInputStreamToFile;
 
@@ -17,7 +22,7 @@ import static org.apache.commons.io.FileUtils.copyInputStreamToFile;
  * @Version 1.0
  */
 
-public class FileUtils {
+public class FileUtil {
 
     /**
      * 离线下载
@@ -201,6 +206,105 @@ public class FileUtils {
             conversionSize= Double.parseDouble(String.format("%.2f",rawSize*1.00 / Math.pow(1024,3)));
         }
         return conversionSize+" "+unit;
+    }
+
+    /**
+     * 获取文件扩展名
+     * @return
+     */
+    public static String getFileExt(String filename) {
+        int index = filename.lastIndexOf(".");
+
+        if (index == -1) {
+            return null;
+        }
+        String result = filename.substring(index + 1);
+        return result;
+    }
+
+    /**
+     * 获得拷贝对象
+     * @param copyFileBean
+     * @return
+     */
+    public static FileBean getCopyObject(FileBean copyFileBean, FileBean targetFileBean){
+        FileBean newFile = null;
+        try {
+            newFile = (FileBean) copyFileBean.clone();
+            newFile.setId(null);
+            newFile.setFilePath(targetFileBean.getFilePath()+targetFileBean.getFileName()+"/");
+            newFile.setFileUpdateTime(null);
+            newFile.setFileCreateTime(null);
+            newFile.setFileOrigin("1");
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return newFile;
+    }
+
+
+
+    /**
+     * 解压
+     *
+     * @param zipFilePath 带解压文件
+     * @param desDirectory 解压到的目录
+     * @throws Exception
+     */
+    public static void unzip(String zipFilePath, String desDirectory) throws Exception {
+
+        File desDir = new File(desDirectory);
+        if (!desDir.exists()) {
+            boolean mkdirSuccess = desDir.mkdir();
+            if (!mkdirSuccess) {
+                throw new Exception("创建解压目标文件夹失败");
+            }
+        }
+        // 读入流
+        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFilePath),
+                Charset.forName(Constants.GBK));
+                // zipFile = new ZipFile(zipFilePath, Charset.forName("GBK"));
+        // 遍历每一个文件
+        ZipEntry zipEntry = zipInputStream.getNextEntry();
+        while (zipEntry != null) {
+            if (zipEntry.isDirectory()) { // 文件夹
+                String unzipFilePath = desDirectory + File.separator + zipEntry.getName();
+                // 直接创建
+                mkdir(new File(unzipFilePath));
+            } else { // 文件
+                String unzipFilePath = desDirectory + File.separator + zipEntry.getName();
+                File file = new File(unzipFilePath);
+                // 创建父目录
+                mkdir(file.getParentFile());
+                // 写出文件流
+                BufferedOutputStream bufferedOutputStream =
+                        new BufferedOutputStream(new FileOutputStream(unzipFilePath));
+                byte[] bytes = new byte[1024];
+                int readLen;
+                while ((readLen = zipInputStream.read(bytes)) != -1) {
+                    bufferedOutputStream.write(bytes, 0, readLen);
+                }
+                bufferedOutputStream.close();
+            }
+            zipInputStream.closeEntry();
+            zipEntry = zipInputStream.getNextEntry();
+        }
+        zipInputStream.close();
+    }
+
+    // 如果父目录不存在则创建
+    private static void mkdir(File file) {
+        if (null == file || file.exists()) {
+            return;
+        }
+        mkdir(file.getParentFile());
+        file.mkdir();
+    }
+
+    public static void main(String[] args) throws Exception {
+        String zipFilePath = "D:\\开发\\test\\test1.zip";
+        String desDirectory = "D:\\ideaWorkspace\\pan\\src\\main\\resources\\static\\file";
+        unzip(zipFilePath, desDirectory);
     }
 
 }

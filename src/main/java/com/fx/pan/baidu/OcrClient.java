@@ -1,6 +1,7 @@
 package com.fx.pan.baidu;
 
 import com.baidu.aip.ocr.AipOcr;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * @Author leaving
@@ -14,9 +15,17 @@ import com.baidu.aip.ocr.AipOcr;
 
 public class OcrClient {
 
-    private  static AipOcr client = new AipOcr("11487965", "4RHdwmUxjMYSgSBcUHPhbiQm",
-            "mGBce6uadRUtDvH1ZtYmqDrNewltWGKW");
+    @Value("${baidu.ocr.APP_ID}")
+    private static String app_id;
+    @Value("${baidu.ocr.API_KEY}")
+    private static String api_key;
+    @Value("${baidu.ocr.SECRET_KEY}")
+    private static String secret_key;
+    private  static AipOcr client = new AipOcr(app_id, api_key,
+            secret_key);
 
+    // private  static AipOcr client = new AipOcr("11487965", "4RHdwmUxjMYSgSBcUHPhbiQm",
+    //         "mGBce6uadRUtDvH1ZtYmqDrNewltWGKW");
     public static AipOcr getInstance(){
         return client;
     }

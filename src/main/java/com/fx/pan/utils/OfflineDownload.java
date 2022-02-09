@@ -20,17 +20,17 @@ import java.net.URL;
  */
 
 public class OfflineDownload {
-    @Value("${spring.tengxun.cos.accessKey}")
+    @Value("${tengxun.cos.accessKey}")
     private String accessKey;
-    @Value("${spring.tengxun.cos.secretKey}")
+    @Value("${tengxun.cos.secretKey}")
     private String secretKey;
-    @Value("${spring.tengxun.cos.bucketRegion}")
+    @Value("${tengxun.cos.bucketRegion}")
     private String bucketRegion;
-    @Value("${spring.tengxun.cos.bucketName}")
+    @Value("${tengxun.cos.bucketName}")
     private String bucketName;
-    @Value("${spring.tengxun.cos.path}")
+    @Value("${tengxun.cos.path}")
     private String path;
-    @Value("${spring.tengxun.cos.qianzui}")
+    @Value("${tengxun.cos.qianzui}")
     private String qianzui;
 
     @Value("user1001")
@@ -73,7 +73,7 @@ public class OfflineDownload {
         String fileSize = "";
 
         try {
-            fileName = FileUtils.getFileName(urlStr);
+            fileName = FileUtil.getFileName(urlStr);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -91,7 +91,7 @@ public class OfflineDownload {
 
             //获取下载文件大小
             contentLength = conn.getContentLength();
-            fileSize = FileUtils.fileSizeUnitConversionAndUnit(contentLength);
+            fileSize = FileUtil.fileSizeUnitConversionAndUnit(contentLength);
             System.out.println("文件大小:"+fileSize);
 
             // 得到输入流

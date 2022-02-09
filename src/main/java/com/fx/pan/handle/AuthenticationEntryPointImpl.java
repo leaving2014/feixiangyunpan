@@ -25,7 +25,7 @@ public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         // 处理异常
-        Msg msg = new Msg(HttpStatus.UNAUTHORIZED,"用户认证失败,请重新登录");
+        Msg msg = new Msg(HttpStatus.UNAUTHORIZED,"用户名或密码错误,请重新登录");
         String json = JSON.toJSONString(msg);
         WebUtils.renderString(response, json);
     }

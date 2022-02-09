@@ -1,9 +1,11 @@
 package com.fx.pan.filter;
 
+import com.alibaba.fastjson.JSON;
 import com.fx.pan.domain.LoginUser;
 import com.fx.pan.service.TokenService;
 import com.fx.pan.utils.JwtUtil;
 import com.fx.pan.utils.RedisCache;
+import com.fx.pan.utils.SessionUtil;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,17 +48,20 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         }
 
         // token 不为空，解析 token
-        String uesrId;
+        Long uesrId;
         try {
             Claims claims = JwtUtil.parseJWT(token);
-            uesrId = claims.getSubject();
+            LoginUser user = JSON.parseObject(claims.getSubject(), LoginUser.class);
+            uesrId = user.getUserId();
+            SessionUtil.setSession(user);
+
+
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("非法 token");
         }
         // 从 redis 中获取用户信息
         String redisKey = REDIS_LOGIN_USER_PREFIX + uesrId;
-
         LoginUser loginUser = redisCache.getCacheObject(redisKey);
 
         if (Objects.isNull(loginUser)) {
@@ -67,7 +72,8 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         // 获取权限信息封装到 Authentication 中
         // 参数：用户信息、已认证状态、权限信息
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());
+                new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());//loginUser.getAuthorities()
+                // new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities());//loginUser.getAuthorities()
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         //放行

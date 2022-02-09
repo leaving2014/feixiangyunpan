@@ -24,4 +24,6 @@ public interface UserMapper extends BaseMapper<User> {
     public int checkUserNameUnique(String userName);
 
     int updateUser(User user);
+
+    User findUserInfoByUserName(String username);
 }

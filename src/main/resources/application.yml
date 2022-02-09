@@ -1,38 +1,19 @@
 spring:
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3307/fxyp?serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8
-    #    url: jdbc:mysql://localhost:3307/sg_security?serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password:
 
-#腾讯cos
-  tengxun:
-    cos:
-      accessKey: AKIDqVt0rSmpb6KHyX3PWNyNa2HGzRdaMs9B
-      secretKey: oMgkY6PTHpEOIxNaXFjz0mIZbOuABwRg
-      bucketRegion: ap-beijing
-      bucketName: fxcloud-1254493079
-      path: https://fxcloud-1254493079.cos.ap-beijing.myqcloud.com
-      qianzui: fxcloud
-
-
-
-  baidu:
-    ocr:
-      APP_ID: 11487965
-      API_KEY: 4RHdwmUxjMYSgSBcUHPhbiQm
-      SECRET_KEY: mGBce6uadRUtDvH1ZtYmqDrNewltWGKW
   servlet:
     multipart:
       enabled: true
       max-request-size: 100MB
       max-file-size: 100MB
-  fx:
-    # 文件存储位置 (0 为本地, 1 为腾讯COS对象存储 )
-    fileStorageType: 0
-    # 文件本地存储根路径
-    fileStorageRootPath: file
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: UTC
+
 
 # MyBatis配置
 #mybatis:
@@ -42,6 +23,16 @@ spring:
 #  mapperLocations: classpath*:mapper/**/*Mapper.xml
 #  # 加载全局的配置文件
 #  configLocation: classpath:mybatis/mybatis-config.xml
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
+      logic-delete-value: 1 # 逻辑已删除值(默认为 1)
+      logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+
 
 # PageHelper分页插件
 #pagehelper:
@@ -70,6 +61,13 @@ redis:
       # #连接池最大阻塞等待时间（使用负值表示没有限制）
       max-wait: -1ms
 
+fx:
+  # 文件存储位置 (0 为本地, 1 为腾讯COS对象存储 )
+  fileStorageType: 0
+  # 文件本地存储根路径
+  fileStorageRootPath: file
+  #本地存储绝对路径,resources目录下
+  localStoragePath: static/file
 
 # token配置
 token:
@@ -78,4 +76,25 @@ token:
   # 令牌密钥
   secret: abcdefghijklmnopqrstuvwxyz
   # 令牌有效期（默认30分钟）
-  expireTime: 30
+  expireTime: 60
+
+
+#腾讯cos
+tengxun:
+  cos:
+    accessKey: AKIDqVt0rSmpb6KHyX3PWNyNa2HGzRdaMs9B
+    secretKey: oMgkY6PTHpEOIxNaXFjz0mIZbOuABwRg
+    bucketRegion: ap-beijing
+    bucketName: fxcloud-1254493079
+    path: https://fxcloud-1254493079.cos.ap-beijing.myqcloud.com
+    qianzui: fxcloud
+
+
+#百度OCR
+baidu:
+  ocr:
+    APP_ID: 11487965
+    API_KEY: 4RHdwmUxjMYSgSBcUHPhbiQm
+    SECRET_KEY: mGBce6uadRUtDvH1ZtYmqDrNewltWGKW
+server:
+  port: 8080

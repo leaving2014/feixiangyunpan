@@ -1,11 +1,14 @@
 package com.fx.pan.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.alibaba.fastjson.annotation.JSONField;
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Date;
+
 /**
  * @Author leaving
  * @Date 2021/1/18 21:21
@@ -13,392 +16,232 @@ import java.util.Date;
  * @TableName file
  */
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @TableName("file")
-public class FileBean implements Serializable {
+public class FileBean implements Serializable,Cloneable{
     /**
-     * 用户id
+     * 主键
      */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long fileId;
-
+    @TableId(type = IdType.AUTO)
+    private Long id;
     /**
      * 文件名称
      */
     private String fileName;
-
-    /**
-     * 文件存储位置,0为本地,1为cos对象存储
-     */
-    private String fileStorageType;
-
     /**
      * 文件路径
      */
     private String filePath;
-
-    /**
-     * 文件绝对路径
-     */
-    private String filePathAbs;
-
     /**
      * 是否为目录
      */
-    private Integer fileIsdir;
-
+    private String fileIsdir;
     /**
      * 文件扩展名
      */
     private String fileExt;
-
     /**
-     * 文件大小
+     * 文件大小(单位B)
      */
-    private Double fileSize;
-
+    private Long fileSize;
     /**
-     * 文件类型,0未知,1图片,2文档,3视频,4音频
+     * 文件类型(0未知,1图片,2文档,3视频,4音频)
      */
-    private String fileCategory;
-
+    private String fileType;
     /**
-     * 文件md5,用于快速上传
+     * 文件md5(用于快速上传)
      */
     private String fileMd5;
-
     /**
-     * 文件共享类型,0为私有不分享,1为公开分享,2为群组分享
+     * 文件是否共享(0不共享,1共享)
      */
-    private Integer fileSharedType;
-
-    /**
-     * 文件是否收藏
-     */
-    private String fileCollected;
-
+    private String fileShared;
     /**
      * 文件创建时间
      */
     private Date fileCreateTime;
-
     /**
      * 文件更新时间
      */
     private Date fileUpdateTime;
-
     /**
-     * 是否删除(0未删除,1已删除)
+     * 文件审核(0未审核,1审核)
      */
-    private String delete;
-
+    private String fileAudit;
+    /**
+     * 文件来自(0用户上传,1文件引用,2离线下载)
+     */
+    private String fileOrigin;
+    /**
+     * 文件是否删除(逻辑删除,0未删除,1删除)
+     */
+    @JSONField(serialize = false)
+    @TableLogic
+    private String deleted;
     /**
      * 文件上传用户
      */
     private Long userId;
 
+
+    @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 
-     */
-    public Long getFileId() {
-        return fileId;
+
+
+    public Long getId() {
+        return id;
     }
 
-    /**
-     * 
-     */
-    public void setFileId(Long fileId) {
-        this.fileId = fileId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    /**
-     * 文件名称
-     */
     public String getFileName() {
         return fileName;
     }
 
-    /**
-     * 文件名称
-     */
     public void setFileName(String fileName) {
         this.fileName = fileName;
     }
 
-    /**
-     * 文件存储位置,0为本地,1为cos对象存储
-     */
-    public String getFileStorageType() {
-        return fileStorageType;
-    }
-
-    /**
-     * 文件存储位置,0为本地,1为cos对象存储
-     */
-    public void setFileStorageType(String fileStorageType) {
-        this.fileStorageType = fileStorageType;
-    }
-
-    /**
-     * 文件路径
-     */
     public String getFilePath() {
         return filePath;
     }
 
-    /**
-     * 文件路径
-     */
     public void setFilePath(String filePath) {
         this.filePath = filePath;
     }
 
-    /**
-     * 文件绝对路径
-     */
-    public String getFilePathAbs() {
-        return filePathAbs;
-    }
-
-    /**
-     * 文件绝对路径
-     */
-    public void setFilePathAbs(String filePathAbs) {
-        this.filePathAbs = filePathAbs;
-    }
-
-    /**
-     * 是否为目录
-     */
-    public Integer getFileIsdir() {
+    public String getFileIsdir() {
         return fileIsdir;
     }
 
-    /**
-     * 是否为目录
-     */
-    public void setFileIsdir(Integer fileIsdir) {
+    public void setFileIsdir(String fileIsdir) {
         this.fileIsdir = fileIsdir;
     }
 
-    /**
-     * 文件扩展名
-     */
     public String getFileExt() {
         return fileExt;
     }
 
-    /**
-     * 文件扩展名
-     */
     public void setFileExt(String fileExt) {
         this.fileExt = fileExt;
     }
 
-    /**
-     * 文件大小
-     */
-    public Double getFileSize() {
+    public Long getFileSize() {
         return fileSize;
     }
 
-    /**
-     * 文件大小
-     */
-    public void setFileSize(Double fileSize) {
+    public void setFileSize(Long fileSize) {
         this.fileSize = fileSize;
     }
 
-    /**
-     * 文件类型,0未知,1图片,2文档,3视频,4音频
-     */
-    public String getFileCategory() {
-        return fileCategory;
+    public String getFileType() {
+        return fileType;
     }
 
-    /**
-     * 文件类型,0未知,1图片,2文档,3视频,4音频
-     */
-    public void setFileCategory(String fileCategory) {
-        this.fileCategory = fileCategory;
+    public void setFileType(String fileType) {
+        this.fileType = fileType;
     }
 
-    /**
-     * 文件md5,用于快速上传
-     */
     public String getFileMd5() {
         return fileMd5;
     }
 
-    /**
-     * 文件md5,用于快速上传
-     */
     public void setFileMd5(String fileMd5) {
         this.fileMd5 = fileMd5;
     }
 
-    /**
-     * 文件共享类型,0为私有不分享,1为公开分享,2为群组分享
-     */
-    public Integer getFileSharedType() {
-        return fileSharedType;
+    public String getFileShared() {
+        return fileShared;
     }
 
-    /**
-     * 文件共享类型,0为私有不分享,1为公开分享,2为群组分享
-     */
-    public void setFileSharedType(Integer fileSharedType) {
-        this.fileSharedType = fileSharedType;
+    public void setFileShared(String fileShared) {
+        this.fileShared = fileShared;
     }
 
-    /**
-     * 文件是否收藏
-     */
-    public String getFileCollected() {
-        return fileCollected;
-    }
-
-    /**
-     * 文件是否收藏
-     */
-    public void setFileCollected(String fileCollected) {
-        this.fileCollected = fileCollected;
-    }
-
-    /**
-     * 文件创建时间
-     */
     public Date getFileCreateTime() {
         return fileCreateTime;
     }
 
-    /**
-     * 文件创建时间
-     */
     public void setFileCreateTime(Date fileCreateTime) {
         this.fileCreateTime = fileCreateTime;
     }
 
-    /**
-     * 文件更新时间
-     */
     public Date getFileUpdateTime() {
         return fileUpdateTime;
     }
 
-    /**
-     * 文件更新时间
-     */
     public void setFileUpdateTime(Date fileUpdateTime) {
         this.fileUpdateTime = fileUpdateTime;
     }
 
-    /**
-     * 是否删除(0未删除,1已删除)
-     */
-    public String getDelete() {
-        return delete;
+    public String getFileAudit() {
+        return fileAudit;
     }
 
-    /**
-     * 是否删除(0未删除,1已删除)
-     */
-    public void setDelete(String delete) {
-        this.delete = delete;
+    public void setFileAudit(String fileAudit) {
+        this.fileAudit = fileAudit;
     }
 
-    /**
-     * 文件上传用户
-     */
+    public String getFileOrigin() {
+        return fileOrigin;
+    }
+
+    public void setFileOrigin(String fileOrigin) {
+        this.fileOrigin = fileOrigin;
+    }
+
+    public String getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(String deleted) {
+        this.deleted = deleted;
+    }
+
     public Long getUserId() {
         return userId;
     }
 
-    /**
-     * 文件上传用户
-     */
     public void setUserId(Long userId) {
         this.userId = userId;
     }
 
     @Override
-    public boolean equals(Object that) {
-        if (this == that) {
-            return true;
-        }
-        if (that == null) {
-            return false;
-        }
-        if (getClass() != that.getClass()) {
-            return false;
-        }
-        FileBean other = (FileBean) that;
-        return (this.getFileId() == null ? other.getFileId() == null : this.getFileId().equals(other.getFileId()))
-            && (this.getFileName() == null ? other.getFileName() == null : this.getFileName().equals(other.getFileName()))
-            && (this.getFileStorageType() == null ? other.getFileStorageType() == null : this.getFileStorageType().equals(other.getFileStorageType()))
-            && (this.getFilePath() == null ? other.getFilePath() == null : this.getFilePath().equals(other.getFilePath()))
-            && (this.getFilePathAbs() == null ? other.getFilePathAbs() == null : this.getFilePathAbs().equals(other.getFilePathAbs()))
-            && (this.getFileIsdir() == null ? other.getFileIsdir() == null : this.getFileIsdir().equals(other.getFileIsdir()))
-            && (this.getFileExt() == null ? other.getFileExt() == null : this.getFileExt().equals(other.getFileExt()))
-            && (this.getFileSize() == null ? other.getFileSize() == null : this.getFileSize().equals(other.getFileSize()))
-            && (this.getFileCategory() == null ? other.getFileCategory() == null : this.getFileCategory().equals(other.getFileCategory()))
-            && (this.getFileMd5() == null ? other.getFileMd5() == null : this.getFileMd5().equals(other.getFileMd5()))
-            && (this.getFileSharedType() == null ? other.getFileSharedType() == null : this.getFileSharedType().equals(other.getFileSharedType()))
-            && (this.getFileCollected() == null ? other.getFileCollected() == null : this.getFileCollected().equals(other.getFileCollected()))
-            && (this.getFileCreateTime() == null ? other.getFileCreateTime() == null : this.getFileCreateTime().equals(other.getFileCreateTime()))
-            && (this.getFileUpdateTime() == null ? other.getFileUpdateTime() == null : this.getFileUpdateTime().equals(other.getFileUpdateTime()))
-            && (this.getDelete() == null ? other.getDelete() == null : this.getDelete().equals(other.getDelete()))
-            && (this.getUserId() == null ? other.getUserId() == null : this.getUserId().equals(other.getUserId()));
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((getFileId() == null) ? 0 : getFileId().hashCode());
-        result = prime * result + ((getFileName() == null) ? 0 : getFileName().hashCode());
-        result = prime * result + ((getFileStorageType() == null) ? 0 : getFileStorageType().hashCode());
-        result = prime * result + ((getFilePath() == null) ? 0 : getFilePath().hashCode());
-        result = prime * result + ((getFilePathAbs() == null) ? 0 : getFilePathAbs().hashCode());
-        result = prime * result + ((getFileIsdir() == null) ? 0 : getFileIsdir().hashCode());
-        result = prime * result + ((getFileExt() == null) ? 0 : getFileExt().hashCode());
-        result = prime * result + ((getFileSize() == null) ? 0 : getFileSize().hashCode());
-        result = prime * result + ((getFileCategory() == null) ? 0 : getFileCategory().hashCode());
-        result = prime * result + ((getFileMd5() == null) ? 0 : getFileMd5().hashCode());
-        result = prime * result + ((getFileSharedType() == null) ? 0 : getFileSharedType().hashCode());
-        result = prime * result + ((getFileCollected() == null) ? 0 : getFileCollected().hashCode());
-        result = prime * result + ((getFileCreateTime() == null) ? 0 : getFileCreateTime().hashCode());
-        result = prime * result + ((getFileUpdateTime() == null) ? 0 : getFileUpdateTime().hashCode());
-        result = prime * result + ((getDelete() == null) ? 0 : getDelete().hashCode());
-        result = prime * result + ((getUserId() == null) ? 0 : getUserId().hashCode());
-        return result;
-    }
-
-    @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getClass().getSimpleName());
-        sb.append(" [");
-        sb.append("Hash = ").append(hashCode());
-        sb.append(", fileId=").append(fileId);
-        sb.append(", fileName=").append(fileName);
-        sb.append(", fileStorageType=").append(fileStorageType);
-        sb.append(", filePath=").append(filePath);
-        sb.append(", filePathAbs=").append(filePathAbs);
-        sb.append(", fileIsdir=").append(fileIsdir);
-        sb.append(", fileExt=").append(fileExt);
-        sb.append(", fileSize=").append(fileSize);
-        sb.append(", fileCategory=").append(fileCategory);
-        sb.append(", fileMd5=").append(fileMd5);
-        sb.append(", fileSharedType=").append(fileSharedType);
-        sb.append(", fileCollected=").append(fileCollected);
-        sb.append(", fileCreateTime=").append(fileCreateTime);
-        sb.append(", fileUpdateTime=").append(fileUpdateTime);
-        sb.append(", delete=").append(delete);
-        sb.append(", userId=").append(userId);
-        sb.append(", serialVersionUID=").append(serialVersionUID);
-        sb.append("]");
-        return sb.toString();
+        return "FileBean{" +
+                "id=" + id +
+                ", fileName='" + fileName + '\'' +
+                ", filePath='" + filePath + '\'' +
+                ", fileIsdir='" + fileIsdir + '\'' +
+                ", fileExt='" + fileExt + '\'' +
+                ", fileSize=" + fileSize +
+                ", fileType='" + fileType + '\'' +
+                ", fileMd5='" + fileMd5 + '\'' +
+                ", fileShared='" + fileShared + '\'' +
+                ", fileCreateTime=" + fileCreateTime +
+                ", fileUpdateTime=" + fileUpdateTime +
+                ", fileAudit='" + fileAudit + '\'' +
+                ", fileOrigin='" + fileOrigin + '\'' +
+                ", deleted='" + deleted + '\'' +
+                ", userId=" + userId +
+                '}';
     }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
+    //
+    // @Override
+    // protected Object clone() throws CloneNotSupportedException {
+    //     Object obj=super.clone();
+    //     FileBean a=((FileBean)obj).getAddress();
+    //     ((FileBean)obj).setAddress((FileBean) a.clone());
+    //     return obj;
+    // }
 }

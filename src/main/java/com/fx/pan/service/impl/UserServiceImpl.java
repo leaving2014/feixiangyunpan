@@ -1,14 +1,18 @@
 package com.fx.pan.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fx.pan.common.Constants;
 import com.fx.pan.common.Msg;
 import com.fx.pan.component.UserDealComp;
 import com.fx.pan.domain.LoginUser;
+import com.fx.pan.domain.Storage;
 import com.fx.pan.domain.User;
+import com.fx.pan.mapper.StorageMapper;
 import com.fx.pan.mapper.UserMapper;
+import com.fx.pan.service.StorageService;
 import com.fx.pan.service.UserService;
 import com.fx.pan.utils.JwtUtil;
 import com.fx.pan.utils.RedisCache;
@@ -23,6 +27,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -42,11 +47,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     private RedisCache redisCache;
 
     @Autowired
-    UserMapper userMapper;
+    private UserMapper userMapper;
 
     @Autowired
-    UserDealComp userDealComp;
+    private UserDealComp userDealComp;
 
+    @Autowired
+    private StorageService storageService;
+
+    @Autowired
+    private StorageMapper storageMapper;
 
     /**
      * 用户注册
@@ -65,6 +75,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
             if (flag) {
                 code = 0;
                 msg = "注册成功";
+                Storage storage = new Storage();
+                storage.setUserId(user.getId());
+                //添加用户存储空间信息
+                // storageMapper.insert(storage);
+                boolean b = storageService.insertUserStorage(storage);
+
             } else {
                 msg = "注册失败";
             }
@@ -93,7 +109,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         //如果认证通过
         LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
         String userId = loginUser.getUser().getId().toString();
-        String jwt = JwtUtil.createJWT(userId);
+
+        User saveUserBean = findUserInfoByUserName(loginUser.getUsername());
+        loginUser.setUserId(saveUserBean.getId());
+
+        String jwt = JwtUtil.createJWT(JSONObject.toJSONString(loginUser));
 
         redisCache.setCacheObject(Constants.REDIS_LOGIN_USER_PREFIX + userId, loginUser);
         return  Msg.success("登录成功").put("token", jwt).put("ts", SysUtil.getTimeStamp());
@@ -115,6 +135,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         return  Msg.success("注销成功");
     }
 
+    public User findUserInfoByUserName(String userName){
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(User::getUserName, userName);
+        return userMapper.selectOne(lambdaQueryWrapper);
+    }
 
     @Override
     public User seletUserWithUserName(String username) {
@@ -146,12 +171,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         if (StringUtils.isEmpty(token)) {
             return null;
         }
-        System.out.println("getUserBeanByToken:"+token);
         //        if (!token.startsWith("Bearer ")) {
 //            throw new NotLoginException("token格式错误");
 //        }
         token = token.replace("Bearer ", "");
-        System.out.println(token);
         try {
             c = JwtUtil.parseJWT(token);
         } catch (Exception e) {
@@ -186,6 +209,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         } else {
             return null;
         }
+    }
+
+    @Override
+    public User selectUserById(Serializable id) {
+        return userMapper.selectById(id);
     }
 
 }

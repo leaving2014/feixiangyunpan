@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -69,15 +68,22 @@ public class LoginUser implements UserDetails {
     /**
      * 权限列表
      */
+    // @JSONField(serialize = false)
+    private List<String> permissions;
 
-    private List<String> permission;
+    public List<String> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(List<String> permissions) {
+        this.permissions = permissions;
+    }
 
     /**
      * 用户信息
      */
     private User user;
 
-    private Set<String> permissions;
 
     @JSONField(serialize = false)
     private List<SimpleGrantedAuthority> authorities;
@@ -87,7 +93,12 @@ public class LoginUser implements UserDetails {
         this.user = user;
     }
 
-    public LoginUser(Long userId, User user, Set<String> permissions) {
+    public LoginUser(User user, List<String> permissions) {
+        this.user = user;
+        this.permissions =  permissions;
+    }
+
+    public LoginUser(Long userId, User user, List<String> permissions) {
         this.userId = userId;
         this.user = user;
         this.permissions = permissions;
@@ -107,6 +118,7 @@ public class LoginUser implements UserDetails {
         authorities =
                 permissions.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
         return authorities;
+
     }
 
     @Override

@@ -2,25 +2,43 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
 <mapper namespace="com.fx.pan.mapper.FileMapper">
 
+    <resultMap id="BaseResultMap" type="com.fx.pan.domain.FileBean">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="fileName" column="file_name" jdbcType="VARCHAR"/>
+            <result property="filePath" column="file_path" jdbcType="VARCHAR"/>
+            <result property="fileIsdir" column="file_isdir" jdbcType="CHAR"/>
+            <result property="fileExt" column="file_ext" jdbcType="VARCHAR"/>
+            <result property="fileSize" column="file_size" jdbcType="DOUBLE"/>
+            <result property="fileType" column="file_type" jdbcType="CHAR"/>
+            <result property="fileMd5" column="file_md5" jdbcType="VARCHAR"/>
+            <result property="fileShared" column="file_shared" jdbcType="CHAR"/>
+            <result property="fileCreateTime" column="file_create_time" jdbcType="TIMESTAMP"/>
+            <result property="fileUpdateTime" column="file_update_time" jdbcType="TIMESTAMP"/>
+            <result property="fileAudit" column="file_audit" jdbcType="CHAR"/>
+            <result property="fileOrigin" column="file_origin" jdbcType="CHAR"/>
+            <result property="deleted" column="deleted" jdbcType="CHAR"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+    </resultMap>
 
-    <insert id="insertFile" keyColumn="file_id" keyProperty="fileId" parameterType="com.fx.pan.domain.FileBean"
+    <sql id="Base_Column_List">
+        id,file_name,file_path,
+        file_isdir,file_ext,file_size,
+        file_type,file_md5,file_shared,
+        file_create_time,file_update_time,file_audit,file_origin,
+        deleted,user_id
+    </sql>
+
+    <insert id="insertFile" keyColumn="id" keyProperty="id" parameterType="com.fx.pan.domain.FileBean"
             useGeneratedKeys="true">
         insert into file
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="fileName != null">
                 file_name,
             </if>
-            <if test="fileStorageType != null">
-                file_storage_type,
-            </if>
             <if test="filePath != null">
                 file_path,
-            </if>
-            <if test="filePathAbs != null">
-                file_path_abs,
             </if>
             <if test="fileIsdir != null">
                 file_isdir,
@@ -31,20 +49,29 @@
             <if test="fileSize != null">
                 file_size,
             </if>
-            <if test="fileCategory != null">
-                file_category,
+            <if test="fileType != null">
+                file_type,
             </if>
             <if test="fileMd5 != null">
                 file_md5,
             </if>
-            <if test="fileSharedType != null">
-                file_shared_type,
+            <if test="fileShared != null">
+                file_shared,
             </if>
-            <if test="fileCollected != null">
-                file_collected,
+            <if test="fileCreateTime != null">
+                file_create_time,
             </if>
-            <if test="delete != null">
-                `delete`,
+            <if test="fileUpdateTime != null">
+                file_update_time,
+            </if>
+            <if test="fileAudit != null">
+                file_audit,
+            </if>
+            <if test="fileOrigin != null">
+                file_origin,
+            </if>
+            <if test="deleted != null">
+                deleted,
             </if>
             <if test="userId != null">
                 user_id,
@@ -55,35 +82,26 @@
             <if test="fileName != null">
                 #{fileName,jdbcType=VARCHAR},
             </if>
-            <if test="fileStorageType != null">
-                #{fileStorageType,jdbcType=VARCHAR},
-            </if>
             <if test="filePath != null">
                 #{filePath,jdbcType=VARCHAR},
             </if>
-            <if test="filePathAbs != null">
-                #{filePathAbs,jdbcType=VARCHAR},
-            </if>
             <if test="fileIsdir != null">
-                #{fileIsdir,jdbcType=INTEGER},
+                #{fileIsdir,jdbcType=CHAR},
             </if>
             <if test="fileExt != null">
                 #{fileExt,jdbcType=VARCHAR},
             </if>
             <if test="fileSize != null">
-                #{fileSize,jdbcType=DOUBLE},
+                #{fileSize,jdbcType=BIGINT},
             </if>
-            <if test="fileCategory != null">
-                #{fileCategory,jdbcType=VARCHAR},
+            <if test="fileType != null">
+                #{fileType,jdbcType=CHAR},
             </if>
             <if test="fileMd5 != null">
                 #{fileMd5,jdbcType=VARCHAR},
             </if>
-            <if test="fileSharedType != null">
-                #{fileSharedType,jdbcType=TINYINT},
-            </if>
-            <if test="fileCollected != null">
-                #{fileCollected,jdbcType=VARCHAR},
+            <if test="fileShared != null">
+                #{fileShared,jdbcType=CHAR},
             </if>
             <if test="fileCreateTime != null">
                 #{fileCreateTime,jdbcType=TIMESTAMP},
@@ -91,8 +109,14 @@
             <if test="fileUpdateTime != null">
                 #{fileUpdateTime,jdbcType=TIMESTAMP},
             </if>
-            <if test="delete != null">
-                #{delete,jdbcType=CHAR},
+            <if test="fileAudit != null">
+                #{fileAudit,jdbcType=CHAR},
+            </if>
+            <if test="fileOrigin != null">
+                #{fileOrigin,jdbcType=CHAR},
+            </if>
+            <if test="deleted != null">
+                #{deleted,jdbcType=CHAR},
             </if>
             <if test="userId != null">
                 #{userId,jdbcType=BIGINT},
@@ -104,8 +128,22 @@
     <update id="updateFileNameById" parameterType="com.fx.pan.domain.FileBean">
         update file
         set file_name = #{fileName,jdbcType=VARCHAR}
-        where file_id = #{fileId,jdbcType=BIGINT}
+        where id = #{fileId,jdbcType=BIGINT}
     </update>
+    <update id="restoreDeletedFileById">
+        update file set deleted = "0" where id = #{id,jdbcType=BIGINT} and user_id = #{user_id,jdbcType=BIGINT}
+    </update>
+    <delete id="deleteRecycleFileById" parameterType="com.fx.pan.domain.FileBean">
+        delete from file where id = #{id,jdbcType=BIGINT} and user_id = #{user_id,jdbcType=BIGINT}
+    </delete>
+
+    <delete id="deleteFileByIdAndUserId">
+        update file set deleted = "1" where id = #{id,jdbcType=BIGINT} and user_id = #{user_id,jdbcType=BIGINT}
+    </delete>
+
+    <select id="selectDeletedFile"  resultType="com.fx.pan.domain.FileBean">
+        select * from file where user_id = #{id,jdbcType=BIGINT} and deleted = "1"
+    </select>
 
 
 </mapper>

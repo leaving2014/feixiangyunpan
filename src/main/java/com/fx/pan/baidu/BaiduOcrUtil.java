@@ -11,24 +11,20 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static com.fx.pan.utils.FileUtils.readImageFile;
+import static com.fx.pan.utils.FileUtil.readImageFile;
 
 /**
  * 百度OCR工具类
  */
 public class BaiduOcrUtil {
 
-    @Value("${spring.baidu.ocr.APP_ID}")
+    @Value("${baidu.ocr.APP_ID}")
     private static String app_id;
-    @Value("${spring.baidu.ocr.API_KEY}")
+    @Value("${baidu.ocr.API_KEY}")
     private static String api_key;
-    @Value("${spring.baidu.ocr.SECRET_KEY}")
+    @Value("${baidu.ocr.SECRET_KEY}")
     private static String secret_key;
 
-    //设置APPID/AK/SK
-    public static final String APP_ID = app_id;
-    public static final String API_KEY = api_key;
-    public static final String SECRET_KEY = secret_key;
 
 
     /**

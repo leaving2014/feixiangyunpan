@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fx.dao.FileDao">
+
+    <resultMap type="com.fx.pan.domain.FileBean" id="FileMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="fileName" column="file_name" jdbcType="VARCHAR"/>
+        <result property="filePath" column="file_path" jdbcType="VARCHAR"/>
+        <result property="fileIsdir" column="file_isdir" jdbcType="VARCHAR"/>
+        <result property="fileExt" column="file_ext" jdbcType="VARCHAR"/>
+        <result property="fileSize" column="file_size" jdbcType="INTEGER"/>
+        <result property="fileType" column="file_type" jdbcType="VARCHAR"/>
+        <result property="fileMd5" column="file_md5" jdbcType="VARCHAR"/>
+        <result property="fileShared" column="file_shared" jdbcType="VARCHAR"/>
+        <result property="fileCreateTime" column="file_create_time" jdbcType="TIMESTAMP"/>
+        <result property="fileUpdateTime" column="file_update_time" jdbcType="TIMESTAMP"/>
+        <result property="fileAudit" column="file_audit" jdbcType="VARCHAR"/>
+        <result property="fileOrigin" column="file_origin" jdbcType="VARCHAR"/>
+        <result property="deleted" column="deleted" jdbcType="VARCHAR"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="FileMap">
+        select
+          id, file_name, file_path, file_isdir, file_ext, file_size, file_type, file_md5, file_shared, file_create_time, file_update_time, file_audit, file_origin, deleted, user_id
+        from file
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="FileMap">
+        select
+          id, file_name, file_path, file_isdir, file_ext, file_size, file_type, file_md5, file_shared, file_create_time, file_update_time, file_audit, file_origin, deleted, user_id
+        from file
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="fileName != null and fileName != ''">
+                and file_name = #{fileName}
+            </if>
+            <if test="filePath != null and filePath != ''">
+                and file_path = #{filePath}
+            </if>
+            <if test="fileIsdir != null and fileIsdir != ''">
+                and file_isdir = #{fileIsdir}
+            </if>
+            <if test="fileExt != null and fileExt != ''">
+                and file_ext = #{fileExt}
+            </if>
+            <if test="fileSize != null">
+                and file_size = #{fileSize}
+            </if>
+            <if test="fileType != null and fileType != ''">
+                and file_type = #{fileType}
+            </if>
+            <if test="fileMd5 != null and fileMd5 != ''">
+                and file_md5 = #{fileMd5}
+            </if>
+            <if test="fileShared != null and fileShared != ''">
+                and file_shared = #{fileShared}
+            </if>
+            <if test="fileCreateTime != null">
+                and file_create_time = #{fileCreateTime}
+            </if>
+            <if test="fileUpdateTime != null">
+                and file_update_time = #{fileUpdateTime}
+            </if>
+            <if test="fileAudit != null and fileAudit != ''">
+                and file_audit = #{fileAudit}
+            </if>
+            <if test="fileOrigin != null and fileOrigin != ''">
+                and file_origin = #{fileOrigin}
+            </if>
+            <if test="deleted != null and deleted != ''">
+                and deleted = #{deleted}
+            </if>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+        </where>
+        limit #{pageable.offset}, #{pageable.pageSize}
+    </select>
+
+    <!--统计总行数-->
+    <select id="count" resultType="java.lang.Long">
+        select count(1)
+        from file
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="fileName != null and fileName != ''">
+                and file_name = #{fileName}
+            </if>
+            <if test="filePath != null and filePath != ''">
+                and file_path = #{filePath}
+            </if>
+            <if test="fileIsdir != null and fileIsdir != ''">
+                and file_isdir = #{fileIsdir}
+            </if>
+            <if test="fileExt != null and fileExt != ''">
+                and file_ext = #{fileExt}
+            </if>
+            <if test="fileSize != null">
+                and file_size = #{fileSize}
+            </if>
+            <if test="fileType != null and fileType != ''">
+                and file_type = #{fileType}
+            </if>
+            <if test="fileMd5 != null and fileMd5 != ''">
+                and file_md5 = #{fileMd5}
+            </if>
+            <if test="fileShared != null and fileShared != ''">
+                and file_shared = #{fileShared}
+            </if>
+            <if test="fileCreateTime != null">
+                and file_create_time = #{fileCreateTime}
+            </if>
+            <if test="fileUpdateTime != null">
+                and file_update_time = #{fileUpdateTime}
+            </if>
+            <if test="fileAudit != null and fileAudit != ''">
+                and file_audit = #{fileAudit}
+            </if>
+            <if test="fileOrigin != null and fileOrigin != ''">
+                and file_origin = #{fileOrigin}
+            </if>
+            <if test="deleted != null and deleted != ''">
+                and deleted = #{deleted}
+            </if>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into file(file_name, file_path, file_isdir, file_ext, file_size, file_type, file_md5, file_shared, file_create_time, file_update_time, file_audit, file_origin, deleted, user_id)
+        values (#{fileName}, #{filePath}, #{fileIsdir}, #{fileExt}, #{fileSize}, #{fileType}, #{fileMd5}, #{fileShared}, #{fileCreateTime}, #{fileUpdateTime}, #{fileAudit}, #{fileOrigin}, #{deleted}, #{userId})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into file(file_name, file_path, file_isdir, file_ext, file_size, file_type, file_md5, file_shared, file_create_time, file_update_time, file_audit, file_origin, deleted, user_id)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+        (#{entity.fileName}, #{entity.filePath}, #{entity.fileIsdir}, #{entity.fileExt}, #{entity.fileSize}, #{entity.fileType}, #{entity.fileMd5}, #{entity.fileShared}, #{entity.fileCreateTime}, #{entity.fileUpdateTime}, #{entity.fileAudit}, #{entity.fileOrigin}, #{entity.deleted}, #{entity.userId})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into file(file_name, file_path, file_isdir, file_ext, file_size, file_type, file_md5, file_shared, file_create_time, file_update_time, file_audit, file_origin, deleted, user_id)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.fileName}, #{entity.filePath}, #{entity.fileIsdir}, #{entity.fileExt}, #{entity.fileSize}, #{entity.fileType}, #{entity.fileMd5}, #{entity.fileShared}, #{entity.fileCreateTime}, #{entity.fileUpdateTime}, #{entity.fileAudit}, #{entity.fileOrigin}, #{entity.deleted}, #{entity.userId})
+        </foreach>
+        on duplicate key update
+        file_name = values(file_name),
+        file_path = values(file_path),
+        file_isdir = values(file_isdir),
+        file_ext = values(file_ext),
+        file_size = values(file_size),
+        file_type = values(file_type),
+        file_md5 = values(file_md5),
+        file_shared = values(file_shared),
+        file_create_time = values(file_create_time),
+        file_update_time = values(file_update_time),
+        file_audit = values(file_audit),
+        file_origin = values(file_origin),
+        deleted = values(deleted),
+        user_id = values(user_id)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update file
+        <set>
+            <if test="fileName != null and fileName != ''">
+                file_name = #{fileName},
+            </if>
+            <if test="filePath != null and filePath != ''">
+                file_path = #{filePath},
+            </if>
+            <if test="fileIsdir != null and fileIsdir != ''">
+                file_isdir = #{fileIsdir},
+            </if>
+            <if test="fileExt != null and fileExt != ''">
+                file_ext = #{fileExt},
+            </if>
+            <if test="fileSize != null">
+                file_size = #{fileSize},
+            </if>
+            <if test="fileType != null and fileType != ''">
+                file_type = #{fileType},
+            </if>
+            <if test="fileMd5 != null and fileMd5 != ''">
+                file_md5 = #{fileMd5},
+            </if>
+            <if test="fileShared != null and fileShared != ''">
+                file_shared = #{fileShared},
+            </if>
+            <if test="fileCreateTime != null">
+                file_create_time = #{fileCreateTime},
+            </if>
+            <if test="fileUpdateTime != null">
+                file_update_time = #{fileUpdateTime},
+            </if>
+            <if test="fileAudit != null and fileAudit != ''">
+                file_audit = #{fileAudit},
+            </if>
+            <if test="fileOrigin != null and fileOrigin != ''">
+                file_origin = #{fileOrigin},
+            </if>
+            <if test="deleted != null and deleted != ''">
+                deleted = #{deleted},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from file where id = #{id}
+    </delete>
+
+</mapper>
+

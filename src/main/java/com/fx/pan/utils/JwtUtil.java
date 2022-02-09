@@ -7,9 +7,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @Author leaving
@@ -19,13 +17,17 @@ import java.util.UUID;
 
 public class JwtUtil {
 
+    // jti：jwt的唯一身份标识
+    public static final String JWT_ID = UUID.randomUUID().toString();
+
+
     /**
      * 有效期为
      * 60 * 60 *1000  一个小时
      */
     public static final Long JWT_TTL = 3 * 60 * 60 * 1000L;
 
-    public static final Long EXPIRE_TIME = 60 * 60 * 1000L * 24 * 1; // 一天
+    public static final Long EXPIRE_TIME = 60 * 60 * 1000L * 24 * 7; // 7天
     /**
      * 设置秘钥明文
      */
@@ -48,8 +50,9 @@ public class JwtUtil {
         return builder.compact();
     }
 
+
     /**
-     * 生成 jtw
+     * 生成 jwt
      *
      * @param subject   token中要存放的数据（json格式）
      * @param ttlMillis token超时时间
@@ -103,13 +106,15 @@ public class JwtUtil {
         /**
          * 生成 JWT
          */
-        // String jwt = createJWT("2123");
+        // String jwt = createJWT("1");
         // System.out.println(jwt);
 
         /**
          * 将生成的 JWT 还原为 之前的明文 2123，时间过期会报错，须重新生成再解析
          */
-        Claims claims = parseJWT("eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIyYzc0NDE5Njk1Y2Y0MDk3OTRhM2E0NDEwNjA3YjY0ZCIsInN1YiI6IjIxMjMiLCJpc3MiOiJzZyIsImlhdCI6MTY0MjA2NjkyMSwiZXhwIjoxNjQyMDcwNTIxfQ.w0o_8wodEpND1Xh_I--2ap_2ONNnvxnNTVIlt0RPmiU");
+        Claims claims = parseJWT("eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI4ZWI0NzRjYmU1ODE0ZGYxYjZhODZjNWVhOTQxNzEzMCIsInN1YiI6IjEiLCJpc3MiOiJmeHBhbiIsImlhdCI6MTY0MzA4MDk2OSwiZXhwIjoxNjQzMTY3MzY5fQ.-0E7uwuMVRNroGDtA83RlPVRQlgd3ooSJcHEQxD5ULg");
+        // Claims claims = parseJWT("eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJxaXdlbi1jbXMiLCJleHAiOjE2NDM2ODU4NzMsInN1YiI6IntcInVzZXJJZFwiOjE4MjN9IiwiYXVkIjoicWl3ZW5zaGFyZSIsImlhdCI6MTY0MzA4MTA3M30.5R8PaVlj3g8onR-m67Slkmz6jQIKuQpnim0tcNFyTNE");
+        System.out.println(claims);
         String subject = claims.getSubject();
         System.out.println(subject);
     }
@@ -139,6 +144,7 @@ public class JwtUtil {
                 .parseClaimsJws(jwt)
                 .getBody();
     }
+
 
 
 

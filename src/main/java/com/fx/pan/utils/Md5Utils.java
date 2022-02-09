@@ -1,5 +1,7 @@
 package com.fx.pan.utils;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -121,6 +123,63 @@ public class Md5Utils {
             e.printStackTrace();
             return "";
         }
+    }
+
+    /**
+     * 获取上传文件的md5
+     * @param file
+     * @return
+     */
+    public static String getMd5(MultipartFile file) {
+        try {
+            //获取文件的byte信息
+            byte[] uploadBytes = file.getBytes();
+            // 拿到一个MD5转换器
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            byte[] digest = md5.digest(uploadBytes);
+            //转换为16进制
+            return new BigInteger(1, digest).toString(16);
+        } catch (Exception e) {
+            // log.error(e.getMessage());
+        }
+        return null;
+    }
+
+    public static String String2Md5(String inStr){
+
+        MessageDigest md5 = null;
+
+        try{
+
+            md5 = MessageDigest.getInstance("MD5");
+
+        }catch (Exception e){
+
+            System.out.println(e.toString());
+            e.printStackTrace();
+
+            return "";
+        }
+
+        char[] charArray = inStr.toCharArray();
+        byte[] byteArray = new byte[charArray.length];
+
+        for (int i = 0; i < charArray.length; i++)
+            byteArray[i] = (byte) charArray[i];
+
+        byte[] md5Bytes = md5.digest(byteArray);
+        StringBuffer hexValue = new StringBuffer();
+
+        for (int i = 0; i < md5Bytes.length; i++){
+
+            int val = ((int) md5Bytes[i]) & 0xff;
+            if (val < 16)
+                hexValue.append("0");
+            hexValue.append(Integer.toHexString(val));
+        }
+
+        return hexValue.toString();
+
     }
 
 

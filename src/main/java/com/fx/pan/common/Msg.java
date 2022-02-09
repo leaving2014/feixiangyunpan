@@ -2,7 +2,6 @@ package com.fx.pan.common;
 
 import java.util.HashMap;
 import java.util.Map;
-
 /**
  * @Author leaving
  * @Date 2021/10/31 20:58

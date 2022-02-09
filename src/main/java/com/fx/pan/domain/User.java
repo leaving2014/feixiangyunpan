@@ -1,5 +1,6 @@
 package com.fx.pan.domain;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -36,6 +37,7 @@ public class User implements Serializable {
      * 密码
      */
 
+    @JSONField(serialize = false)
     private  String password;
 
     /**
@@ -85,6 +87,7 @@ public class User implements Serializable {
     /**
      * 账号状态（0正常 1停用）
      */
+    @JSONField(serialize = false)
     private String status;
 
 

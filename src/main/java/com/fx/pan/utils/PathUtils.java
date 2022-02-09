@@ -1,5 +1,6 @@
 package com.fx.pan.utils;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.ClassUtils;
 
 import java.io.File;
@@ -11,6 +12,11 @@ import java.io.File;
  */
 
 public class PathUtils {
+
+    @Value("${fx.localStoragePath}")
+    private String localStoragePath;
+
+
 
     /**
      * 获取服务器存放文件的目录路径
