@@ -51,5 +51,9 @@ public class Chunk implements Serializable {
      * 二进制文件
      */
     private MultipartFile file;
+    /**
+     * 文件路径
+     */
+    private String filePath;
 
 }

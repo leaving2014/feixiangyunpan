@@ -9,7 +9,7 @@
     <insert id="insertUser" parameterType="com.fx.pan.domain.User" useGeneratedKeys="true" keyProperty="id">
 
         insert into user(
-        <if test="id != null and userId != 0">id,</if>
+        <if test="id != null">id,</if>
         <if test="userName != null and userName != ''">user_name,</if>
         <if test="nickName != null and nickName != ''">nick_name,</if>
         <if test="email != null and email != ''">email,</if>

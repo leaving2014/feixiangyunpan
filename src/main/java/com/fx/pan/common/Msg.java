@@ -17,12 +17,11 @@ public class Msg {
 
     private String msg;
 
+    private Map<String,Object> data = new HashMap<String, Object>();
+
     public Msg(){
 
     }
-
-
-    private Map<String,Object> data = new HashMap<String, Object>();
 
     public Msg(int code, String msg) {
         this.code = code;
@@ -33,6 +32,7 @@ public class Msg {
         Msg result = new Msg(code,msg);
         return result;
     }
+
     /**
      * 处理成功时返回的数据
      * @return
@@ -58,6 +58,7 @@ public class Msg {
 
     // 设置结果，形参为结果枚举
     public static Msg setResult(ResultCodeEnum result) {
+
         Msg msg = new Msg();
         msg.setCode(result.getCode());
         msg.setMsg(result.getMessage());

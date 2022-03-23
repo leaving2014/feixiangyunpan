@@ -54,8 +54,6 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             LoginUser user = JSON.parseObject(claims.getSubject(), LoginUser.class);
             uesrId = user.getUserId();
             SessionUtil.setSession(user);
-
-
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("非法 token");

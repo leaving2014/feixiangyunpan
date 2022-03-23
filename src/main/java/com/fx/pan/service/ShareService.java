@@ -1,6 +1,7 @@
 package com.fx.pan.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fx.pan.common.Msg;
 import com.fx.pan.domain.Share;
 
 /**
@@ -11,5 +12,6 @@ import com.fx.pan.domain.Share;
  */
 public interface ShareService extends IService<Share> {
 
+    Msg getShareList(Long userId);
 }
 

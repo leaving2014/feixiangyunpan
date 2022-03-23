@@ -14,6 +14,30 @@ import java.util.Date;
 public class DateUtil {
 
     /**
+     * 获取系统当前时间
+     *
+     * @return 系统当前时间
+     */
+    public static String getCurrentTime() {
+        Date date = new Date();
+        String stringDate = String.format("%tF %<tT", date);
+        return stringDate;
+    }
+
+    /**
+     * 获取格式化时间
+     * @param format
+     * @return Date
+     */
+    public static Date getFormatCurrentTime(String format){
+        Date date = new Date();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
+        String format1 = simpleDateFormat.format(date);
+
+        return date;
+    }
+
+    /**
      * 指定日期加上天数后的日期
      * @param num 为增加的天数
      * @param newDate 创建时间

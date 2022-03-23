@@ -1,6 +1,7 @@
 package com.fx.pan;
 
 
+import com.fx.pan.utils.DateUtil;
 import com.fx.pan.utils.FileUtil;
 import org.apache.commons.io.FileUtils;
 
@@ -24,5 +25,6 @@ public class Test {
     public static void main(String[] args) {
         System.out.println(FileUtils.byteCountToDisplaySize(12233L)); //11 KB  Apache commons.io
         System.out.println(FileUtil.fileSizeUnitConversionAndUnit(12233L));//11.95 KB
+        System.out.println(DateUtil.getCurrentTime());
     }
 }

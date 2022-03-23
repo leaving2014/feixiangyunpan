@@ -10,6 +10,7 @@ import com.fx.pan.domain.User;
 import com.fx.pan.service.StorageService;
 import com.fx.pan.service.UserService;
 import com.fx.pan.utils.RedisCache;
+import com.fx.pan.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.Serializable;
 
 /**
  * @Author leaving
@@ -107,16 +107,29 @@ public class UserController {
 
     /**
      * 获取用户信息
-     * @param user_id
      * @return
      */
-    @GetMapping("/user/userinfo/{user_id}")
-    public Msg userInfo(@PathVariable Serializable user_id){
-        User user = userService.selectUserById(user_id);
+    @GetMapping("/user/userinfo")
+    public Msg userInfo(){
+        Long userId = SecurityUtils.getUserId();
+        User user = userService.selectUserById(userId);
         QueryWrapper<Storage> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", user_id);
-        Storage userStorage = storageService.getUserStorage(user_id);
+        queryWrapper.eq("user_id", userId);
+        Storage userStorage = storageService.getUserStorage(userId);
         return Msg.success("获取成功").put("userInfo", JSONObject.toJSON(user)).put("userStorage",userStorage);
+    }
+
+    /**
+     * 获取用户存储信息
+     * @return
+     */
+    @GetMapping("/user/storage")
+    public Msg userStorage(){
+        Long userId = SecurityUtils.getUserId();
+        QueryWrapper<Storage> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+        Storage userStorage = storageService.getUserStorage(userId);
+        return Msg.success("获取成功").put("userStorage",userStorage);
     }
 
     @PostMapping("/user/token")

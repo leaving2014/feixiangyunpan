@@ -52,6 +52,7 @@ public class TestController {
         return  Msg.success("hello").put("name", "user").put("ts", SysUtil.getTimeStamp());
     }
 
+    @PreAuthorize("jsr250Enabled = false ")
     @GetMapping("/u1")
     public Msg hello(){
         User user = userService.seletUserWithUserName("sa");

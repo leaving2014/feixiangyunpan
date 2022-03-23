@@ -1,7 +1,8 @@
 package com.fx.pan.domain;
 
-import com.alibaba.fastjson.annotation.JSONField;
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,10 +36,6 @@ public class FileBean implements Serializable,Cloneable{
      */
     private String filePath;
     /**
-     * 是否为目录
-     */
-    private String fileIsdir;
-    /**
      * 文件扩展名
      */
     private String fileExt;
@@ -47,48 +44,61 @@ public class FileBean implements Serializable,Cloneable{
      */
     private Long fileSize;
     /**
-     * 文件类型(0未知,1图片,2文档,3视频,4音频)
+     * 文件类型(0未知,1图片,2文档,3视频,4种子,5音频,6其他)
      */
-    private String fileType;
+    private Integer fileType;
+    /**
+     * 文件是否删除(逻辑删除,0:未删除,1:删除)
+     */
+    private Integer deleted;
+    /**
+     * 文件上传用户id
+     */
+    private Long userId;
+    /**
+     * 文件原始名称(一般不会改变,对应磁盘文件名)
+     */
+    private String originName;
+    /**
+     * 是否为目录
+     */
+    private Integer isDir;
     /**
      * 文件md5(用于快速上传)
      */
-    private String fileMd5;
+    private String identifier;
+    /**
+     * 文件url
+     */
+    private String fileUrl;
     /**
      * 文件是否共享(0不共享,1共享)
      */
-    private String fileShared;
+    private Integer isShared;
     /**
-     * 文件创建时间
+     * 文件存储类型 (0:本地存储 1:cos对象存储)
      */
-    private Date fileCreateTime;
+    private Integer storageType;
+    /**
+     * 文件审核(-1:未审核,0:审核中,1:审核通过)
+     */
+    private Integer audit;
+    /**
+     * 文件来源(0: 用户上传,1: 文件引用(用户保存的分享文件),2: 离线下载)
+     */
+    private Integer origin;
+    /**
+     * 文件的父目录id (根目录下的目录父目录和文件为-1)
+     */
+    private Long parentPathId;
     /**
      * 文件更新时间
      */
     private Date fileUpdateTime;
     /**
-     * 文件审核(0未审核,1审核)
+     * 文件创建时间
      */
-    private String fileAudit;
-    /**
-     * 文件来自(0用户上传,1文件引用,2离线下载)
-     */
-    private String fileOrigin;
-    /**
-     * 文件是否删除(逻辑删除,0未删除,1删除)
-     */
-    @JSONField(serialize = false)
-    @TableLogic
-    private String deleted;
-    /**
-     * 文件上传用户
-     */
-    private Long userId;
-
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
-
+    private Date fileCreateTime;
 
 
     public Long getId() {
@@ -115,14 +125,6 @@ public class FileBean implements Serializable,Cloneable{
         this.filePath = filePath;
     }
 
-    public String getFileIsdir() {
-        return fileIsdir;
-    }
-
-    public void setFileIsdir(String fileIsdir) {
-        this.fileIsdir = fileIsdir;
-    }
-
     public String getFileExt() {
         return fileExt;
     }
@@ -139,67 +141,19 @@ public class FileBean implements Serializable,Cloneable{
         this.fileSize = fileSize;
     }
 
-    public String getFileType() {
+    public Integer getFileType() {
         return fileType;
     }
 
-    public void setFileType(String fileType) {
+    public void setFileType(Integer fileType) {
         this.fileType = fileType;
     }
 
-    public String getFileMd5() {
-        return fileMd5;
-    }
-
-    public void setFileMd5(String fileMd5) {
-        this.fileMd5 = fileMd5;
-    }
-
-    public String getFileShared() {
-        return fileShared;
-    }
-
-    public void setFileShared(String fileShared) {
-        this.fileShared = fileShared;
-    }
-
-    public Date getFileCreateTime() {
-        return fileCreateTime;
-    }
-
-    public void setFileCreateTime(Date fileCreateTime) {
-        this.fileCreateTime = fileCreateTime;
-    }
-
-    public Date getFileUpdateTime() {
-        return fileUpdateTime;
-    }
-
-    public void setFileUpdateTime(Date fileUpdateTime) {
-        this.fileUpdateTime = fileUpdateTime;
-    }
-
-    public String getFileAudit() {
-        return fileAudit;
-    }
-
-    public void setFileAudit(String fileAudit) {
-        this.fileAudit = fileAudit;
-    }
-
-    public String getFileOrigin() {
-        return fileOrigin;
-    }
-
-    public void setFileOrigin(String fileOrigin) {
-        this.fileOrigin = fileOrigin;
-    }
-
-    public String getDeleted() {
+    public Integer getDeleted() {
         return deleted;
     }
 
-    public void setDeleted(String deleted) {
+    public void setDeleted(Integer deleted) {
         this.deleted = deleted;
     }
 
@@ -211,24 +165,116 @@ public class FileBean implements Serializable,Cloneable{
         this.userId = userId;
     }
 
+    public String getOriginName() {
+        return originName;
+    }
+
+    public void setOriginName(String originName) {
+        this.originName = originName;
+    }
+
+    public Integer getIsDir() {
+        return isDir;
+    }
+
+    public void setIsDir(Integer isDir) {
+        this.isDir = isDir;
+    }
+
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
+
+    public String getFileUrl() {
+        return fileUrl;
+    }
+
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
+    }
+
+    public Integer getIsShared() {
+        return isShared;
+    }
+
+    public void setIsShared(Integer isShared) {
+        this.isShared = isShared;
+    }
+
+    public Integer getStorageType() {
+        return storageType;
+    }
+
+    public void setStorageType(Integer storageType) {
+        this.storageType = storageType;
+    }
+
+    public Integer getAudit() {
+        return audit;
+    }
+
+    public void setAudit(Integer audit) {
+        this.audit = audit;
+    }
+
+    public Integer getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(Integer origin) {
+        this.origin = origin;
+    }
+
+    public Long getParentPathId() {
+        return parentPathId;
+    }
+
+    public void setParentPathId(Long parentPathId) {
+        this.parentPathId = parentPathId;
+    }
+
+    public Date getFileUpdateTime() {
+        return fileUpdateTime;
+    }
+
+    public void setFileUpdateTime(Date fileUpdateTime) {
+        this.fileUpdateTime = fileUpdateTime;
+    }
+
+    public Date getFileCreateTime() {
+        return fileCreateTime;
+    }
+
+    public void setFileCreateTime(Date fileCreateTime) {
+        this.fileCreateTime = fileCreateTime;
+    }
+
     @Override
     public String toString() {
         return "FileBean{" +
                 "id=" + id +
                 ", fileName='" + fileName + '\'' +
                 ", filePath='" + filePath + '\'' +
-                ", fileIsdir='" + fileIsdir + '\'' +
                 ", fileExt='" + fileExt + '\'' +
                 ", fileSize=" + fileSize +
-                ", fileType='" + fileType + '\'' +
-                ", fileMd5='" + fileMd5 + '\'' +
-                ", fileShared='" + fileShared + '\'' +
-                ", fileCreateTime=" + fileCreateTime +
-                ", fileUpdateTime=" + fileUpdateTime +
-                ", fileAudit='" + fileAudit + '\'' +
-                ", fileOrigin='" + fileOrigin + '\'' +
-                ", deleted='" + deleted + '\'' +
+                ", fileType=" + fileType +
+                ", deleted=" + deleted +
                 ", userId=" + userId +
+                ", originName='" + originName + '\'' +
+                ", isDir=" + isDir +
+                ", identifier='" + identifier + '\'' +
+                ", fileUrl='" + fileUrl + '\'' +
+                ", isShared=" + isShared +
+                ", storageType=" + storageType +
+                ", audit=" + audit +
+                ", origin=" + origin +
+                ", parentPathId=" + parentPathId +
+                ", fileUpdateTime=" + fileUpdateTime +
+                ", fileCreateTime=" + fileCreateTime +
                 '}';
     }
 

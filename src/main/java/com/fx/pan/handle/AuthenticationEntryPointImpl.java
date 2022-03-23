@@ -1,9 +1,11 @@
 package com.fx.pan.handle;
 
 import com.alibaba.fastjson.JSON;
-import com.fx.pan.common.HttpStatus;
+import com.fx.pan.common.AppHttpCodeEnum;
 import com.fx.pan.common.Msg;
 import com.fx.pan.utils.WebUtils;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -21,12 +23,18 @@ import java.io.IOException;
 
 @Component
 public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint {
-    //认证失败处理
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        // 处理异常
-        Msg msg = new Msg(HttpStatus.UNAUTHORIZED,"用户名或密码错误,请重新登录");
-        String json = JSON.toJSONString(msg);
-        WebUtils.renderString(response, json);
+        Msg msg = null;
+        if (authException instanceof BadCredentialsException){
+            msg = Msg.error(AppHttpCodeEnum.LOGIN_ERROR.getCode(),authException.getMessage());
+        }else if (authException instanceof InsufficientAuthenticationException){
+            msg = Msg.error(AppHttpCodeEnum.NEED_LOGIN.getCode(),AppHttpCodeEnum.NEED_LOGIN.getMsg());
+
+        }else {
+            msg = Msg.error(AppHttpCodeEnum.SYSTEM_ERROR.getCode(),"认证或授权失败");
+        }
+        // 响应给前端
+        WebUtils.renderString(response, JSON.toJSONString(msg));
     }
 }

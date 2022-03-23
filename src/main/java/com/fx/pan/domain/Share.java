@@ -3,36 +3,37 @@ package com.fx.pan.domain;
 
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * 文件分享表(Share)表实体类
  *
- * @author makejava
+ * @author leaving
  * @since 2022-01-26 23:24:22
  */
 @SuppressWarnings("serial")
-public class Share extends Model<Share> {
+public class Share extends Model<Share> implements Serializable {
     //主键
     private Long id;
-    //文件共享类型(0为私有不分享,1为公开分享,2为群组分享,3为好友分享)
+    //文件共享类型(0为公共分享,1为私密分享,2为好友分享)
     private Integer shareType;
     //文件分享链接
     private String shareLink;
-    //文件提取码
-    private String shareCode;
     //分享链接浏览次数
-    private Integer browseTimes;
+    private Long browseTimes;
     //分享文件下载次数
-    private Integer downloadTimes;
+    private Long downloadTimes;
     //文件分享时间
     private Date shareTime;
-    //文件分享有效期,可取值1,7,0( 0为永久不过期)
-    private Date expired;
-    //删除标志
-    private String deleted;
+    //文件分享有效期,可取值1,7,30,0( 0为永久不过期)
+    private Integer expired;
     //用户id
     private Long userId;
+    //文件提取码
+    private String extractionCode;
+    //更新时间
+    private Date updateTime;
 
 
     public Long getId() {
@@ -59,27 +60,19 @@ public class Share extends Model<Share> {
         this.shareLink = shareLink;
     }
 
-    public String getShareCode() {
-        return shareCode;
-    }
-
-    public void setShareCode(String shareCode) {
-        this.shareCode = shareCode;
-    }
-
-    public Integer getBrowseTimes() {
+    public Long getBrowseTimes() {
         return browseTimes;
     }
 
-    public void setBrowseTimes(Integer browseTimes) {
+    public void setBrowseTimes(Long browseTimes) {
         this.browseTimes = browseTimes;
     }
 
-    public Integer getDownloadTimes() {
+    public Long getDownloadTimes() {
         return downloadTimes;
     }
 
-    public void setDownloadTimes(Integer downloadTimes) {
+    public void setDownloadTimes(Long downloadTimes) {
         this.downloadTimes = downloadTimes;
     }
 
@@ -91,20 +84,12 @@ public class Share extends Model<Share> {
         this.shareTime = shareTime;
     }
 
-    public Date getExpired() {
+    public Integer getExpired() {
         return expired;
     }
 
-    public void setExpired(Date expired) {
+    public void setExpired(Integer expired) {
         this.expired = expired;
-    }
-
-    public String getDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(String deleted) {
-        this.deleted = deleted;
     }
 
     public Long getUserId() {
@@ -113,6 +98,48 @@ public class Share extends Model<Share> {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getExtractionCode() {
+        return extractionCode;
+    }
+
+    public void setExtractionCode(String extractionCode) {
+        this.extractionCode = extractionCode;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    /**
+     * 获取主键值
+     *
+     * @return 主键值
+     */
+    @Override
+    public Serializable pkVal() {
+        return this.id;
+    }
+
+    @Override
+    public String toString() {
+        return "Share{" +
+                "id=" + id +
+                ", shareType=" + shareType +
+                ", shareLink='" + shareLink + '\'' +
+                ", browseTimes=" + browseTimes +
+                ", downloadTimes=" + downloadTimes +
+                ", shareTime=" + shareTime +
+                ", expired=" + expired +
+                ", userId=" + userId +
+                ", extractionCode='" + extractionCode + '\'' +
+                ", updateTime=" + updateTime +
+                '}';
     }
 
 }

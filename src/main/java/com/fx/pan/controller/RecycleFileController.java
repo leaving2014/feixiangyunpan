@@ -2,13 +2,10 @@ package com.fx.pan.controller;
 
 import com.fx.pan.common.Msg;
 import com.fx.pan.domain.FileBean;
-import com.fx.pan.domain.LoginUser;
 import com.fx.pan.service.FileService;
-import com.fx.pan.service.UserService;
-import com.fx.pan.utils.SessionUtil;
+import com.fx.pan.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -25,9 +22,6 @@ import java.util.List;
 @RestController
 public class RecycleFileController {
 
-    @Autowired
-    private UserService userService;
-
     @Resource
     private FileService fileService;
 
@@ -37,36 +31,37 @@ public class RecycleFileController {
      */
     @GetMapping("/list")
     public Msg fileRecycle(@RequestHeader("Authorization") String token){
-        Long id = userService.getUserBeanByToken(token).getId();
-        List<FileBean> list = fileService.getRecycleList(id);
+        Long userId = SecurityUtils.getUserId();
+        List<FileBean> list = fileService.getRecycleList(userId);
         return Msg.success("获取成功").put("list", list).put("count", list.size());
     }
 
     /**
      *还原回收站文件
-     * @param filelist
+     * @param fileList
      */
     @PostMapping("/restore")
-    public Msg restoreFile(@RequestBody List<Long> filelist){
-        LoginUser sessionUserBean = (LoginUser) SessionUtil.getSession();
-        Long userId = sessionUserBean.getUserId();
-        for (Long fid : filelist) {
+    public Msg restoreFile(@RequestBody List<Long> fileList){
+        Long userId = SecurityUtils.getUserId();
+        for (Long fid : fileList) {
             fileService.restoreFile(fid,userId);
         }
-        return Msg.success("还原成功").put("count", filelist.size());
+        return Msg.success("还原成功").put("count", fileList.size());
     }
 
+    /**
+     * 删除回收站文件
+     * @param fileList
+     * @return
+     */
     @PostMapping("/delete")
-    public Msg deleteRecycleFile(@RequestParam("id") Long id){
-        LoginUser sessionUserBean = (LoginUser) SessionUtil.getSession();
-        Long userId = sessionUserBean.getUserId();
-
-        boolean flag = fileService.deleteRecycleFileById(id,userId);
-        if (flag) {
-            return Msg.success("删除成功");
-        }else{
-            return Msg.error(500, "删除失败");
+    public Msg deleteRecycleFile(@RequestBody List<Long> fileList){
+        Long userId = SecurityUtils.getUserId();
+        System.out.println(userId);
+        for (Long fid : fileList) {
+            fileService.deleteRecycleFileById(fid,userId);
         }
+        return Msg.success("删除成功");
     }
 
 

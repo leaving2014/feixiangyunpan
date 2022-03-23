@@ -116,7 +116,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         String jwt = JwtUtil.createJWT(JSONObject.toJSONString(loginUser));
 
         redisCache.setCacheObject(Constants.REDIS_LOGIN_USER_PREFIX + userId, loginUser);
-        return  Msg.success("登录成功").put("token", jwt).put("ts", SysUtil.getTimeStamp());
+        User user = loginUser.getUser();
+        return  Msg.success("登录成功").put("token", jwt).put("userInfo",user).put("ts", SysUtil.getTimeStamp());
     }
 
     /**

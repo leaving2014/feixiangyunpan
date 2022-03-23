@@ -31,6 +31,20 @@ public class RedisCache {
     }
 
     /**
+     * 将值放入缓存并设置时间-秒
+     * @param key 键
+     * @param value 值
+     * @param time 时间（单位：秒），如果值为负数，则永久
+     */
+    public void set(String key, Object value, long time) {
+        if (time > 0) {
+            redisTemplate.opsForValue().set(key, value, time, TimeUnit.SECONDS);
+        } else {
+            redisTemplate.opsForValue().set(key, value);
+        }
+    }
+
+    /**
      * 缓存基本的对象，Integer、String、实体类等
      *
      * @param key 缓存的键值
@@ -236,6 +250,16 @@ public class RedisCache {
     public Collection<String> keys(final String pattern)
     {
         return redisTemplate.keys(pattern);
+    }
+
+    /**
+     * 获取自增长值
+     * @param key 键
+     * @return 返回增长之后的值
+     */
+    public Long getIncr(String key) {
+        Long count = redisTemplate.opsForValue().increment(key, 1);
+        return count;
     }
 
 }

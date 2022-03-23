@@ -1,7 +1,13 @@
 package com.fx.pan.utils;
 
 import com.fx.pan.common.Constants;
+import com.fx.pan.domain.Chunk;
 import com.fx.pan.domain.FileBean;
+import com.fx.pan.utils.file.FileTypeUtils;
+import com.fx.pan.utils.file.ImageUtil;
+import org.apache.commons.io.FilenameUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -10,6 +16,8 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -21,11 +29,16 @@ import static org.apache.commons.io.FileUtils.copyInputStreamToFile;
  * @Date 2021/11/25 10:58
  * @Version 1.0
  */
-
+@Component
 public class FileUtil {
-
+    private  static String absoluteFilePath;
+    @Value("${fx.absoluteFilePath}")
+    public void seAbsoluteFilePath(String absoluteFilePath) {
+        FileUtil.absoluteFilePath = absoluteFilePath;
+    }
     /**
      * 离线下载
+     *
      * @param response
      * @throws MalformedURLException
      */
@@ -75,35 +88,35 @@ public class FileUtil {
 
     }
 
-    public static String multipartFileToFile(MultipartFile file){
+    public static String multipartFileToFile(MultipartFile file) {
         String fullPath = null;
         if (file != null) {
             try {
                 String fileRealName = file.getOriginalFilename();//获得原始文件名;
-                int pointIndex =  fileRealName.lastIndexOf(".");//点号的位置
+                int pointIndex = fileRealName.lastIndexOf(".");//点号的位置
                 String fileSuffix = fileRealName.substring(pointIndex);//截取文件后缀
                 String fileNewName = UUID.randomUUID().toString();//新文件名,时间戳形式yyyyMMddHHmmssSSS
                 String saveFileName = fileNewName.concat(fileSuffix);//新文件完整名（含后缀）
-                String filePath  = "src\\main\\resources\\tmp\\"+saveFileName;
+                String filePath = "src\\main\\resources\\tmp\\" + saveFileName;
                 File path = new File(filePath); //判断文件路径下的文件夹是否存在，不存在则创建
                 // if (!path.exists()) {
                 //     path.mkdirs();
                 // }
                 File savedFile = new File(filePath);
                 boolean isCreateSuccess = savedFile.createNewFile(); // 是否创建文件成功
-                if(isCreateSuccess){      //将文件写入
+                if (isCreateSuccess) {      //将文件写入
                     //第一种
                     file.transferTo(savedFile);
                     //第二种
-                    savedFile = new File(filePath,saveFileName);
+                    savedFile = new File(filePath, saveFileName);
                     // 使用下面的jar包
-                    copyInputStreamToFile(file.getInputStream(),savedFile);
-                    fullPath= savedFile.getAbsolutePath();
+                    copyInputStreamToFile(file.getInputStream(), savedFile);
+                    fullPath = savedFile.getAbsolutePath();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }else {
+        } else {
             System.out.println("文件是空的");
         }
         return fullPath;
@@ -111,7 +124,8 @@ public class FileUtil {
 
 
     /**
-     *离线下载获取文件名称
+     * 离线下载获取文件名称
+     *
      * @param link 下载文件url
      * @return fileName 下载文件名称
      * @throws IOException
@@ -136,20 +150,20 @@ public class FileUtil {
             fileName = conn.getHeaderField("Content-Disposition");
             if (fileName == null || fileName.indexOf("file") < 0) {
                 int index = link.indexOf("?");
-                if(index != -1) {
+                if (index != -1) {
                     fileName = link.substring(0, index);
                     String[] fileNameArr = fileName.split("/");
-                    fileName= fileNameArr[fileNameArr.length-1];
+                    fileName = fileNameArr[fileNameArr.length - 1];
                 }
             } else {
-                if (fileName.indexOf("filename")!=-1){
+                if (fileName.indexOf("filename") != -1) {
                     fileName = URLDecoder.decode(fileName.substring(fileName.indexOf("filename") + 9,
                             fileName.length() - 1), "UTF-8");
-                    System.out.println("filename:"+fileName);
-                }else if (fileName.indexOf("fileName")!=-1)  {
+                    System.out.println("filename:" + fileName);
+                } else if (fileName.indexOf("fileName") != -1) {
                     fileName = URLDecoder.decode(fileName.substring(fileName.indexOf("fileName") + 9,
                             fileName.length() - 1), "UTF-8");
-                    System.out.println("fileName:"+fileName);
+                    System.out.println("fileName:" + fileName);
 
                 }
                 extName = fileName.substring(fileName.lastIndexOf(".") + 1);
@@ -158,58 +172,74 @@ public class FileUtil {
         return fileName;
     }
 
+    /**
+     * 获取文件扩展名
+     *
+     * @param fileName 文件名
+     * @return 文件扩展名
+     */
+    public static String getFileExtendName(String fileName) {
+        return FilenameUtils.getExtension(fileName);
+    }
+
 
     /**
-     *
      * @param rawSize
      * @return
      */
-    public double fileSizeUnitConversion(long rawSize){
+    public double fileSizeUnitConversion(long rawSize) {
         //26.71KB    fileSize:27352.0
-        double conversionSize=0;
-        if (rawSize<1024){
+        double conversionSize = 0;
+        if (rawSize < 1024) {
             // B
-            conversionSize= rawSize;
-        }else if (rawSize<1024*1024){
+            conversionSize = rawSize;
+        } else if (rawSize < 1024 * 1024) {
             //KB
-            conversionSize=Double.parseDouble(String.format("%.2f",rawSize / 1024));
-        }else if(rawSize<Math.pow(1024,3)){
+            conversionSize = Double.parseDouble(String.format("%.2f", rawSize / 1024));
+        } else if (rawSize < Math.pow(1024, 3)) {
             // MB
-            conversionSize=Double.parseDouble(String.format("%.2f",rawSize / Math.pow(1024,2)));
-        }else if (rawSize<Math.pow(1024,4)){
+            conversionSize = Double.parseDouble(String.format("%.2f", rawSize / Math.pow(1024, 2)));
+        } else if (rawSize < Math.pow(1024, 4)) {
             //GB
-            conversionSize= Double.parseDouble(String.format("%.2f",rawSize / Math.pow(1024,3)));
+            conversionSize = Double.parseDouble(String.format("%.2f", rawSize / Math.pow(1024, 3)));
         }
         return conversionSize;
     }
 
     /**
-     *
      * @param rawSize
      * @return
      */
-    public static String fileSizeUnitConversionAndUnit(long rawSize){
+    public static String fileSizeUnitConversionAndUnit(long rawSize) {
         //26.71KB    fileSize:27352.0
-        double conversionSize=0;
-        String unit="";
-        if (rawSize<1024){
-            unit="B";
-            conversionSize= rawSize;
-        }else if (rawSize<1024*1024){
-            unit="KB";
-            conversionSize=Double.parseDouble(String.format("%.2f",rawSize*1.00 / 1024));
-        }else if(rawSize<Math.pow(1024,3)){
-            unit="MB";
-            conversionSize=Double.parseDouble(String.format("%.2f",rawSize*1.00/ Math.pow(1024,2)));
-        }else if (rawSize<Math.pow(1024,4)){
-            unit="GB";
-            conversionSize= Double.parseDouble(String.format("%.2f",rawSize*1.00 / Math.pow(1024,3)));
+        double conversionSize = 0;
+        String unit = "";
+        if (rawSize < 1024) {
+            unit = "B";
+            conversionSize = rawSize;
+        } else if (rawSize < 1024 * 1024) {
+            unit = "KB";
+            conversionSize = Double.parseDouble(String.format("%.2f", rawSize * 1.00 / 1024));
+        } else if (rawSize < Math.pow(1024, 3)) {
+            unit = "MB";
+            conversionSize = Double.parseDouble(String.format("%.2f", rawSize * 1.00 / Math.pow(1024, 2)));
+        } else if (rawSize < Math.pow(1024, 4)) {
+            unit = "GB";
+            conversionSize = Double.parseDouble(String.format("%.2f", rawSize * 1.00 / Math.pow(1024, 3)));
         }
-        return conversionSize+" "+unit;
+        return conversionSize + " " + unit;
+    }
+
+
+    public static String getCacheFileFullPath(String path, String date, String fileName) {
+        String newPath = path + "/" + date + "/" + fileName;
+        System.out.println("生成文件全路径:" + newPath);
+        return newPath;
     }
 
     /**
      * 获取文件扩展名
+     *
      * @return
      */
     public static String getFileExt(String filename) {
@@ -219,35 +249,85 @@ public class FileUtil {
             return null;
         }
         String result = filename.substring(index + 1);
+        System.out.println("文件扩展名:" + result);
         return result;
     }
 
     /**
      * 获得拷贝对象
+     *
      * @param copyFileBean
      * @return
      */
-    public static FileBean getCopyObject(FileBean copyFileBean, FileBean targetFileBean){
+    public static FileBean getCopyObject(FileBean copyFileBean, FileBean targetFileBean) {
         FileBean newFile = null;
         try {
             newFile = (FileBean) copyFileBean.clone();
             newFile.setId(null);
-            newFile.setFilePath(targetFileBean.getFilePath()+targetFileBean.getFileName()+"/");
+            newFile.setFilePath(targetFileBean.getFilePath() + targetFileBean.getFileName());
             newFile.setFileUpdateTime(null);
             newFile.setFileCreateTime(null);
-            newFile.setFileOrigin("1");
+            newFile.setOrigin(1);
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
         }
         return newFile;
     }
 
+    /**
+     * 返回上传文件对象
+     *
+     * @param chunk
+     * @param userId
+     * @return
+     */
+    public static FileBean getFileBean(Chunk chunk, Date date, Integer storageType, Long userId) {
+        FileBean f = new FileBean();
+        String fileName = chunk.getFilename();
+        f.setFileName(fileName);
+        f.setFilePath(chunk.getFilePath());
+        f.setIsDir(0);
+        f.setFileSize(chunk.getTotalSize());
+
+        String extendName = FileUtil.getFileExt(fileName);
+        f.setFileExt(extendName);
+
+        f.setIdentifier(Md5Utils.getMd5(chunk.getFile()));
+        f.setStorageType(storageType);
+        Integer fileType = FileTypeUtils.getFileTypeByExtendName(FileUtil.getFileExt(fileName));
+
+        f.setFileCreateTime(date);
+        f.setFileUpdateTime(date);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("YYYYMMdd");
+        String formatDate = simpleDateFormat.format(date);
+
+        f.setFileUrl(formatDate+"/"+chunk.getIdentifier()+"."+extendName);
+
+        // 图片生成缩略图
+        if (fileType == 1) {
+            // TODO 文件校验是否合规
+            f.setAudit(1);
+            System.out.println("生成缩略图");
+            ImageUtil.generateThumbnail(absoluteFilePath + "/" + formatDate +"/" + chunk.getIdentifier() +"."+extendName
+                    , f,
+                    true,
+                    0.3);
+        } else if (fileType == 2) {
+            // 视频生成缩略图
+            // TODO 文件校验是否合规
+
+        }
+        f.setFileType(fileType);
+
+        f.setUserId(userId);
+        return f;
+    }
 
 
     /**
      * 解压
      *
-     * @param zipFilePath 带解压文件
+     * @param zipFilePath  带解压文件
      * @param desDirectory 解压到的目录
      * @throws Exception
      */
@@ -263,7 +343,7 @@ public class FileUtil {
         // 读入流
         ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFilePath),
                 Charset.forName(Constants.GBK));
-                // zipFile = new ZipFile(zipFilePath, Charset.forName("GBK"));
+        // zipFile = new ZipFile(zipFilePath, Charset.forName("GBK"));
         // 遍历每一个文件
         ZipEntry zipEntry = zipInputStream.getNextEntry();
         while (zipEntry != null) {

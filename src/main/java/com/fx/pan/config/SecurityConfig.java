@@ -108,8 +108,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
                 .and()
                 .authorizeRequests()
-                // 对于登录接口 允许匿名访问；已登录，不能访问
-                .antMatchers("/user/login", "/user/register","/filetransfer/**").anonymous()
+                // 对于登录接口 允许匿名访问；已登录，不能访问 ,"/filetransfer/**"
+                // ,"/filetransfer/download","/filetransfer/preview","/filetransfer/image"
+                .antMatchers("/user/login", "/user/register","/filetransfer/preview",
+                        "/filetransfer/image","/filetransfer/download",
+                        "/filetransfer/media","/filetransfer/preview/stream").anonymous()
 
                 .antMatchers(
                         HttpMethod.GET,

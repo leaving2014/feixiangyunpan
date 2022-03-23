@@ -4,17 +4,20 @@ package com.fx.pan.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fx.pan.common.Msg;
-import com.fx.pan.domain.LoginUser;
 import com.fx.pan.domain.Share;
 import com.fx.pan.service.FileService;
 import com.fx.pan.service.ShareService;
-import com.fx.pan.utils.SessionUtil;
+import com.fx.pan.service.UserService;
+import com.fx.pan.utils.DateUtil;
+import com.fx.pan.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * 文件分享表(Share)表控制层
@@ -28,21 +31,40 @@ public class ShareController {
     /**
      * 服务对象
      */
+
+    @Autowired
+    private UserService userService;
     @Resource
     private ShareService shareService;
 
     @Autowired
     private FileService fileService;
 
+
     /**
      * 文件分享
      */
     @PostMapping("/create")
     public Msg shareFile() {
-        LoginUser sessionUserBean = (LoginUser) SessionUtil.getSession();
-        Long userId = sessionUserBean.getUserId();
-        // fileService.shareFile("");
+        Long userId = SecurityUtils.getUserId();
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        Share share = new Share();
+        Date shareTime = DateUtil.getFormatCurrentTime("yyyy-MM-dd HH:mm:ss");
+        share.setShareTime(shareTime);
+        share.setUserId(userId);
+        // if (s)
+        // TODO  文件分享
+        // share.setExpired(DateUtil.plusDay());
+        // share.setShareStatus(0);
+        // fileService.createShareFile(fileId,shareCode,shareType,expired,userId);
         return Msg.success("分享成功");
+    }
+
+
+    @GetMapping("/list")
+    public Msg shareList(){
+        Long userId = SecurityUtils.getUserId();
+        return shareService.getShareList(userId);
     }
 
 
@@ -55,6 +77,8 @@ public class ShareController {
      */
     @GetMapping
     public Msg selectAll(Page<Share> page, Share share) {
+        Long userId = SecurityUtils.getUserId();
+
         Page<Share> page1 = shareService.page(page, new QueryWrapper<>(share));
 
         return Msg.success().put("list", page1);
