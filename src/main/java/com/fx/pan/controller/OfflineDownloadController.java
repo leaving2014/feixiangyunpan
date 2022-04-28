@@ -1,12 +1,15 @@
 package com.fx.pan.controller;
 
 import com.fx.pan.common.Msg;
+import com.fx.pan.service.OfflineDownloadService;
 import com.fx.pan.utils.OfflineDownload;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.logging.Level;
@@ -21,14 +24,17 @@ import java.util.logging.Logger;
 @RestController
 public class OfflineDownloadController {
 
-
+    @Resource
+    private OfflineDownloadService offlineDownloadService;
 
 
     @PostMapping("/new")
     public Msg newOfflineDownload(@RequestParam("url") String url,
                                   HttpServletResponse response) throws IOException {
         // String fileName = FileUtils.getFileName(url);
-        Msg msg = OfflineDownload.downLoadFromUrl(url, "D:\\ideaWorkspace\\pan\\src\\main\\resources\\offlinedownload");
+        Msg msg = offlineDownloadService.downloadFromUrl(url);
+        // Msg msg1 = OfflineDownload.downLoadFromUrl(url, "D:\\ideaWorkspace\\pan\\src\\main\\resources" +
+        //         "\\offlinedownload");
 
         return msg;
 

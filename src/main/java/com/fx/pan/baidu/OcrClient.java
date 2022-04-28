@@ -21,12 +21,36 @@ public class OcrClient {
     private static String api_key;
     @Value("${baidu.ocr.SECRET_KEY}")
     private static String secret_key;
-    private  static AipOcr client = new AipOcr(app_id, api_key,
-            secret_key);
+    // = new AipOcr(app_id, api_key,
+    // secret_key);
 
-    // private  static AipOcr client = new AipOcr("11487965", "4RHdwmUxjMYSgSBcUHPhbiQm",
-    //         "mGBce6uadRUtDvH1ZtYmqDrNewltWGKW");
-    public static AipOcr getInstance(){
+    private static AipOcr aipOcr;
+
+    private static AipOcr client = new AipOcr("11487965", "4RHdwmUxjMYSgSBcUHPhbiQm",
+            "mGBce6uadRUtDvH1ZtYmqDrNewltWGKW");
+
+    public static AipOcr getInstance() {
+        // if (client == null) {
+        //     synchronized (AipOcr.class) {
+        //         if (client == null) {
+        //             client = new AipOcr("11487965", "4RHdwmUxjMYSgSBcUHPhbiQm", "mGBce6uadRUtDvH1ZtYmqDrNewltWGKW");
+        //         }
+        //     }
+        // }
         return client;
+    }
+
+
+    public static AipOcr getAipOcr() {
+        if (aipOcr == null) {
+            synchronized (AipOcr.class) {
+                if (aipOcr == null) {
+                    aipOcr = new AipOcr(app_id, api_key, secret_key);
+                    // aipOcr = new AipOcr("11487965", "4RHdwmUxjMYSgSBcUHPhbiQm", "mGBce6uadRUtDvH1ZtYmqDrNewltWGKW");
+                }
+            }
+        }
+        System.out.println("OCRClient:::getAipOcr===========" + aipOcr);
+        return aipOcr;
     }
 }

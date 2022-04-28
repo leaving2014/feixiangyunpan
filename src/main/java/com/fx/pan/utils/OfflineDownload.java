@@ -30,11 +30,7 @@ public class OfflineDownload {
     private String bucketName;
     @Value("${tengxun.cos.path}")
     private String path;
-    @Value("${tengxun.cos.qianzui}")
-    private String qianzui;
 
-    @Value("user1001")
-    private String user;
 
     //https://dlcdn.apache.org//commons/io/binaries/commons-io-2.11.0-bin.zip
 
@@ -73,7 +69,7 @@ public class OfflineDownload {
         String fileSize = "";
 
         try {
-            fileName = FileUtil.getFileName(urlStr);
+            fileName = FileUtils.getFileName(urlStr);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -91,8 +87,8 @@ public class OfflineDownload {
 
             //获取下载文件大小
             contentLength = conn.getContentLength();
-            fileSize = FileUtil.fileSizeUnitConversionAndUnit(contentLength);
-            System.out.println("文件大小:"+fileSize);
+            fileSize = FileUtils.fileSizeUnitConversionAndUnit(contentLength);
+            System.out.println("文件大小:" + fileSize);
 
             // 得到输入流
             InputStream inputStream = conn.getInputStream();

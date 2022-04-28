@@ -6,7 +6,7 @@ import com.fx.pan.factory.operation.ImageOperation;
 import com.fx.pan.factory.operation.VideoOperation;
 import com.fx.pan.factory.preview.domain.PreviewFile;
 import com.fx.pan.factory.utils.CharsetUtils;
-import com.fx.pan.utils.FileUtil;
+import com.fx.pan.utils.FileUtils;
 import lombok.Data;
 import org.apache.commons.io.IOUtils;
 
@@ -26,10 +26,10 @@ public abstract class Previewer {
 
     public void imageThumbnailPreview(HttpServletResponse httpServletResponse, PreviewFile previewFile) {
         String fileUrl = previewFile.getFileUrl();
-        boolean isVideo = fxUtils.isVideoFile(FileUtil.getFileExtendName(fileUrl));
+        boolean isVideo = fxUtils.isVideoFile(FileUtils.getFileExtendName(fileUrl));
         String thumbnailImgUrl = previewFile.getFileUrl();
         if (isVideo) {
-            thumbnailImgUrl = fileUrl.replace("." + FileUtil.getFileExtendName(fileUrl), ".jpg");
+            thumbnailImgUrl = fileUrl.replace("." + FileUtils.getFileExtendName(fileUrl), ".jpg");
         }
 
 
@@ -54,7 +54,7 @@ public abstract class Previewer {
                 int height = thumbImageHeight == 0 ? 150 : thumbImageHeight;
 
                 if (isVideo) {
-                    in = VideoOperation.thumbnailsImage(inputstream, saveFile, width, height);
+                    // in = VideoOperation.thumbnailsImage(inputstream, saveFile, width, height);
                 } else {
                     in = ImageOperation.thumbnailsImage(inputstream, saveFile, width, height);
                 }
@@ -75,7 +75,7 @@ public abstract class Previewer {
         try {
             outputStream = httpServletResponse.getOutputStream();
             byte[] bytes = IOUtils.toByteArray(inputStream);
-            bytes = CharsetUtils.convertCharset(bytes, FileUtil.getFileExtendName(previewFile.getFileUrl()));
+            bytes = CharsetUtils.convertCharset(bytes, FileUtils.getFileExtendName(previewFile.getFileUrl()));
             outputStream.write(bytes);
 
         } catch (IOException e) {

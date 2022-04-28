@@ -1,5 +1,6 @@
 package com.fx.pan.utils;
 
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Component;
@@ -247,13 +248,26 @@ public class RedisCache {
      * @param pattern 字符串前缀
      * @return 对象列表
      */
-    public Collection<String> keys(final String pattern)
-    {
+    public Collection<T> keys(final String pattern) {
         return redisTemplate.keys(pattern);
     }
 
+    // 更新redis list中的数据
+    public <T> void updateCacheList(final String key, final Integer index, final Object value) {
+        // redisTemplate.opsForList().rightPushAll(key, Object);
+        redisTemplate.opsForList().remove(key, 1, value);
+        // redisTemplate.opsForList().set(key, index, value);
+    }
+
+    // 删除 List中的数据
+    public void deleteCacheList(final String key, final Object value) {
+        redisTemplate.opsForList().remove(key, 1, value);
+    }
+
+
     /**
      * 获取自增长值
+     *
      * @param key 键
      * @return 返回增长之后的值
      */
@@ -261,5 +275,11 @@ public class RedisCache {
         Long count = redisTemplate.opsForValue().increment(key, 1);
         return count;
     }
+
+    //判断对象是否存在
+    public boolean hasKey(String key) {
+        return redisTemplate.hasKey(key);
+    }
+
 
 }

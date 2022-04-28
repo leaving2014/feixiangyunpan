@@ -4,10 +4,14 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @Author leaving
@@ -17,6 +21,9 @@ import java.time.LocalDateTime;
 
 @EqualsAndHashCode(callSuper = false)
 @TableName("user")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -27,165 +34,31 @@ public class User implements Serializable {
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
-
-    /**
-     * 用户名
-     */
+    //用户名
     private String userName;
-
-    /**
-     * 密码
-     */
-
+    //密码
     @JSONField(serialize = false)
-    private  String password;
-
-    /**
-     * 昵称
-     */
+    private String password;
+    //昵称
     private String nickName;
-
-    /**
-     * 头像
-     */
+    //头像地址
     private String avatar;
-
-    /**
-     * 手机号
-     */
+    //手机号
     private String phoneNumber;
-
-
-    /**
-     * 邮箱
-     */
+    //邮箱
     private String email;
+    //性别(0男，1女，2未知）
+    private Integer sex;
+    //创建时间
+    private Date createTime;
+    //更新时间
+    private Date updateTime;
+    //角色 (1管理员2普通用户)
+    private Integer role;
+    //账号状态（ 0正常1停用）
+    private Integer status;
 
-
-
-    /**
-     * 用户性别（0男，1女，2未知）
-     */
-    private String sex;
-
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updateTime;
-
-    /**
-     * 用户类型（1管理员，2普通用户）
-     */
-    private String role;
-
-    /**
-     * 账号状态（0正常 1停用）
-     */
-    @JSONField(serialize = false)
-    private String status;
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getNickName() {
-        return nickName;
-    }
-
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
-    }
-
-    public String getAvatar() {
-        return avatar;
-    }
-
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getSex() {
-        return sex;
-    }
-
-    public void setSex(String sex) {
-        this.sex = sex;
-    }
-
-    public LocalDateTime getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(LocalDateTime createTime) {
-        this.createTime = createTime;
-    }
-
-    public LocalDateTime getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(LocalDateTime updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    private Integer deleted;
 
     @Override
     public String toString() {
@@ -197,11 +70,12 @@ public class User implements Serializable {
                 ", avatar='" + avatar + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", email='" + email + '\'' +
-                ", sex='" + sex + '\'' +
+                ", sex=" + sex +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
-                ", role='" + role + '\'' +
-                ", status='" + status + '\'' +
+                ", role=" + role +
+                ", status=" + status +
+                ", deleted=" + deleted +
                 '}';
     }
 }

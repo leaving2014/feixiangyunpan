@@ -41,8 +41,9 @@ public class LocalStorageDownloader extends Downloader{
 
     }
 
+    @Override
     public InputStream getInputStream(DownloadFile downloadFile) {
-        File file = new File(fxUtils.getStaticPath() + downloadFile.getFileUrl());
+        File file = new File(fxUtils.getStaticPath() + "\\" + downloadFile.getFileUrl());
         FileInputStream inputStream = null;
 
         try {

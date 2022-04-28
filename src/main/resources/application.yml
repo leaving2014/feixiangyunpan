@@ -1,12 +1,11 @@
 spring:
   #环境切换dev/prod
-  profiles:
-    active: dev
   datasource:
 #    driver-class-name: org.mariadb.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     username: root
     password: 123456
+#    url: jdbc:mariadb://localhost:3309/fxyp?characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=UTC
     url: jdbc:mariadb://localhost:3309/fxyp?characterEncoding=utf-8&useSSL=false&useTimezone=true&serverTimezone=GMT%2B8
     druid:
       #2.连接池配置
@@ -53,10 +52,27 @@ spring:
     multipart:
       enabled: true
       max-request-size: 100MB
-      max-file-size: 100MB
+      max-file-size: 500MB
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: UTC
+    #    time-zone: UTC
+    time-zone: GMT+8
+  #  rabbitmq:
+  #    host: localhost
+  #    port: 5672
+  #    username: admin
+  #    password: admin
+  data:
+#  config:
+#    activate:
+#      on-profile: dev
+#    mongodb:
+#      authentication-database: admin
+#      host: localhost
+#      port: 27017
+#      username: admin
+#      password: 123456
+#      database: wb
 
 
 # MyBatis配置
@@ -105,18 +121,24 @@ redis:
       # #连接池最大阻塞等待时间（使用负值表示没有限制）
       max-wait: -1ms
 
-fx:
-  # 文件存储位置 (0 为本地, 1 为腾讯COS对象存储 )
-  fileStorageType: 0
-  # 文件本地存储根路径
-  fileStorageRootPath: file
-  #本地存储绝对路径,resources目录下
-  localStoragePath: static/file
-  basicAbsolutePath: D:/ideaWorkspace/pan/static
-  absoluteFilePath: D:/ideaWorkspace/pan/static/file
-  absoluteCachePath: D:/ideaWorkspace/pan/static/cache
-  file:
-    upload: D:/ideaWorkspace/pan/target/static/file
+#fx:
+#  storageType: 0
+#  enableFileAudit: true
+#  # 文件存储位置 (0 为本地, 1 为腾讯COS对象存储 )
+#  fileStorageType: 0
+#  # 文件本地存储根路径
+#  fileStorageRootPath: file
+#  #本地存储绝对路径,resources目录下
+#  localStoragePath: static/file
+#  staticPath: D:/ideaWorkspace/pan/static
+#  absoluteFilePath: D:/ideaWorkspace/pan/static/file
+#  absoluteCachePath: D:/ideaWorkspace/pan/static/cache
+file:
+  uploadFolder: D:/ideaWorkspace/pan/static/image/
+  upload: D:/ideaWorkspace/pan/target/static/file
+  accessPath: /images/
+  staticAccessPath: /images/**
+
 #  annoypath: "/user/login", "/user/register" ,"/filetransfer/download"
 
 # token配置
@@ -137,8 +159,6 @@ tengxun:
     bucketRegion: ap-beijing
     bucketName: fxcloud-1254493079
     path: https://fxcloud-1254493079.cos.ap-beijing.myqcloud.com
-    qianzui: fxcloud
-
 
 #百度OCR
 baidu:
@@ -151,3 +171,7 @@ server:
   servlet:
     ## 全局controller访问前缀
     context-path: /api
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+    min-response-size: 2048

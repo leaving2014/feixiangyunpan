@@ -5,6 +5,7 @@ import com.fx.pan.advice.FxException;
 import com.fx.pan.common.Msg;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.domain.LoginUser;
+import com.fx.pan.domain.Storage;
 import com.fx.pan.dto.file.BatchCopyFileDTO;
 import com.fx.pan.dto.file.BatchMoveFileDTO;
 import com.fx.pan.dto.file.UnzipFileDTO;
@@ -14,22 +15,18 @@ import com.fx.pan.factory.operation.download.domain.DownloadFile;
 import com.fx.pan.factory.operation.write.Writer;
 import com.fx.pan.factory.operation.write.domain.WriteFile;
 import com.fx.pan.service.FileService;
-import com.fx.pan.service.UserService;
-import com.fx.pan.utils.BeanCopyUtils;
-import com.fx.pan.utils.SecurityUtils;
+import com.fx.pan.service.StorageService;
+import com.fx.pan.utils.*;
 import com.fx.pan.utils.file.FileTypeUtils;
 import com.fx.pan.vo.FileListVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -47,17 +44,15 @@ import java.util.*;
 public class FileController {
 
 
-    // @Value("${fx.fileStorageType}")
-    // private String fileStorageType;
-    //
-    // @Value("${fx.fileStorageRootPath}")
-    // private String fileStorageRootPath;
-
-    @Autowired
-    private UserService userService;
-
     @Resource
     private FileService fileService;
+
+    @Resource
+    private StorageService storageService;
+
+
+    @Autowired
+    private RedisCache redisCache;
 
     @Resource
     FxFactory fxFactory;
@@ -88,7 +83,7 @@ public class FileController {
         createFile.setFileCreateTime(new Date());
         createFile.setFileUpdateTime(new Date());
         // fileService.se
-        if (!createFile.getFilePath().equals("/")){
+        if (!"/".equals(createFile.getFilePath())) {
             Long parentpPathId = fileService.selectByFilePath(createFile.getFilePath(), userId).getId();
             createFile.setParentPathId(parentpPathId);
         } else {
@@ -112,38 +107,26 @@ public class FileController {
      * 文件重命名
      */
     @PostMapping("/rename")
-    public Msg rename(@RequestBody Map params) {
-        Integer fileId = (Integer) params.get("fileId");
-        String newFileName = (String) params.get("fileName");
-
-        // @RequestParam Long fileId, @RequestParam String fileName
-        // 重命名的文件夹
-        FileBean fileBean = fileService.selectFileById(fileId.longValue());
-        System.out.println("重命名文件夹");
-        System.out.println(fileBean);
+    public Msg rename(@RequestParam Long fileId, @RequestParam String fileName) {
+        Long userId = SecurityUtils.getUserId();
+        FileBean fileBean = fileService.selectFileById(fileId);
         // 判断 重命名是否是文件夹 ,文件夹重命名需要更新文件夹下所有的子目录和文件的目录
-        System.out.println(fileBean.getIsDir());
-        System.out.println(fileBean.getIsDir() == 1);
         if (fileBean.getIsDir() == 1) {
-            // TODO 重命名子目录和文件
-            log.info("目录重命名加载子目录");
             // 先对重命名的子目录和文件重命名
-            List<FileBean> childFileList = fileService.selectChildFileListByPath('/' + fileBean.getFileName());
+            List<FileBean> childFileList = fileService.selectChildFileListByPath('/' + fileBean.getFileName(), userId);
             log.info(childFileList.toString());
             for (FileBean file : childFileList) {
-                log.info("子目录" + file.getFileName() + "开始重命名");
                 String orginFilePath = file.getFilePath();
-                String newPath = orginFilePath.replace(fileBean.getFileName(), newFileName);
-                int i = fileService.updateFilePathById(file.getId(), newPath);
+                String newPath = orginFilePath.replace(fileBean.getFileName(), fileName);
+                fileService.updateFilePathById(file.getId(), newPath);
             }
-
-            // 最后重命名用户重命名的文件
-            boolean flag = fileService.fileRename(fileId.longValue(), newFileName);
-            return Msg.success("重命名成功12344").put("newFileName", newFileName);
+            // 重命名用户重命名的文件
+            boolean flag = fileService.renameFile(fileId, fileName);
+            return Msg.success("重命名成功").put("newFileName", fileName);
         } else {
-            boolean flag = fileService.fileRename(fileId.longValue(), newFileName);
+            boolean flag = fileService.renameFile(fileId, fileName);
             if (flag) {
-                return Msg.success("重命名成功").put("newFileName", newFileName);
+                return Msg.success("重命名成功").put("newFileName", fileName);
             } else {
                 return Msg.error(500, "重命名失败");
             }
@@ -155,9 +138,9 @@ public class FileController {
      */
 
     @PostMapping("/copy")
-    public Msg copyFile(@RequestParam Long fileId,@RequestParam String filePath) {
+    public Msg copyFile(@RequestParam Long fileId, @RequestParam String filePath) {
         Long userId = SecurityUtils.getUserId();
-        Msg msg = fileService.copyFile(fileId, filePath,userId);
+        Msg msg = fileService.copyFile(fileId, filePath, userId);
         return msg;
     }
 
@@ -165,12 +148,9 @@ public class FileController {
      * 文件移动
      */
     @PostMapping("/move")
-    public Msg moveFile(@RequestBody Map params) {
+    public Msg moveFile(@RequestParam Long fileId, @RequestParam String filePath) {
         Long userId = SecurityUtils.getUserId();
-        Integer fileId = (Integer) params.get("fileId");
-        String filePath = (String) params.get("filePath");
-
-        fileService.moveFile(fileId.longValue(), filePath,userId);
+        fileService.moveFile(fileId, filePath, userId);
         return Msg.success("移动成功");
     }
 
@@ -178,17 +158,60 @@ public class FileController {
      * 文件删除
      */
     @PostMapping("/delete")
-    public Msg deleteFile(@RequestBody FileBean fileBean) {
+    public Msg deleteFile(@RequestParam Long id) {
         Long userId = SecurityUtils.getUserId();
+        FileBean deleteFile = fileService.selectFileById(id);
+        boolean flag = false;
+        Long totalSize = 0L;
+        // 删除对象是文件夹
+        if (deleteFile.getIsDir() == 1) {
+            // 获取删除文件夹下的所有文件
+            List<FileBean> subFileList = fileService.selectChildFileListByPath(deleteFile.getFileName(), userId);
+            for (FileBean file : subFileList) {
 
-        boolean flag = fileService.deleteFile(fileBean.getId(), userId);
+                if (file.getIsDir() == 0) {
+                    totalSize += file.getFileSize();
+                }
+                // flag = fileService.deleteFile(id, userId);
+            }
+            flag = fileService.deleteFile(id, userId);
+        } else {
+            totalSize += deleteFile.getFileSize();
+            flag = fileService.deleteFile(id, userId);
+            String key = "fileList-uid:" + userId;
+            redisCache.deleteCacheList(key, deleteFile);
+        }
+
         if (flag) {
-            return Msg.success("删除成功");
+            storageService.updateStorageUse(-totalSize, userId);
+            Storage storage = storageService.getUserStorage(userId);
+            return Msg.success("删除成功").put("userStorage", storage);
         } else {
             return Msg.error(500, "删除失败");
         }
     }
 
+    // 获取文件详细信息
+    @PostMapping("/detail")
+    public Msg getFileDetail(@RequestParam Long id) {
+        FileBean fileBean = fileService.selectFileById(id);
+        return Msg.success("获取文件详细信息成功").put("file", fileBean);
+    }
+
+    @PostMapping("/refresh")
+    public Msg refresh() {
+        Long userId = SecurityUtils.getUserId();
+        String key = "fileList-uid:" + userId;
+        List<FileBean> fl = null;
+        fl = fileService.getFileList("/", userId, 0);
+        if (redisCache.hasKey(key)) {
+            redisCache.deleteObject(key);
+            if (fl.size() > 0) {
+                redisCache.setCacheList(key, fl);
+            }
+        }
+        return Msg.success("ok").put("ts", System.currentTimeMillis()).put("total", fl.size());
+    }
 
     /**
      * 根据路径获取所有文件列表
@@ -196,10 +219,43 @@ public class FileController {
      * @return
      */
     @GetMapping("/list")
-    public Msg fileList(@RequestParam(required = false, defaultValue = "/") String filePath) {
+    public Msg fileList(@RequestParam(required = false, defaultValue = "/") String filePath, @RequestParam(required =
+            false, defaultValue = "0") Integer dir, @RequestParam Boolean refresh) {
         Long userId = SecurityUtils.getUserId();
-        List fl = fileService.getFileList(filePath, userId);
-        return Msg.success("获取成功").put("list", JSONObject.toJSON(fl)).put("path", filePath).put("total", fl.size());
+        String key = "fileList-uid:" + userId;
+        List<FileBean> fl = null;
+        // 判断是否是否强制刷新
+        if (refresh) {
+            fl = fileService.getFileList(filePath, userId, (Integer) dir);
+            redisCache.deleteObject(key);
+            if (fl.size() > 0) {
+                redisCache.setCacheList(key, fl);
+            }
+        } else {
+            if (filePath.equals("/")) {
+                if (redisCache.hasKey(key)) {
+                    fl = redisCache.getCacheList(key);
+                } else {
+                    fl = fileService.getFileList(filePath, userId, (Integer) dir);
+                    // 文件列表不为空缓存到redis中
+                    if (fl.size() > 0) {
+                        redisCache.deleteObject(key);
+                        redisCache.setCacheList(key, fl);
+                    }
+                }
+            } else {
+                if (dir == null) {
+                    fl = fileService.getFileList(filePath, userId, (Integer) dir);
+                } else {
+                    fl = fileService.getFileList(filePath, userId, (Integer) dir);
+                }
+            }
+        }
+
+        //判断redis中是否有键为key的缓存
+
+
+        return Msg.success("获取成功").put("list", fl).put("path", filePath).put("total", fl.size());
     }
 
     /**
@@ -215,6 +271,21 @@ public class FileController {
         Long userId = SecurityUtils.getUserId();
 
         List<FileListVo> fileList = new ArrayList<>();
+
+        // redis缓存
+        // String key = "fileList-type="+fileType+"-uid:"+userId ;
+        // List<FileBean> fl = null;
+        // //判断redis中是否有键为key的缓存
+        // boolean hasKey = redisCache.hasKey(key);
+        // if(hasKey && currentPage == 1) {
+        //     System.out.println("redisCachehasKey============"+key);
+        //     fl = redisCache.getCacheObject(key);
+        // } else {
+        //     fl = fileService.getFileList(filePath, userId);
+        //     redisCache.deleteObject(key);
+        //     redisCache.setCacheObject(key, fl);
+        // }
+
         Long beginCount = 0L;
         if (pageCount == 0 || currentPage == 0) {
             beginCount = 0L;
@@ -222,24 +293,22 @@ public class FileController {
         } else {
             beginCount = (currentPage - 1) * pageCount;
         }
-
-        Long total = 0L;
         if (fileType == FileTypeUtils.OTHER_TYPE) {
 
             List<String> arrList = new ArrayList<>();
             arrList.addAll(Arrays.asList(FileTypeUtils.DOC_FILE));
             arrList.addAll(Arrays.asList(FileTypeUtils.IMG_FILE));
             arrList.addAll(Arrays.asList(FileTypeUtils.VIDEO_FILE));
-            arrList.addAll(Arrays.asList(FileTypeUtils.BT_FILE));
+            arrList.addAll(Arrays.asList(FileTypeUtils.ZIP_FILE));
             arrList.addAll(Arrays.asList(FileTypeUtils.Audio_FILE));
 
             fileList = fileService.selectFileNotInExtendNames(arrList, beginCount, pageCount, userId);
-            total = fileService.selectCountNotInExtendNames(arrList, beginCount, pageCount, userId);
+            // total = fileService.selectCountNotInExtendNames(arrList, beginCount, pageCount, userId);
         } else {
             fileList = fileService.selectFileByExtendName(FileTypeUtils.getFileExtendsByType(fileType), beginCount,
                     pageCount, userId);
-            total = fileService.selectCountByExtendName(FileTypeUtils.getFileExtendsByType(fileType), beginCount,
-                    pageCount, userId);
+            // total = fileService.selectCountByExtendName(FileTypeUtils.getFileExtendsByType(fileType), beginCount,
+            //         pageCount, userId);
         }
 
         // Map<String, Object> map = new HashMap<>();
@@ -247,6 +316,21 @@ public class FileController {
         // map.put("total", total);
 
         return Msg.success("获取成功").put("list", fileList).put("total", fileList.size());
+    }
+
+    /**
+     * 获取指定扩展名的文件列表
+     *
+     * @param extName
+     * @return
+     */
+    @GetMapping("/list/type/ext")
+    public Msg fileListOfTypeExt(@RequestParam String extName) {
+        List<String> list = new ArrayList<>();
+
+        list.add(extName);
+        List<FileListVo> fileList = fileService.selectFileByExtendName(list, 1L, 100L, SecurityUtils.getUserId());
+        return Msg.success("获取成功").put("list", fileList);
     }
 
 
@@ -265,10 +349,40 @@ public class FileController {
     /**
      * 解压文件
      */
-    @GetMapping("/unzipFile")
+    @PostMapping("/unzip")
     public Msg unzipFile(@RequestBody UnzipFileDTO unzipFileDto) {
-        fileService.unzip(unzipFileDto.getFileId(), unzipFileDto.getUnzipMode(), unzipFileDto.getFilePath());
-        return Msg.success("解压成功");
+        Long userId = SecurityUtils.getUserId();
+        FileBean fileBean = fileService.selectFileById(unzipFileDto.getFileId());
+        Long fileSize = fileBean.getFileSize();
+        Storage storage = storageService.getUserStorage(fileBean.getUserId());
+        Long remainingSize = storage.getStorageSize() - storage.getStorageSizeUsed();
+
+        if (fileSize > remainingSize) {
+            return Msg.error(500, "空间不足,请先扩容或删除文件后再解压");
+        }
+        // 解压到以文件名命名的目录时 创建目录
+        if (unzipFileDto.getUnzipMode() == 2) {
+            // String fullPath = unzipFileDto.getFilePath();
+            // // 获取fullPath最后一个斜杠后的字符串
+            // String fileName = fullPath.substring(fullPath.lastIndexOf("/") + 1);
+            // // 获取fullPath最后一个斜杠前的字符串
+            // String filePath = fullPath.substring(0, fullPath.lastIndexOf("/"));
+            // // 获取
+            // FileBean parentFile = fileService.selectByFilePath(filePath, userId);
+            // String parentPath = fileBean.getFilePath();
+            FileBean unzipRoot = new FileBean();
+            unzipRoot.setParentPathId(fileBean.getParentPathId());
+            unzipRoot.setFileName(unzipFileDto.getFilePath().substring(unzipFileDto.getFilePath().lastIndexOf("/") + 1));
+            unzipRoot.setUserId(userId);
+            unzipRoot.setIsDir(1);
+            unzipRoot.setFileCreateTime(new Date());
+            unzipRoot.setFileUpdateTime(new Date());
+            System.out.println("创建根文件夹:" + unzipRoot);
+            fileService.createFolder(unzipRoot);
+        }
+        boolean b = fileService.unzip(unzipFileDto.getFileId(), unzipFileDto.getUnzipMode(),
+                unzipFileDto.getFilePath());
+        return Msg.success("解压成功").put("filePath", unzipFileDto.getFilePath());
     }
 
 
@@ -294,8 +408,6 @@ public class FileController {
 
     /**
      * 批量复制文件
-     *
-     * @return
      */
     @PostMapping("/batchcopy")
     public Msg batchCopy(@RequestBody BatchCopyFileDTO batchCopyFileDTO) {
@@ -304,20 +416,16 @@ public class FileController {
         String filePath = batchCopyFileDTO.getFilePath();
         for (FileBean file : fileList) {
             Long fileId = file.getId();
-            // 批量移动的文件夹
+            // 批量复制的文件夹
             FileBean fileBean = fileService.selectFileById(fileId);
-            System.out.println("批量移动文件夹");
             System.out.println(fileBean);
-            // 判断 批量移动是否是文件夹 ,文件夹批量移动需要更新文件夹下所有的子目录和文件的目录
-            System.out.println(fileBean.getIsDir());
-            System.out.println(fileBean.getIsDir() == 1);
-
+            // 判断 批量复制是否是文件夹 ,文件夹批量复制需要更新文件夹下所有的子目录和文件的目录
             if (fileBean.getIsDir() == 1) {
                 // TODO 复制的是文件夹
                 return Msg.error(500, "文件夹不能批量复制");
 
             } else {
-                fileService.copyFile(fileId, filePath,userId);
+                fileService.copyFile(fileId, filePath, userId);
             }
         }
         return Msg.success("批量复制成功").put("total", fileList.size());
@@ -325,30 +433,41 @@ public class FileController {
 
     /**
      * 批量移动文件
-     *
-     * @return
      */
     @PostMapping("/batchmove")
     public Msg batchMove(@RequestBody BatchMoveFileDTO batchMoveFileDTO) {
         Long userId = SecurityUtils.getUserId();
         List<FileBean> fileList = batchMoveFileDTO.getFileList();
-        String filePath = batchMoveFileDTO.getFilePath();
-        // TODO  批量移动
+        String targetPath = batchMoveFileDTO.getFilePath();
+        // 批量移动
         for (FileBean file : fileList) {
             Long fileId = file.getId();
-            // 批量移动的文件夹
+            // 移动的文件对象
             FileBean fileBean = fileService.selectFileById(fileId);
-            System.out.println("批量移动文件夹");
-            System.out.println(fileBean);
             // 判断 批量移动是否是文件夹 ,文件夹批量移动需要更新文件夹下所有的子目录和文件的目录
-            System.out.println(fileBean.getIsDir());
-            System.out.println(fileBean.getIsDir() == 1);
             if (fileBean.getIsDir() == 1) {
                 // 对文件夹进行遍历移动
+                // 获取移动文件夹的所有子文件
+                List<FileBean> fileBeanList = fileService.selectChildFileListByPath("/" + fileBean.getFileName(),
+                        userId);
+                int childFileLength = fileBeanList.size();
+                while (childFileLength > 0) {
+                    for (FileBean fb : fileBeanList) {
+                        if ("/".equals(targetPath)) {
+                            String newPath = fb.getFilePath().replace(fileBean.getFilePath(), "");
+                            fileService.moveFile(fb.getId(), newPath, userId);
+                        } else {
+                            fileService.moveFile(fb.getId(), targetPath + fb.getFilePath(), userId);
+
+                        }
+                        childFileLength--;
+                    }
+                }
+                fileService.moveFile(fileId, targetPath, userId);
 
             } else {
-                // 对多文件移动
-                fileService.moveFile(fileId,filePath,userId);
+                // 对单个文件移动
+                fileService.moveFile(fileId, targetPath, userId);
             }
         }
         return Msg.success("批量移动成功").put("total", fileList.size());
@@ -362,7 +481,19 @@ public class FileController {
     @PostMapping("/batchdelete")
     public Msg batchdelete(@RequestBody List<Long> fileList) {
         Long userId = SecurityUtils.getUserId();
+        Long totalSize = 0L;
         for (Long fid : fileList) {
+            FileBean fileBean = fileService.selectFileById(fid);
+            if (fileBean.getIsDir() == 1) {
+                List<FileBean> subFileList = fileService.selectChildFileListByPath(fileBean.getFileName(), userId);
+                for (FileBean fb : subFileList) {
+                    if (fb.getIsDir() == 0) {
+                        totalSize += fb.getFileSize();
+                    }
+                }
+            } else {
+                totalSize += fileBean.getFileSize();
+            }
             fileService.deleteFile(fid, userId);
         }
         return Msg.success("批量删除成功").put("total", fileList.size());
@@ -377,6 +508,8 @@ public class FileController {
         LoginUser loginUser = SecurityUtils.getLoginUser();
 
         FileBean fileBean = fileService.selectFileById(updateFileDTO.getFileId());
+        FileBean orginFileBean = BeanCopyUtils.copyBean(fileBean, FileBean.class);
+        String identifier = fileBean.getIdentifier();
         // Long pointCount = fileService.getFilePointCount(userFile.getFileId());
         // if (pointCount > 1) {
         //     return Msg.error(550,"暂不支持修改");
@@ -386,6 +519,7 @@ public class FileController {
         try {
 
             Writer writer1 = fxFactory.getWriter(fileBean.getStorageType());
+            System.out.println("Writer==" + writer1);
             WriteFile writeFile = new WriteFile();
             writeFile.setFileUrl(fileBean.getFileUrl());
             int fileSize = byteArrayInputStream.available();
@@ -394,12 +528,23 @@ public class FileController {
             DownloadFile downloadFile = new DownloadFile();
             downloadFile.setFileUrl(fileBean.getFileUrl());
             InputStream inputStream = fxFactory.getDownloader(fileBean.getStorageType()).getInputStream(downloadFile);
-            String md5Str = DigestUtils.md5Hex(String.valueOf(inputStream));
-            fileBean.setIdentifier(md5Str);
+            // String md5Str = DigestUtils.md5Hex(String.valueOf(inputStream));
+            // System.out.println("文件更新后MD5====" + md5Str);
+
+            File newFile = new File(FileUtils.getLocalStorageFilePathByFileBean(orginFileBean));
+
+            String md5HashCode32 = Md5Utils.md5HashCode32(new FileInputStream(newFile));
+            System.out.println("新文件的md5===" + md5HashCode32);
+            fileBean.setIdentifier(md5HashCode32);
+            String newFileUrl = orginFileBean.getFileUrl().replace(identifier, md5HashCode32);
+            fileBean.setFileUrl(newFileUrl);
             fileBean.setFileUpdateTime(new Date());
             // fileBean.setModifyUserId(loginUser.getUserId());
             fileBean.setFileSize((long) fileSize);
-            fileService.updateById(fileBean);
+            System.out.println(FileUtils.getLocalStorageFilePathByFileBean(orginFileBean).replace(orginFileBean.getIdentifier(), md5HashCode32));
+            // fileService.updateById(fileBean);
+            // File file = new File(FileUtils.getLocalStorageFilePathByFileBean(orginFileBean));
+            // file.delete();
         } catch (Exception e) {
             throw new FxException(999999, "修改文件异常");
         } finally {
@@ -412,6 +557,32 @@ public class FileController {
         return Msg.success("修改文件成功");
     }
 
+    @GetMapping("clear/list")
+    @ResponseBody
+    public Msg clearFile(@RequestParam Long fileSize) {
+        Long userId = SecurityUtils.getUserId();
+        List<FileBean> fileBeanList = fileService.selectFileWithFileSize(fileSize, userId);
+        // fileService.selectFileByUpdateTime(fileBean);
+        return Msg.success("获取清理文件列表成功").put("list", fileBeanList);
+    }
 
+    /**
+     * 获取文件操作进度 如解压
+     *
+     * @param fid  文件id
+     * @param type 操作类型
+     * @return
+     */
+    @GetMapping("/progress")
+    @ResponseBody
+    public Msg progress(@RequestParam Long fid, @RequestParam String type) {
+        Long userId = SecurityUtils.getUserId();
+        Object cacheObject = redisCache.getCacheObject(type + "-" + fid + "-" + userId);
+        if (cacheObject != null) {
+            return Msg.success("ok").put("progress", cacheObject);
+        } else {
+            return Msg.success("ok").put("progress", 100);
+        }
+    }
 
 }

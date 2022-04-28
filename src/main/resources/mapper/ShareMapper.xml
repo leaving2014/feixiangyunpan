@@ -1,44 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.fx.pan.domain.Share">
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fx.pan.mapper.ShareMapper">
 
-    <resultMap type="com.fx.pan.domain.Share" id="ShareMap">
-        <result property="id" column="id" jdbcType="INTEGER"/>
-        <result property="shareType" column="share_type" jdbcType="INTEGER"/>
-        <result property="shareLink" column="share_link" jdbcType="VARCHAR"/>
-        <result property="shareCode" column="share_code" jdbcType="VARCHAR"/>
-        <result property="browseTimes" column="browse_times" jdbcType="INTEGER"/>
-        <result property="downloadTimes" column="download_times" jdbcType="INTEGER"/>
+    <resultMap id="BaseResultMap" type="com.fx.pan.domain.Share">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="type" column="type" jdbcType="TINYINT"/>
+        <result property="batchNum" column="batch_num" jdbcType="VARCHAR"/>
+        <result property="extractionCode" column="extraction_code" jdbcType="VARCHAR"/>
+        <result property="fileId" column="file_id" jdbcType="BIGINT"/>
+        <result property="filePath" column="file_path" jdbcType="VARCHAR"/>
+        <result property="browseTimes" column="browse_times" jdbcType="BIGINT"/>
+        <result property="downloadTimes" column="download_times" jdbcType="BIGINT"/>
+        <result property="saveTimes" column="save_times" jdbcType="BIGINT"/>
+        <result property="expired" column="expired" jdbcType="INTEGER"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
         <result property="shareTime" column="share_time" jdbcType="TIMESTAMP"/>
-        <result property="expired" column="expired" jdbcType="TIMESTAMP"/>
-        <result property="deleted" column="deleted" jdbcType="VARCHAR"/>
-        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="expiredTime" column="expired_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+
     </resultMap>
 
-    <!-- 批量插入 -->
-    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
-        insert into fxyp.share(share_type, share_link, share_code, browse_times, download_times, share_time, expired,
-        deleted, user_id)
-        values
-        <foreach collection="entities" item="entity" separator=",">
-            (#{entity.shareType}, #{entity.shareLink}, #{entity.shareCode}, #{entity.browseTimes},
-            #{entity.downloadTimes}, #{entity.shareTime}, #{entity.expired}, #{entity.deleted}, #{entity.userId})
-        </foreach>
-    </insert>
-    <!-- 批量插入或按主键更新 -->
-    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
-        insert into fxyp.share(share_type, share_link, share_code, browse_times, download_times, share_time, expired,
-        deleted, user_id)
-        values
-        <foreach collection="entities" item="entity" separator=",">
-            (#{entity.shareType}, #{entity.shareLink}, #{entity.shareCode}, #{entity.browseTimes},
-            #{entity.downloadTimes}, #{entity.shareTime}, #{entity.expired}, #{entity.deleted}, #{entity.userId})
-        </foreach>
-        on duplicate key update
-        share_type = values(share_type) , share_link = values(share_link) , share_code = values(share_code) ,
-        browse_times = values(browse_times) , download_times = values(download_times) , share_time = values(share_time)
-        , expired = values(expired) , deleted = values(deleted) , user_id = values(user_id)
-    </insert>
-
+    <sql id="Base_Column_List">
+        id
+        ,type,batch_num,
+        extraction_code,browse_times,download_times,
+        expired,status,share_time,
+        expired_time,update_time,user_id,
+        deleted
+    </sql>
+    <select id="selectShareAndFileInfo" resultType="java.util.List">
+        select *
+        from share a
+                 LEFT JOIN share ON share.user_id = a.user_id
+                 left join file b on b.id = a.file_id
+        where a.user_id = #{userId}
+    </select>
+    <select id="selectShareFileList" resultType="com.fx.pan.vo.share.ShareFileListVO">
+        select *
+        from share a
+                 LEFT JOIN share ON share.user_id = a.user_id
+                 left join file b on b.id = a.file_id
+        where a.user_id = #{userId}
+    </select>
 </mapper>
-

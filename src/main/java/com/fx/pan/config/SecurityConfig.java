@@ -29,7 +29,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration(proxyBeanMethods = false)
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-
+    public static final String ANONYMOUS = "ROLE_ANONYMOUS";
 
     /**
      * 自定义用户认证逻辑
@@ -110,10 +110,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 // 对于登录接口 允许匿名访问；已登录，不能访问 ,"/filetransfer/**"
                 // ,"/filetransfer/download","/filetransfer/preview","/filetransfer/image"
-                .antMatchers("/user/login", "/user/register","/filetransfer/preview",
-                        "/filetransfer/image","/filetransfer/download",
-                        "/filetransfer/media","/filetransfer/preview/stream").anonymous()
-
+                .antMatchers(HttpMethod.GET,"/filetransfer/preview",
+                        "/filetransfer/image", "/filetransfer/download/*", "/filetransfer/download",
+                        "/filetransfer/media", "/filetransfer/preview/stream","/office/excel/online/data").anonymous()
+                .antMatchers(HttpMethod.POST, "/user/login", "/user/register").anonymous()
                 .antMatchers(
                         HttpMethod.GET,
                         "/",
@@ -125,13 +125,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 ).permitAll()
 
                 // 登录或未登录都能访问
-                .antMatchers("/user/login").permitAll()
+                .antMatchers("/user/shareuser").permitAll()
+                .antMatchers("/share/shareinfo").permitAll()
+                .antMatchers("/share/checkextractioncode").permitAll()
+                .antMatchers("/office/excel/check").permitAll()
+                .antMatchers("/office/excel/online/data").permitAll()
+                // .antMatchers("/share/*").permitAll()
+                .antMatchers("/user/userinfo").permitAll()
 
                 // .antMatchers("/testCors").hasAuthority("system:dept:list22")
 
                 // 任意用户，认证之后都可以访问（除上面外的所有请求全部需要鉴权认证）
                 .anyRequest().authenticated();
-        // http.logout().logoutUrl("/logout").logoutSuccessHandler(logoutSuccessHandler);
 
         // 添加 jwt 认证过滤器，在 UsernamePasswordAuthenticationFilter 过滤器之前
         http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);

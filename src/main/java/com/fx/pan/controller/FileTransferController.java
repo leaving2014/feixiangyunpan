@@ -1,25 +1,34 @@
 package com.fx.pan.controller;
 
+import cn.hutool.core.date.DateUtil;
+import com.fx.pan.annotation.Limit;
 import com.fx.pan.common.Msg;
 import com.fx.pan.component.FileDealComp;
 import com.fx.pan.domain.Chunk;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.dto.file.DownloadFileDTO;
 import com.fx.pan.dto.file.UploadFileDTO;
+import com.fx.pan.factory.fxUtils;
 import com.fx.pan.handle.NonStaticResourceHttpRequestHandler;
 import com.fx.pan.service.FileService;
 import com.fx.pan.service.FileTransferService;
+import com.fx.pan.service.StorageService;
+import com.fx.pan.utils.*;
 import com.fx.pan.utils.file.Word2PdfAsposeUtil;
+import com.fx.pan.utils.file.convert.FormatConversion;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,7 +38,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Author leaving
@@ -42,6 +52,7 @@ import java.util.Date;
 @RestController
 @RequestMapping("/filetransfer")
 @AllArgsConstructor
+@PropertySource(value = {"classpath:application.properties"})
 public class FileTransferController {
     private NonStaticResourceHttpRequestHandler nonStaticResourceHttpRequestHandler;
 
@@ -51,8 +62,13 @@ public class FileTransferController {
     @Value("${fx.absoluteCachePath}")
     String absoluteCachePath;
 
+    @Value("${fx.storageType}")
+    Integer storageType;
     @Autowired
     private FileTransferService fileTransferService;
+
+    @Autowired
+    private StorageService storageService;
 
     @Autowired
     private FileService fileService;
@@ -60,22 +76,69 @@ public class FileTransferController {
     @Autowired
     FileDealComp fileDealComp;
 
+    @Autowired
+    private RedisCache redisCache;
+
     public FileTransferController() {
     }
-
-    // @Autowired
-    // private FxFactory fxFactory;
-
 
     /**
      * 极速上传 根据MD5进行极速上传
      *
      * @return
      */
-    @PostMapping("/quickUpload")
-    public Msg quickUpload(UploadFileDTO uploadFileDto, @RequestHeader("Authorization") String token) {
+    @GetMapping("/upload")
+    public Msg quickUpload(UploadFileDTO uploadFileDto, @ModelAttribute Chunk chunk) {
+        Long userId = SecurityUtils.getUserId();
+        boolean isCheckSuccess = storageService.checkStorage(userId, uploadFileDto.getTotalSize());
+        if (!isCheckSuccess) {
+            return Msg.msg(500, "存储空间不足");
+        }
+        Msg ret = new Msg();
+        try {
+            String identifier = chunk.getIdentifier();
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("identifier", identifier);
+            // Collection<T> collection = redisCache.keys("upload-file-userId-" + userId + "-" + identifier + "*");
+            List<Chunk> erpChunks =
+                    redisCache.getCacheList("upload-file-userId-" + userId + "-" + identifier + "*");
+            // List<T> erpChunks =new ArrayList<T>(collection);
+            // 将erpChunks转换为List<Chunk>
+            // List<Chunk> chunks = erpChunks.stream().map(t -> (Chunk) t).collect(Collectors.toList());
+            // search(params, Chunk.class);
+            // chunkService.find(params);
+            Set<Integer> chunkNumbers = new HashSet<Integer>();
+            for (Chunk erpChunk : erpChunks) {
+                chunkNumbers.add(erpChunk.getChunkNumber());
+            }
+            System.out.println("chunkNumbers===:" + chunkNumbers);
+            Map<String, Object> res = new HashMap<String, Object>();
+            res.put("chunkNumbers", chunkNumbers);
+            params = new HashMap<String, Object>();
+            params.put("identifier", identifier);
+            List<FileBean> files = fileService.selectFileByIdentifier(identifier);
+            // redisCache.getCacheList("upload-file-userId-"+ userId+"-"+identifier+"-"+ chunkNumbers);
+            // keys("upload-file-userId-"+ userId+"-"+identifier+"*");
+            // fileService.find(params);
+            if (files.size() > 0) {
+                res.put("code", 200);
+                res.put("fileName", files.get(0).getFileName());
+                res.put("fileUrl", files.get(0).getFileUrl());
+                res.put("fileSize", files.get(0).getFileSize());
+            } else if (erpChunks.size() > 0 && erpChunks.size() == erpChunks.get(0).getTotalChunks()) {
+                res.put("message", "上传成功！");
+                res.put("code", 205);
+            }
+            ret.setData(res);
+        } catch (Exception e) {
+            ret.setCode(500);
+            ret.setMsg("操作失败:" + e.getMessage());
+            e.printStackTrace();
+        }
 
-        return Msg.success("");
+        // UploadFileVo uploadFileVo = fileTransferService.uploadFileSpeed(uploadFileDto);
+        // return Msg.success("极速上传成功").put("file", uploadFileVo);
+        return ret;
     }
 
     /**
@@ -87,10 +150,13 @@ public class FileTransferController {
      * @return 上传响应状态
      */
     // @PreAuthorize("has")
-    @PostMapping("/fileUpload")
+    @PostMapping("/upload")
     public Msg uploadPost(@ModelAttribute Chunk chunk,
-                          HttpServletResponse response, @RequestParam(defaultValue = "/") String filePath) {
-        return fileTransferService.fileUploadPost(chunk, response, filePath);
+                          HttpServletResponse response) {
+        // @RequestParam(defaultValue = "/") String filePath,
+        // @RequestParam String relativePath
+        return fileTransferService.fileUploadPost(chunk, response, chunk.getFilePath(), "/");
+        // return fileTransferService.fileUpload(chunk, response);
     }
 
 
@@ -99,10 +165,6 @@ public class FileTransferController {
 
     }
 
-    // https://pan.qiwenshare.com/api/filetransfer/
-    // downloadfile?userFileId=80042&shareBatchNum=&extractionCode=
-    // https://pan.qiwenshare.com/api/filetransfer/downloadfile?
-    // userFileId=80041&shareBatchNum=&extractionCode=
     @GetMapping("/download11")
     public void download(HttpServletResponse httpServletResponse, @RequestBody DownloadFileDTO downloadFileDTO) {
         // File file = new File(downloadFileDTO.getExtractionCode());
@@ -131,20 +193,39 @@ public class FileTransferController {
 
     // http://localhost:8080/api/filetransfer/download?fileName=folder.png
     @GetMapping("/download")
-    public String downloadFile(HttpServletRequest request, HttpServletResponse response, @RequestParam String fileName
-            , @RequestParam Long fileId) {
+    public void downloadFile(HttpServletRequest request, HttpServletResponse response, @RequestParam String id,
+                             @RequestParam Long uid, @RequestParam Long fid, @RequestParam int count) throws UnsupportedEncodingException {
         // Long fileId= downloadFileDTO.getUserFileId();
         // 文件名
         // String fileName = downloadFileDTO.getFileName();
 
-        FileBean fileBean = fileService.selectFileById(fileId);
+        FileBean fileBean = fileService.selectFileById(fid);
         // 如果下载的是单文件
         if (fileBean.getIsDir() == 0) {
-            File file = new File("D:\\ideaWorkspace\\pan\\target\\static\\file\\" + fileName);
+            String filePath = FileUtils.getLocalStorageFilePathByFileBean(fileBean);
+            File file = new File(filePath);
             //File file = new File(realPath , fileName);
             if (file.exists()) {
+                // if (download) {
                 response.setContentType("application/force-download");// 设置强制下载不打开
-                response.addHeader("Content-Disposition", "attachment;fileName=" + fileName);// 设置文件名
+                // }
+                ServletContext context = request.getServletContext();
+                // get MIME type of the file
+                String mimeType = context.getMimeType(filePath);
+                if (mimeType == null) {
+                    // set to binary type if MIME mapping not found
+                    mimeType = "application/octet-stream";
+
+                }
+                // set content attributes for the response
+                response.setContentType(mimeType);
+                response.setContentLength((int) file.length());
+                // 设置文件名
+                response.addHeader("Content-Disposition",
+                        "attachment;filename=" + new String(fileBean.getFileName().getBytes("utf-8"),
+                                "ISO8859-1"));
+
+
                 byte[] buffer = new byte[1024];
                 FileInputStream fis = null;
                 BufferedInputStream bis = null;
@@ -157,7 +238,6 @@ public class FileTransferController {
                         os.write(buffer, 0, i);
                         i = bis.read(buffer);
                     }
-                    return "下载成功";
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally { // 做关闭操作
@@ -182,13 +262,105 @@ public class FileTransferController {
 
         }
 
-        if (fileName != null) {
-            //设置文件路径
-
-        }
-        return "下载失败";
+        // if (fileName != null) {
+        //     //设置文件路径
+        //
+        // }
+        // return "下载失败";
     }
 
+
+    @GetMapping("/download/batch")
+    public void downloadBatchFile(HttpServletRequest request, HttpServletResponse response,
+                                  @RequestParam String filePath,
+                                  @RequestParam String fileList) throws UnsupportedEncodingException {
+        String s = SecretUtil.decodeBase64(fileList);
+        String[] list = s.split(",");
+        System.out.println(list);
+
+        List<File> files = new ArrayList<>();
+        for (int i = 0; i < list.length; i++) {
+            FileBean fileBean = fileService.selectFileById(Long.parseLong(list[i]));
+            String path = FileUtils.getLocalStorageFilePathByFileBean(fileBean);
+            File file = new File(path);
+
+            files.add(file);
+            System.out.println(path);
+        }
+        String fileName = "下载.zip";
+        String zipFileName = "D:/ideaWorkspace/pan/static/cache/下载.zip";
+        // FileUtils.createDownloadZipFile(zipFileName);
+        boolean zipFlag = false;
+
+        try {
+            zipFlag = FileUtils.doCompressFiles(files, new File(zipFileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (zipFlag) {
+            File file = new File(zipFileName);
+            response.setContentType("application/force-download");// 设置强制下载不打开
+            ServletContext context = request.getServletContext();
+            // get MIME type of the file
+            String mimeType = context.getMimeType(filePath);
+            if (mimeType == null) {
+                // set to binary type if MIME mapping not found
+                mimeType = "application/octet-stream";
+
+            }
+            // set content attributes for the response
+            response.setContentType(mimeType);
+            response.setContentLength((int) file.length());
+            // 设置文件名
+            response.addHeader("Content-Disposition",
+                    "attachment;filename=" + new String(fileName.getBytes(StandardCharsets.UTF_8), "ISO8859-1"));
+
+            byte[] buffer = new byte[1024];
+            FileInputStream fis = null;
+            BufferedInputStream bis = null;
+            try {
+                fis = new FileInputStream(file);
+                bis = new BufferedInputStream(fis);
+                OutputStream os = response.getOutputStream();
+                int i = bis.read(buffer);
+                while (i != -1) {
+                    os.write(buffer, 0, i);
+                    i = bis.read(buffer);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally { // 做关闭操作
+                if (bis != null) {
+                    try {
+                        bis.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+
+    }
+
+    ;
+
+
+    @GetMapping("/rowfile")
+    public void rowFile(HttpServletRequest request, HttpServletResponse response,
+                        @RequestParam String id,
+                        @RequestParam Long uid, @RequestParam Long fid) {
+
+
+    }
 
     /**
      * 获取原图
@@ -245,8 +417,9 @@ public class FileTransferController {
     @RequestMapping(value = "/preview", produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseBody
     public byte[] preview(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
-                          Long time, String id, int fileType, String extensionName) {
-        Date d = new Date(time);
+                          String time, String id, int fileType, String extensionName) {
+        Long identity = Long.valueOf(time);
+        Date d = new Date(identity);
         SimpleDateFormat sf = new SimpleDateFormat("yyyyMMdd");
         String date = sf.format(d);
         // FileBean userFile = fileService.getById(previewDTO.getFileId());
@@ -300,7 +473,6 @@ public class FileTransferController {
             // httpServletRequest.setAttribute("produces",MediaType.IMAGE_JPEG_VALUE);
             // produces = MediaType.IMAGE_JPEG_VALUE
             filePath = absoluteCachePath + "/" + date + "/" + id + "." + extensionName;
-            System.out.println("filePath:=====" + filePath);
             File file = new File(filePath);
             FileInputStream inputStream = null;
             try {
@@ -368,7 +540,11 @@ public class FileTransferController {
         byte[] bytes = new byte[0];
         response.setHeader("Accept-Ranges", "bytes");
 
-        filePath = absoluteFilePath + "/" + date + "/" + id + "." + extensionName;
+        // filePath = absoluteFilePath + "/" + date + "/" + id + "." + extensionName;
+        System.out.println("fxUtils.getStaticPath()====" + fxUtils.getStaticPath());
+        filePath = fxUtils.getStaticPath() + "\\" + date + "\\" + id + "." + extensionName;
+        System.out.println("文档预览路径===" + filePath);
+        // filePath = fxUtils.getStaticPath() + writeFile.getFileUrl();
 
         File file1 = new File(filePath);
         if (!file1.exists()) {
@@ -440,116 +616,56 @@ public class FileTransferController {
      */
     @RequestMapping(value = "/preview/stream", method = RequestMethod.GET)
     public void player(HttpServletRequest request, HttpServletResponse response,Long time, String id, int fileType, String extensionName) {
-//        String path = request.getServletContext().getRealPath("/static/my/video/interview.mp4");
-
         BufferedInputStream bis = null;
         Date d = new Date(time);
         SimpleDateFormat sf = new SimpleDateFormat("yyyyMMdd");
         String date = sf.format(d);
         String path = absoluteFilePath + "/" + date + "/" + id + "." + extensionName;
-        // Path filePath = Paths.get(path);
-        System.out.println("媒体文件地址====="+path);
-
         try {
             File file = new File(path);
             if (file.exists()) {
-                long p = 0L;
-                long toLength = 0L;
-                long contentLength = 0L;
-                int rangeSwitch = 0; // 0,从头开始的全文下载；1,从某字节开始的下载（bytes=27000-）；2,从某字节开始到某字节结束的下载（bytes=27000-39000）
-                long fileLength;
-                String rangBytes = "";
-                fileLength = file.length();
 
-                // get file content
-                InputStream ins = new FileInputStream(file);
-                bis = new BufferedInputStream(ins);
-
-                // tell the client to allow accept-ranges
-                response.reset();
-                response.setHeader("Accept-Ranges", "bytes");
-
-                // client requests a file block download start byte
-                String range = request.getHeader("Range");
-                if (range != null && range.trim().length() > 0 && !"null".equals(range)) {
-                    response.setStatus(javax.servlet.http.HttpServletResponse.SC_PARTIAL_CONTENT);
-                    rangBytes = range.replaceAll("bytes=", "");
-                    if (rangBytes.endsWith("-")) { // bytes=270000-
-                        rangeSwitch = 1;
-                        p = Long.parseLong(rangBytes.substring(0, rangBytes.indexOf("-")));
-                        contentLength = fileLength - p; // 客户端请求的是270000之后的字节（包括bytes下标索引为270000的字节）
-                    } else { // bytes=270000-320000
-                        rangeSwitch = 2;
-                        String temp1 = rangBytes.substring(0, rangBytes.indexOf("-"));
-                        String temp2 = rangBytes.substring(rangBytes.indexOf("-") + 1, rangBytes.length());
-                        p = Long.parseLong(temp1);
-                        toLength = Long.parseLong(temp2);
-                        contentLength = toLength - p + 1; // 客户端请求的是 270000-320000 之间的字节
-                    }
-                } else {
-                    contentLength = fileLength;
-                }
-
-                // 如果设设置了Content-Length，则客户端会自动进行多线程下载。如果不希望支持多线程，则不要设置这个参数。
-                // Content-Length: [文件的总大小] - [客户端请求的下载的文件块的开始字节]
-                response.setHeader("Content-Length", new Long(contentLength).toString());
-
-                // 断点开始
-                // 响应的格式是:
-                // Content-Range: bytes [文件块的开始字节]-[文件的总大小 - 1]/[文件的总大小]
-                if (rangeSwitch == 1) {
-                    String contentRange = new StringBuffer("bytes ").append(new Long(p).toString()).append("-")
-                            .append(new Long(fileLength - 1).toString()).append("/")
-                            .append(new Long(fileLength).toString()).toString();
-                    response.setHeader("Content-Range", contentRange);
-                    bis.skip(p);
-                } else if (rangeSwitch == 2) {
-                    String contentRange = range.replace("=", " ") + "/" + new Long(fileLength).toString();
-                    response.setHeader("Content-Range", contentRange);
-                    bis.skip(p);
-                } else {
-                    String contentRange = new StringBuffer("bytes ").append("0-").append(fileLength - 1).append("/")
-                            .append(fileLength).toString();
-                    response.setHeader("Content-Range", contentRange);
-                }
-
-                String fileName = file.getName();
-                response.setContentType("application/octet-stream");
-                response.addHeader("Content-Disposition", "attachment;filename=" + fileName);
-
-                OutputStream out = response.getOutputStream();
-                int n = 0;
-                long readLength = 0;
-                int bsize = 1024;
-                byte[] bytes = new byte[bsize];
-                if (rangeSwitch == 2) {
-                    // 针对 bytes=27000-39000 的请求，从27000开始写数据
-                    while (readLength <= contentLength - bsize) {
-                        n = bis.read(bytes);
-                        readLength += n;
-                        out.write(bytes, 0, n);
-                    }
-                    if (readLength <= contentLength) {
-                        n = bis.read(bytes, 0, (int) (contentLength - readLength));
-                        out.write(bytes, 0, n);
-                    }
-                } else {
-                    while ((n = bis.read(bytes)) != -1) {
-                        out.write(bytes, 0, n);
-                    }
-                }
-                out.flush();
-                out.close();
-                bis.close();
             }
-        } catch (IOException ie) {
-            // 忽略 ClientAbortException 之类的异常
+                long fileLength = file.length();
+            // 随机读文件
+            RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+
+            //获取从那个字节开始读取文件
+            String rangeString = request.getHeader("Range");
+            System.out.println(rangeString);
+            long range=0;
+            if (rangeString!=null) {
+                range = Long.valueOf(rangeString.substring(rangeString.indexOf("=") + 1, rangeString.indexOf("-")));
+            }
+            //获取响应的输出流
+            OutputStream outputStream = response.getOutputStream();
+            //设置内容类型
+            // if (fileType == 3) {
+            //     response.setHeader("Content-Type", "video/mp4");
+            // } else if (fileType == 5) {
+            //     response.setHeader("Content-Type", "audio/mp3");
+            // }
+                response.setContentType("application/octet-stream");
+            //返回码需要为206，代表只处理了部分请求，响应了部分数据
+            response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+
+            // 移动访问指针到指定位置
+            randomAccessFile.seek(range);
+            // 每次请求只返回1MB的视频流
+            byte[] bytes = new byte[1024 * 1024 * 3];
+            int len = randomAccessFile.read(bytes);
+            //设置此次相应返回的数据长度
+            response.setContentLength(len);
+            //设置此次相应返回的数据范围
+            response.setHeader("Content-Range", "bytes "+range+"-"+(fileLength-1)+"/"+fileLength);
+            // 将这3MB的视频流响应给客户端
+            outputStream.write(bytes, 0, len);
+            outputStream.close();
+            randomAccessFile.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-
 
 
     /**
@@ -561,27 +677,64 @@ public class FileTransferController {
      * @return
      */
     @PostMapping("/formatconversion")
+    @Limit(key = "limit2", permitsPerSecond = 0.2, timeout = 500, msg =
+            "请求过于频繁，请稍后再试！请求频率限制在0.2次/秒！")
     public Msg formatConversion(@RequestParam String fileExt, @RequestParam String convertExt,
-                                @RequestParam Long fileId) {
+                                @RequestParam Long fileId) throws FileNotFoundException {
+        Long userId = SecurityUtils.getUserId();
+        String[] doc = {"doc", "docx"};
+        String[] xls = {"xls", "xlsx"};
+        ;
+        String[] ppt = {"ppt", "pptx"};
         Boolean flag = false;
         Integer code = 500;
+        Long fileSize = 0L;
         String msg = "转换失败";
         FileBean fileBean = fileService.selectFileById(fileId);
-        if (fileExt.equals("docx")) {
-            if ("pdf".equals(convertExt)) {
-                String docPath = absoluteFilePath + fileBean.getFileName();
-                String pdfPath = absoluteFilePath + fileBean.getFileName().replace(fileExt, convertExt);
-                flag = Word2PdfAsposeUtil.doc2pdf(docPath, pdfPath);
-                if (flag) {
-                    code = 200;
-                    msg = "转换成功";
-                }
-            }
-        } else if ("pdf".equals(fileExt)) {
+        FileBean newFileBean = new FileBean();
 
+
+        String orginFilePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
+        String convertFilePath = absoluteFilePath + "/tmp/" + fileBean.getFileName().replace(fileBean.getFileExt(),
+                convertExt);
+
+
+        // 判断doc是否包含fileExt
+        if (Arrays.asList(doc).contains(fileExt)) {
+            if ("pdf".equals(convertExt)) {
+                flag = Word2PdfAsposeUtil.doc2pdf(orginFilePath, convertFilePath);
+            }
+        } else if (Arrays.asList(xls).contains(fileExt)) {
+            flag = FormatConversion.excel2pdf(orginFilePath, convertFilePath);
+        } else if ("pdf".equals(fileExt)) {
+            flag = FormatConversion.Pdf2Doc(orginFilePath, convertFilePath);
         }
 
-        return Msg.msg(code, msg);
+        // 剥离重复代码
+        if (flag) {
+            Date date = new Date();
+            String dateStr = DateUtil.format(date, "yyyyMMdd");
+            File convertFile = new File(convertFilePath);
+            String md5 = Md5Utils.md5HashCode32(convertFilePath);
+            String fileUrl = dateStr + "/" + md5 + "." + convertExt;
+            newFileBean = BeanCopyUtils.copyBean(FileUtils.getFileBeanByPath(convertFilePath, fileBean.getFilePath(),
+                    date, storageType, userId), FileBean.class);
+            fileService.save(newFileBean);
+            fileSize = newFileBean.getFileSize();
+            boolean b = storageService.updateStorageUse(fileSize, userId);
+            // 移动文件到文件存储路径
+            File moveFolder = new File(fxUtils.getStaticPath() + "/" + dateStr);
+            System.out.println("moveFolder:" + moveFolder.getAbsolutePath());
+            // 判断目录moveFolder是否存在，不存在则创建
+            if (!moveFolder.exists()) {
+                moveFolder.mkdirs();
+            }
+            convertFile.renameTo(new File(fxUtils.getStaticPath() + "/" + fileUrl));
+            code = 0;
+            msg = "转换成功";
+        }
+
+        return Msg.msg(code, msg).put("file", newFileBean);
     }
 
 }

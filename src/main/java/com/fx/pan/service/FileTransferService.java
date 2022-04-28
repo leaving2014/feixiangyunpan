@@ -1,9 +1,11 @@
 package com.fx.pan.service;
 
 import com.fx.pan.common.Msg;
+import com.fx.pan.controller.UploadFileVo;
 import com.fx.pan.domain.Chunk;
 import com.fx.pan.dto.file.DownloadFileDTO;
 import com.fx.pan.dto.file.PreviewDTO;
+import com.fx.pan.dto.file.UploadFileDTO;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -14,7 +16,12 @@ import javax.servlet.http.HttpServletResponse;
  */
 public interface FileTransferService {
     void downloadFile(HttpServletResponse httpServletResponse, DownloadFileDTO downloadFileDTO);
-    Msg fileUploadPost(Chunk chunk, HttpServletResponse response,String filePath);
+
+    Msg fileUploadPost(Chunk chunk, HttpServletResponse response, String filePath, String relativePath);
+
+    Msg fileUpload(Chunk chunk, HttpServletResponse response);
 
     void previewFile(HttpServletResponse httpServletResponse, PreviewDTO previewDTO);
+
+    UploadFileVo uploadFileSpeed(UploadFileDTO uploadFileDto);
 }

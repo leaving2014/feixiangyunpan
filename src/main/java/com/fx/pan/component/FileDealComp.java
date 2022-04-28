@@ -76,7 +76,7 @@ public class FileDealComp {
                 log.info("分享批次号不存在，权限校验失败");
                 return false;
             }
-            Integer shareType = shareList.get(0).getShareType();
+            Integer shareType = shareList.get(0).getType();
             if (1 == shareType) {
                 //判断提取码
                 if (!shareList.get(0).getExtractionCode().equals(extractionCode)) {

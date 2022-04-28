@@ -11,6 +11,7 @@ import com.fx.pan.common.ResultCodeEnum;
 import com.fx.pan.exception.NotLoginException;
 import com.fx.pan.exception.UploadException;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
  * 方法收集到一个类型，并应用到所有控制器上
  */
 @Slf4j
-// @RestControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandlerAdvice {
 
     /**

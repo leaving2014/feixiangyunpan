@@ -34,7 +34,17 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
-
+        <!--aop-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <!--限流-->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>29.0-jre</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
@@ -90,24 +100,38 @@
             <optional>true</optional>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.amqp</groupId>
-            <artifactId>spring-rabbit-test</artifactId>
-            <scope>test</scope>
-        </dependency>
+        <!--<dependency>-->
+        <!--    <groupId>org.springframework.amqp</groupId>-->
+        <!--    <artifactId>spring-rabbit-test</artifactId>-->
+        <!--    <scope>test</scope>-->
+        <!--</dependency>-->
 
-        <!--数据库-->
+        <!--MySQL数据库-->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <!--<version>5.1.6</version>-->
         </dependency>
 
-        <!--MariaDB-->
+        <!--MariaDB数据库-->
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
             <version>2.1.2</version>
+        </dependency>
+        <!--<dependency>-->
+        <!--    <groupId>org.springframework.boot</groupId>-->
+        <!--    <artifactId>spring-boot-starter-data-mongodb</artifactId>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-mongodb</artifactId>
+            <version>1.9.0.RELEASE</version><!--$NO-MVN-MAN-VER$-->
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>3.6.0</version>
         </dependency>
 
         <!--druid数据源-->
@@ -137,12 +161,22 @@
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
-            <version>5.1.0</version>
+            <version>3.15</version>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>5.1.0</version>
+            <version>3.15</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-scratchpad</artifactId>
+            <version>3.15</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml-schemas</artifactId>
+            <version>3.15</version>
         </dependency>
         <!--hutool工具-->
         <dependency>
@@ -169,6 +203,16 @@
             <artifactId>spire.pdf</artifactId>
             <version>3.4.2</version>
         </dependency>
+        <!--excel转换-->
+        <dependency>
+            <groupId>e-iceblue</groupId>
+            <artifactId>spire.xls.free</artifactId>
+            <version>3.9.1</version>
+        </dependency>
+        <!--<dependency>-->
+        <!--    <groupId>com.aspose</groupId>-->
+        <!--    <artifactId>aspose.ce</artifactId>-->
+        <!--</dependency>-->
         <!--mybatis generator-->
         <dependency>
             <groupId>org.mybatis.generator</groupId>
@@ -188,18 +232,31 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.4</version>
+            <version>2.11.0</version>
         </dependency>
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.2</version>
-        </dependency>
+        <!--<dependency>-->
+        <!--    <groupId>commons-codec</groupId>-->
+        <!--    <artifactId>commons-codec</artifactId>-->
+        <!--    <version>1.2</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
             <version>3.1</version>
         </dependency>
+        <!--文件解压缩-->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.14</version>
+        </dependency>
+
+        <!--<dependency>-->
+        <!--    <groupId>org.apache.tika</groupId>-->
+        <!--    <artifactId>tika-parser-zip-commons</artifactId>-->
+        <!--    <version>2.3.0</version>-->
+        <!--</dependency>-->
+
 
         <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
         <!--<dependency>-->
@@ -208,11 +265,11 @@
         <!--    <version>4.5.13</version>-->
         <!--</dependency>-->
 
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>1.2</version>
-        </dependency>
+        <!--<dependency>-->
+        <!--    <groupId>commons-logging</groupId>-->
+        <!--    <artifactId>commons-logging</artifactId>-->
+        <!--    <version>1.2</version>-->
+        <!--</dependency>-->
 
 
         <dependency>
@@ -221,12 +278,13 @@
             <version>3.5.1</version>
             <scope>test</scope>
         </dependency>
-        <!-- 模板引擎 -->
-        <dependency>
-            <groupId>org.apache.velocity</groupId>
-            <artifactId>velocity-engine-core</artifactId>
-            <version>2.0</version>
-        </dependency>
+        <!-- 模板引擎-自动生成代码 -->
+        <!--<dependency>-->
+        <!--    <groupId>org.apache.velocity</groupId>-->
+        <!--    <artifactId>velocity-engine-core</artifactId>-->
+        <!--    <version>2.0</version>-->
+        <!--</dependency>-->
+        <!--jwt-->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt</artifactId>
@@ -253,12 +311,12 @@
             <artifactId>thumbnailator</artifactId>
             <version>0.4.17</version>
         </dependency>
-        <!--视频缩略图-->
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>javacv-platform</artifactId>
-            <version>1.5.7</version>
-        </dependency>
+        <!--视频缩略图  -->
+        <!--<dependency>-->
+        <!--    <groupId>org.bytedeco</groupId>-->
+        <!--    <artifactId>javacv-platform</artifactId>-->
+        <!--    <version>1.5.7</version>-->
+        <!--</dependency>-->
 
         <!-- https://mvnrepository.com/artifact/com.github.junrar/junrar -->
         <dependency>
@@ -273,6 +331,7 @@
             <version>3.0.3</version>
         </dependency>
 
+        <!--junit测试-->
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
@@ -296,6 +355,21 @@
             <artifactId>spring-boot-devtools</artifactId>
             <optional>true</optional>
             <scope>true</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>1.9.14</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>13.0</version>
+            <scope>compile</scope>
         </dependency>
 
 

@@ -29,15 +29,17 @@ public class FileTypeUtils {
     public static final String[] Audio_FILE = new String[]{"wav", "aif", "au", "mp3", "ram", "wma", "mmf", "amr",
             "aac", "flac"};
     public static final String[] TXT_FILE = new String[]{"txt", "html", "java", "xml", "js", "css", "json"};
-    public static final String[] ZIP_FILE = new String[]{"7z”,“zip", "rar"};
+    public static final String[] ZIP_FILE = new String[]{"7z", "zip", "rar"};
     public static final String[] TORRENT_FILE = new String[]{"torrent"};
     public static final int IMAGE_TYPE = 1;
     public static final int DOC_TYPE = 2;
     public static final int VIDEO_TYPE = 3;
-    public static final int BT_TYPE = 4;
+    public static final int ZIP_TYPE = 4;
+    // public static final int BT_TYPE = 4;
     public static final int Audio_TYPE = 5;
     public static final int OTHER_TYPE = 6;
-    public static final int SHARE_FILE = 6;
+
+    public static final int SHARE_FILE = 8;
     public static final int RECYCLE_FILE = 7;
 
     public static List<String> getFileExtendsByType(int fileType) {
@@ -53,8 +55,8 @@ public class FileTypeUtils {
             case VIDEO_TYPE:
                 fileExtends = Arrays.asList(VIDEO_FILE);
                 break;
-            case BT_TYPE:
-                fileExtends = Arrays.asList(BT_FILE);
+            case ZIP_TYPE:
+                fileExtends = Arrays.asList(ZIP_FILE);
                 break;
             case Audio_TYPE:
                 fileExtends = Arrays.asList(Audio_FILE);
@@ -65,12 +67,13 @@ public class FileTypeUtils {
 
 
         }
+        System.out.println("分类文件扩展名集合=======" + fileExtends);
         return fileExtends;
     }
 
     public static int getFileTypeByExtendName(String extendName) {
         // 找不到匹配返回未知文件类型 9
-        // 0目录,1图片,2文档,3视频,4种子,5音频,6压缩文件 9未知
+        // 0目录,1图片,2文档,3视频,4压缩文件,5音频,6压缩文件 9未知
         int fileType = 9;
         if (Arrays.asList(IMG_FILE).contains(extendName)) {
             fileType = 1;
@@ -78,12 +81,12 @@ public class FileTypeUtils {
             fileType = 2;
         } else if (Arrays.asList(VIDEO_FILE).contains(extendName)) {
             fileType = 3;
-        } else if (Arrays.asList(BT_FILE).contains(extendName)) {
+        } else if (Arrays.asList(ZIP_FILE).contains(extendName)) {
             fileType = 4;
         } else if (Arrays.asList(Audio_FILE).contains(extendName)) {
             fileType = 5;
-        } else if (Arrays.asList(ZIP_FILE).contains(extendName)) {
-            fileType = 6;
+        } else if (Arrays.asList(OTHER_TYPE).contains(extendName)) {
+            fileType = 9;
         }
         return fileType;
     }

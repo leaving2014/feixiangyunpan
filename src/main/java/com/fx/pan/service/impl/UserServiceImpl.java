@@ -3,6 +3,7 @@ package com.fx.pan.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fx.pan.common.Constants;
 import com.fx.pan.common.Msg;
@@ -14,20 +15,31 @@ import com.fx.pan.mapper.StorageMapper;
 import com.fx.pan.mapper.UserMapper;
 import com.fx.pan.service.StorageService;
 import com.fx.pan.service.UserService;
-import com.fx.pan.utils.JwtUtil;
-import com.fx.pan.utils.RedisCache;
-import com.fx.pan.utils.SysUtil;
+import com.fx.pan.utils.*;
 import io.jsonwebtoken.Claims;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -38,12 +50,19 @@ import java.util.Objects;
 
 @Slf4j
 @Service
-public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements UserService {
+@PropertySource(value = {"classpath:application.properties"})
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+    private Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
-    @Autowired
+    @Value("${fx.file.uploadFolder}")
+    private String realBasePath;
+
+    @Value("${fx.file.accessPath}")
+    private String accessPath;
+    @Resource
     private AuthenticationManager authenticationManager;
 
-    @Autowired
+    @Resource
     private RedisCache redisCache;
 
     @Autowired
@@ -97,24 +116,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     @Override
     public Msg login(String username,String password) {
         // AuthenticationManager authenticate进行用户认证
-
-        Authentication authenticationToken =
-                new UsernamePasswordAuthenticationToken(username,password);
+        Authentication authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
         Authentication authenticate = authenticationManager.authenticate(authenticationToken);
         // 如果认证没通过
         if (Objects.isNull(authenticate)) {
             throw new RuntimeException("登录失败");
         }
-
         //如果认证通过
         LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
         String userId = loginUser.getUser().getId().toString();
-
         User saveUserBean = findUserInfoByUserName(loginUser.getUsername());
         loginUser.setUserId(saveUserBean.getId());
-
         String jwt = JwtUtil.createJWT(JSONObject.toJSONString(loginUser));
-
         redisCache.setCacheObject(Constants.REDIS_LOGIN_USER_PREFIX + userId, loginUser);
         User user = loginUser.getUser();
         return  Msg.success("登录成功").put("token", jwt).put("userInfo",user).put("ts", SysUtil.getTimeStamp());
@@ -215,6 +228,59 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     @Override
     public User selectUserById(Serializable id) {
         return userMapper.selectById(id);
+    }
+
+    @SneakyThrows
+    @Override
+    public String uploadAvatar(HttpServletRequest request, MultipartFile multipartFile) {
+        // *图片扩展名*
+        String imgSuffix = FileTypeUtils.getFileExtendName(multipartFile.getOriginalFilename());
+        System.out.println("imgSuffix======" + imgSuffix);
+        // *文件唯一的名字*
+        String md5 = Md5Utils.getMd5(multipartFile);
+        String fileName = md5 + "." + imgSuffix;
+        Date todayDate = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        String today = dateFormat.format(todayDate);
+        // *域名访问的相对路径（通过浏览器访问的链接-虚拟路径）*
+        String saveToPath = accessPath + today + "/";
+        // *真实路径，实际储存的路径*
+        String realPath = realBasePath + today + "/";
+        // *储存文件的物理路径，使用本地路径储存*
+        String filepath = realPath + fileName;
+        logger.info("上传图片名为：" + fileName + "--虚拟文件路径为：" + saveToPath + "--物理文件路径为：" + realPath);
+        // *判断有没有对应的文件夹*
+        File destFile = new File(filepath);
+        if (!destFile.getParentFile().exists()) {
+            destFile.getParentFile().mkdirs();
+        }
+        if (!destFile.exists()) {
+            multipartFile.transferTo(destFile);
+        }
+        return saveToPath + fileName;
+    }
+
+    @Override
+    public List<User> getUserList(String query, int pageNum, int pageSize) {
+        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(query != null, User::getUserName, query);
+        Page<User> page = new Page<>(pageNum, pageSize);
+        List<User> records = page.getRecords();
+        return records;
+    }
+
+    @Override
+    public int adminRegister(User user) {
+        boolean userFlag = userDealComp.isUserNameExist(user);
+        if (userFlag) {
+            return -1;
+        } else {
+            user.setRole(1);
+            user.setCreateTime(new Date());
+            user.setUpdateTime(new Date());
+            return userMapper.insert(user);
+        }
+
     }
 
 }

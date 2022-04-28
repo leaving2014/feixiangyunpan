@@ -1,14 +1,16 @@
 package com.fx.pan.utils.file;
 
 
+import cn.hutool.core.date.DateUtil;
 import com.fx.pan.domain.FileBean;
-import com.fx.pan.utils.FileUtil;
+import com.fx.pan.factory.fxUtils;
+import com.fx.pan.utils.FileUtils;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
 import net.coobird.thumbnailator.name.Rename;
-import org.bytedeco.javacv.FFmpegFrameGrabber;
-import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacv.Java2DFrameConverter;
+// import org.bytedeco.javacv.FFmpegFrameGrabber;
+// import org.bytedeco.javacv.Frame;
+// import org.bytedeco.javacv.Java2DFrameConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -43,7 +46,7 @@ public class ImageUtil {
 
     private static final String IMAGEMAT = "png";
     private static final String ROTATE = "rotate";
-
+    public static final String[] IMG_FILE = new String[]{"bmp", "jpg", "png", "tif", "gif", "jpeg"};
     /**
      * 默认截取视频的中间帧为封面
      */
@@ -67,9 +70,20 @@ public class ImageUtil {
         return null;
     }
 
+    public static void startGenerateThumbnail(String filePath, FileBean fileBean, boolean scale, double scaleSize) throws IOException {
+        if (Arrays.asList(IMG_FILE).contains(fileBean.getFileExt())) {
+            // TODO 文件校验是否合规
+            fileBean.setAudit(1);
+            ImageUtil.generateThumbnail(filePath, fileBean, true, 0.3);
+        } else if (fileBean.getFileType() == 2) {
+            // 视频生成缩略图
+            // TODO 文件校验是否合规
+        }
+    }
+
     @SneakyThrows
     public static void generateThumbnail(String filePath, FileBean fileBean, boolean scale, double scaleSize) {
-        System.out.println("要生成缩略图移动文件路径===="+filePath);
+        System.out.println("要生成缩略图移动文件路径====" + filePath);
         File file = new File(filePath);
         String fileName = file.getName();
         Date date = fileBean.getFileCreateTime();
@@ -99,11 +113,36 @@ public class ImageUtil {
          * 按照比例进行缩放
          * scale(比例)
          * */
-        String path = FileUtil.getCacheFileFullPath(absoluteCachePath, formatDate,
+        Long originFileSize = fileBean.getFileSize();
+        // 小于500KB不生成缩略图
+        if (fileBean.getFileSize() < 512000L) {
+            return;
+        }
+        float scaleRatio;
+
+        float fileSizeMib = (float) FileUtils.fileSizeUnitConversion(originFileSize);
+
+        if (originFileSize > 1048576) { // 图片大于1MB
+            scaleRatio = 0.5f;
+
+            if (fileSizeMib > 20) { // 图片大于20MB
+                scaleRatio = 0.01f;
+            } else if (fileSizeMib >= 10 && fileSizeMib < 20) {  // 图片大于10MB小于20MB
+                scaleRatio = scaleRatio - fileSizeMib * 0.025f;
+            } else { // 图片小于10MB
+                scaleRatio = 0.2f - fileSizeMib * 0.01f;
+            }
+
+        } else {
+            scaleRatio = 0.3f;
+        }
+        System.out.println("图片缩放比例为" + scaleRatio);
+
+        String path = FileUtils.getCacheFileFullPath(absoluteCachePath, formatDate,
                 fileName);
-        System.out.println("按照比例进行缩放生成文件路径:===="+path);
+        System.out.println("按照比例进行缩放生成文件路径:====" + path);
         Thumbnails.of(filePath)
-                .scale(0.05f)
+                .scale(scaleRatio)
                 .toFile(path);
 
 
@@ -254,7 +293,7 @@ public class ImageUtil {
 
 
     /**
-     * 生成视频预览图
+     * 生成视频预览图 主方法
      *
      * @param filePath       视频文件本地路径
      * @param targerFilePath 目标文件夹
@@ -262,52 +301,60 @@ public class ImageUtil {
      * @return 图片文件路径
      * @throws Exception
      */
-    public static String randomGrabberFFmpegImage(String filePath, String targerFilePath, String targetFileName)
-            throws Exception {
-        System.out.println(filePath);
-        FFmpegFrameGrabber ff = FFmpegFrameGrabber.createDefault(filePath);
-        ff.start();
-        Frame f;
-        int lenght = ff.getLengthInFrames();
-        int i = 0;
-        String path = null;
-        while (i < lenght) {
-            // 过滤前5帧，避免出现全黑的图片，依自己情况而定
-            f = ff.grabFrame();
-            if ((i > 200) && (f.image != null)) {
-                path = doExecuteFrame(f, targerFilePath, targetFileName);
-                break;
-            }
-            i++;
-        }
+    // public static String randomGrabberFFmpegImage(String filePath, String targerFilePath, String targetFileName)
+    //         throws Exception {
+    //     System.out.println(filePath);
+    //     FFmpegFrameGrabber ff = FFmpegFrameGrabber.createDefault(filePath);
+    //     ff.start();
+    //     Frame f;
+    //     int lenght = ff.getLengthInFrames();
+    //     int i = 0;
+    //     String path = null;
+    //     while (i < lenght) {
+    //         // 过滤前5帧，避免出现全黑的图片，依自己情况而定
+    //         f = ff.grabFrame();
+    //         if ((i > 200) && (f.image != null)) {
+    //             path = doExecuteFrame(f, targerFilePath, targetFileName);
+    //             break;
+    //         }
+    //         i++;
+    //     }
+    //
+    //     ff.stop();
+    //     return path;
+    // }
 
-        ff.stop();
-        return path;
-    }
-
-    public static String doExecuteFrame(Frame f, String targerFilePath, String targetFileName) {
-
-        if (null == f || null == f.image) {
-            // throw new GlobleException("获取缩略图失败");
-        }
-        Java2DFrameConverter converter = new Java2DFrameConverter();
-        String imageMat = "jpg";
-        String FileName = targerFilePath + File.separator + targetFileName + "." + imageMat;
-        BufferedImage bi = converter.getBufferedImage(f);
-        System.out.println("width:" + bi.getWidth());
-        System.out.println("height:" + bi.getHeight());
-        File output = new File(FileName);
-        try {
-            ImageIO.write(bi, imageMat, output);
-        } catch (IOException e) {
-            // throw new GlobleException("缩略图写入文件夹失败");
-        }
-        return FileName;
-    }
-
+    /**
+     * 执行帧处理
+     *
+     * @param f
+     * @param targerFilePath
+     * @param targetFileName
+     * @return
+     * @throws Exception
+     */
+    // public static String doExecuteFrame(Frame f, String targerFilePath, String targetFileName) {
+    //
+    //     if (null == f || null == f.image) {
+    //         // throw new GlobleException("获取缩略图失败");
+    //     }
+    //     Java2DFrameConverter converter = new Java2DFrameConverter();
+    //     String imageMat = "jpg";
+    //     String FileName = targerFilePath + File.separator + targetFileName + "." + imageMat;
+    //     BufferedImage bi = converter.getBufferedImage(f);
+    //     System.out.println("width:" + bi.getWidth());
+    //     System.out.println("height:" + bi.getHeight());
+    //     File output = new File(FileName);
+    //     try {
+    //         ImageIO.write(bi, imageMat, output);
+    //     } catch (IOException e) {
+    //         // throw new GlobleException("缩略图写入文件夹失败");
+    //     }
+    //     return FileName;
+    // }
     public static void main(String[] args) throws Exception {
-        String s = randomGrabberFFmpegImage("/home/xiao/IMG_3077.mp4", "/home/xiao", "213");
         // String s = randomGrabberFFmpegImage("/home/xiao/IMG_3077.mp4", "/home/xiao", "213");
-        System.out.println(s);
+        // String s = randomGrabberFFmpegImage("/home/xiao/IMG_3077.mp4", "/home/xiao", "213");
+        // System.out.println(s);
     }
 }

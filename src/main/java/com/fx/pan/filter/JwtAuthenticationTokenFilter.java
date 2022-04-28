@@ -16,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import javax.annotation.Resource;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -39,10 +40,30 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        // 基于cookie验证
+        // 获得cookie
+        // Cookie[] cookies = request.getCookies();
+        // // 没有cookie信息，则重定向到登录界面
+        // if (null == cookies) {
+        //     response.sendRedirect(request.getContextPath() + "/login");
+        //     return;
+        // }
+        // // 定义cookie_username，用户的一些登录信息，例如：用户名，密码等
+        // String cookie_username = null;
+        // // 获取cookie里面的一些用户信息
+        // for (Cookie item : cookies) {
+        //     if ("cookie_username".equals(item.getName())) {
+        //         cookie_username = item.getValue();
+        //         break;
+        //     }
+        // }
+
+
         // 获取 token ( 前端，用户登录后，将 token 放到请求头当中。所以这里从请求头中获取 token )
         String token = tokenService.getToken(request);
         if (!StringUtils.hasText(token)) {
             // 如果请求头没有 token ，放行
+            // System.out.println("请求头没有 token,放行");
             filterChain.doFilter(request, response);
             return;
         }
@@ -50,6 +71,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         // token 不为空，解析 token
         Long uesrId;
         try {
+            System.out.println("开始解析token:" + token);
             Claims claims = JwtUtil.parseJWT(token);
             LoginUser user = JSON.parseObject(claims.getSubject(), LoginUser.class);
             uesrId = user.getUserId();

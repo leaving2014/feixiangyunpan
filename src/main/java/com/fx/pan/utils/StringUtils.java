@@ -3,6 +3,8 @@ package com.fx.pan.utils;
 import org.springframework.util.AntPathMatcher;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 字符串工具类
@@ -379,9 +381,7 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils
             if (preCharIsUpperCase && curreCharIsUpperCase && !nexteCharIsUpperCase)
             {
                 sb.append(SEPARATOR);
-            }
-            else if ((i != 0 && !preCharIsUpperCase) && curreCharIsUpperCase)
-            {
+            } else if ((i != 0 && !preCharIsUpperCase) && curreCharIsUpperCase) {
                 sb.append(SEPARATOR);
             }
             sb.append(Character.toLowerCase(c));
@@ -391,14 +391,32 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils
     }
 
     /**
+     * 获取url参数值
+     *
+     * @param url
+     * @param name
+     * @return
+     */
+    public static String getParamByUrl(String url, String name) {
+        url += "&";
+        String pattern = "(\\?|&){1}#{0,1}" + name + "=[a-zA-Z0-9]*(&{1})";
+        Pattern r = Pattern.compile(pattern);
+        Matcher matcher = r.matcher(url);
+        if (matcher.find()) {
+            return matcher.group(0).split("=")[1].replace("&", "");
+        } else {
+            return "";
+        }
+    }
+
+    /**
      * 是否包含字符串
-     * 
-     * @param str 验证字符串
+     *
+     * @param str  验证字符串
      * @param strs 字符串组
      * @return 包含返回true
      */
-    public static boolean inStringIgnoreCase(String str, String... strs)
-    {
+    public static boolean inStringIgnoreCase(String str, String... strs) {
         if (str != null && strs != null)
         {
             for (String s : strs)
@@ -488,16 +506,12 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils
      * @param strs 需要检查的字符串数组
      * @return 是否匹配
      */
-    public static boolean matches(String str, List<String> strs)
-    {
-        if (isEmpty(str) || isEmpty(strs))
-        {
+    public static boolean matches(String str, List<String> strs) {
+        if (isEmpty(str) || isEmpty(strs)) {
             return false;
         }
-        for (String pattern : strs)
-        {
-            if (isMatch(pattern, str))
-            {
+        for (String pattern : strs) {
+            if (isMatch(pattern, str)) {
                 return true;
             }
         }
@@ -505,11 +519,28 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils
     }
 
     /**
+     * 生成随机字符串
+     *
+     * @param length
+     * @return
+     */
+    public static String getRandomString(int length) {
+        String str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        Random random = new Random();
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < length; i++) {
+            int number = random.nextInt(62);
+            sb.append(str.charAt(number));
+        }
+        return sb.toString();
+    }
+
+    /**
      * 判断url是否与规则配置: 
      * ? 表示单个字符; 
      * * 表示一层路径内的任意字符串，不可跨层级; 
      * ** 表示任意层路径;
-     * 
+     *
      * @param pattern 匹配规则
      * @param url 需要匹配的url
      * @return

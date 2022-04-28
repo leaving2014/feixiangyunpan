@@ -1,7 +1,7 @@
 package com.fx.pan.factory.upload.product;
 
 import com.fx.pan.factory.fxUtils;
-import com.fx.pan.utils.FileUtil;
+import com.fx.pan.utils.FileUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -36,7 +36,7 @@ public class QiwenMultipartFile {
 
     public String getExtendName() {
         String originalName = getMultipartFile().getOriginalFilename();
-        String extendName = FileUtil.getFileExtendName(originalName);
+        String extendName = FileUtils.getFileExtendName(originalName);
         return extendName;
     }
 

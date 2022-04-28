@@ -27,14 +27,15 @@ public class LocalStorageWriter extends Writer {
     @Override
     public void write(InputStream inputStream, WriteFile writeFile) {
         try {
-            FileOutputStream out = new FileOutputStream(fxUtils.getStaticPath() + writeFile.getFileUrl());
+            System.out.println("写文件路径-=======" + fxUtils.getStaticPath() + "/" + writeFile.getFileUrl());
+            FileOutputStream out = new FileOutputStream(fxUtils.getStaticPath() + "/" + writeFile.getFileUrl());
             Throwable var4 = null;
 
             try {
                 byte[] bytes = new byte[1024];
 
                 int read;
-                while((read = inputStream.read(bytes)) != -1) {
+                while ((read = inputStream.read(bytes)) != -1) {
                     out.write(bytes, 0, read);
                 }
 

@@ -95,11 +95,12 @@ public class fxUtils {
         }
         return false;
     }
+    // public static String getFile
 
     public static String getStaticPath() {
         String localStoragePath = LOCAL_STORAGE_PATH;
         if (StringUtils.isNotEmpty(localStoragePath)) {
-            return (new File(localStoragePath)).getPath() + File.separator;
+            return (new File(localStoragePath)).getPath().replaceAll("\\\\", "/");
         } else {
             String projectRootAbsolutePath = getProjectRootPath();
             int index = projectRootAbsolutePath.indexOf("file:");
@@ -107,7 +108,7 @@ public class fxUtils {
                 projectRootAbsolutePath = projectRootAbsolutePath.substring(0, index);
             }
 
-            return (new File(projectRootAbsolutePath + "static")).getPath() + File.separator;
+            return (new File(projectRootAbsolutePath + "static")).getPath().replaceAll("\\\\", "/");
         }
     }
     public static String getProjectRootPath() {

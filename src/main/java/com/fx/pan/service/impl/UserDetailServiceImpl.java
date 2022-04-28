@@ -6,6 +6,7 @@ import com.fx.pan.domain.Role;
 import com.fx.pan.domain.User;
 import com.fx.pan.mapper.RoleMapper;
 import com.fx.pan.mapper.UserMapper;
+import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -52,7 +53,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
         }
 
         // 查询对应的权限信息
-        String role = user.getRole();
+        Integer role = user.getRole();
         Role userRole = roleMapper.selectById(role);
         String roleName = userRole.getRole();
         List<String> roleList = new ArrayList<>(Arrays.asList("user", "test", roleName));

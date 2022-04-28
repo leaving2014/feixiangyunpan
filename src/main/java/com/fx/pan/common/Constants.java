@@ -104,6 +104,17 @@ public class Constants
      */
     public static final String REDIS_LOGIN_USER_PREFIX = "fxpanlogin:";
     /**
+     * redis缓存数据前缀
+     */
+    public static final String REDIS_DATA_PREFIX = "fxpan_data:";
+    /**
+     * redis协同编辑缓存数据前缀
+     */
+    public static final String REDIS_COOPERATION_PREFIX = "fxpan_cooperation:";
+
+    public static final String REDIS_UPLOAD_PREFIX = "fxpan_upload:";
+
+    /**
      * 用户ID
      */
     public static final String JWT_USERID = "userid";

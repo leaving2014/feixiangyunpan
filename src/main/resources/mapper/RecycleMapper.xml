@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fx.pan.mapper.RecycleMapper">
+
+    <resultMap id="BaseResultMap" type="com.fx.pan.domain.FileBean">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="fileName" column="file_name" jdbcType="VARCHAR"/>
+        <result property="filePath" column="file_path" jdbcType="VARCHAR"/>
+        <result property="fileExt" column="file_ext" jdbcType="VARCHAR"/>
+        <result property="fileSize" column="file_size" jdbcType="INTEGER"/>
+        <result property="fileType" column="file_type" jdbcType="INTEGER"/>
+        <result property="deleted" column="deleted" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="originName" column="origin_name" jdbcType="VARCHAR"/>
+        <result property="isDir" column="is_dir" jdbcType="INTEGER"/>
+        <result property="identifier" column="identifier" jdbcType="VARCHAR"/>
+        <result property="fileUrl" column="file_url" jdbcType="VARCHAR"/>
+        <result property="isShared" column="is_shared" jdbcType="INTEGER"/>
+        <result property="storageType" column="storage_type" jdbcType="INTEGER"/>
+        <result property="audit" column="audit" jdbcType="INTEGER"/>
+        <result property="origin" column="origin" jdbcType="INTEGER"/>
+        <result property="parentPathId" column="parent_path_id" jdbcType="INTEGER"/>
+        <result property="fileUpdateTime" column="file_update_time" jdbcType="TIMESTAMP"/>
+        <result property="fileCreateTime" column="file_create_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,file_name,file_path,
+        file_isdir,file_ext,file_size,
+        file_type,file_md5,file_shared,
+        file_create_time,file_update_time,file_audit,file_origin,
+        deleted,user_id
+    </sql>
+
+    <insert id="insertFile" keyColumn="id" keyProperty="id" parameterType="com.fx.pan.domain.FileBean"
+            useGeneratedKeys="true">
+        insert into file
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="fileName != null">
+                file_name,
+            </if>
+            <if test="originName != null">
+                origin_name,
+            </if>
+            <if test="filePath != null">
+                file_path,
+            </if>
+            <if test="isDir != null">
+                is_dir,
+            </if>
+            <if test="fileExt != null">
+                file_ext,
+            </if>
+            <if test="fileSize != null">
+                file_size,
+            </if>
+            <if test="fileType != null">
+                file_type,
+            </if>
+            <if test="identifier != null">
+                identifier,
+            </if>
+            <if test="fileUrl != null">
+                file_url,
+            </if>
+            <if test="isShared != null">
+                is_shared,
+            </if>
+            <if test="storageType != null">
+                storage_type,
+            </if>
+            <if test="audit != null">
+                `audit`,
+            </if>
+            <if test="origin != null">
+                origin,
+            </if>
+            <if test="parentPathId != null">
+                parent_path_id,
+            </if>
+            <if test="deleted != null">
+                deleted,
+            </if>
+            <if test="userId != null">
+                user_id,
+            </if>
+            <if test="fileCreateTime != null">
+                file_create_time,
+            </if>
+            <if test="fileUpdateTime != null">
+                file_update_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="fileName != null">
+                #{fileName,jdbcType=VARCHAR},
+            </if>
+            <if test="originName != null">
+                #{originName,jdbcType=VARCHAR},
+            </if>
+            <if test="filePath != null">
+                #{filePath,jdbcType=VARCHAR},
+            </if>
+            <if test="isDir != null">
+                #{isDir,jdbcType=BOOLEAN},
+            </if>
+            <if test="fileExt != null">
+                #{fileExt,jdbcType=VARCHAR},
+            </if>
+            <if test="fileSize != null">
+                #{fileSize,jdbcType=BIGINT},
+            </if>
+            <if test="fileType != null">
+                #{fileType,jdbcType=BOOLEAN},
+            </if>
+            <if test="identifier != null">
+                #{identifier,jdbcType=VARCHAR},
+            </if>
+            <if test="fileUrl != null">
+                #{fileUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="isShared != null">
+                #{isShared,jdbcType=BOOLEAN},
+            </if>
+            <if test="storageType != null">
+                #{storageType,jdbcType=BOOLEAN},
+            </if>
+            <if test="audit != null">
+                #{audit,jdbcType=BOOLEAN},
+            </if>
+            <if test="origin != null">
+                #{origin,jdbcType=BOOLEAN},
+            </if>
+            <if test="parentPathId != null">
+                #{parentPathId,jdbcType=BIGINT},
+            </if>
+            <if test="deleted != null">
+                #{deleted,jdbcType=BOOLEAN},
+            </if>
+            <if test="userId != null">
+                #{userId,jdbcType=BIGINT},
+            </if>
+            <if test="fileUpdateTime != null">
+                #{fileUpdateTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="fileCreateTime != null">
+                #{fileCreateTime,jdbcType=TIMESTAMP}
+            </if>
+        </trim>
+    </insert>
+
+
+    <update id="updateFileNameById" parameterType="com.fx.pan.domain.FileBean">
+        update file
+        set file_name = #{fileName,jdbcType=VARCHAR}
+        where id = #{fileId,jdbcType=BIGINT}
+    </update>
+    <update id="restoreDeletedFileById">
+        update file
+        set deleted = 0
+        where id = #{id,jdbcType=BIGINT}
+          and user_id = #{userId,jdbcType=BIGINT}
+    </update>
+    <delete id="deleteRecycleFileById" parameterType="com.fx.pan.domain.FileBean">
+        delete
+        from file
+        where id = #{id,jdbcType=BIGINT}
+          and user_id = #{userId,jdbcType=BIGINT}
+    </delete>
+
+    <delete id="deleteFileByIdAndUserId">
+        update file
+        set deleted = 1
+        where id = #{id,jdbcType=BIGINT}
+          and user_id = #{userId,jdbcType=BIGINT}
+    </delete>
+
+
+    <select id="selectDeletedFile" resultType="com.fx.pan.domain.FileBean">
+        select *
+        from file
+        where user_id = #{id,jdbcType=BIGINT}
+          and deleted = 1
+    </select>
+
+    <!--<select id="selectFileByExtendName" resultType="com.fx.pan.vo.FileListVo"></select>-->
+
+
+    <sql id="selectByExtendName">
+        where file_ext in
+        <foreach collection="fileNameList" open="(" close=")" separator="," item="fileName">
+            #{fileName}
+        </foreach>
+        and user_id = #{userId}
+        and deleted = 0
+    </sql>
+    <sql id="selectByNotExtendName">
+        where file_ext not in
+        <foreach collection="fileNameList" open="(" close=")" separator="," item="fileName">
+            #{fileName}
+        </foreach>
+        and user_id = #{userId}
+        and deleted = 0
+    </sql>
+    <select id="selectFileByExtendName" parameterType="com.fx.pan.domain.FileBean"
+            resultType="com.fx.pan.vo.FileListVo">
+        select * from file
+        <include refid="selectByExtendName"></include>
+        limit #{beginCount}, #{pageCount}
+    </select>
+
+    <select id="selectCountByExtendName" parameterType="com.fx.pan.domain.FileBean" resultType="java.lang.Long">
+        select count(*) from file
+        <include refid="selectByExtendName"></include>
+    </select>
+
+    <select id="selectFileNotInExtendNames" parameterType="com.fx.pan.domain.FileBean"
+            resultType="com.fx.pan.vo.FileListVo">
+        select * from file
+        <include refid="selectByNotExtendName"></include>
+        limit #{beginCount}, #{pageCount}
+    </select>
+
+    <select id="selectCountNotInExtendNames" parameterType="com.fx.pan.domain.FileBean" resultType="java.lang.Long">
+        select count(*) from file
+        <include refid="selectByNotExtendName"></include>
+    </select>
+
+
+    <select id="selectRecycleFileByUserId" resultType="com.fx.pan.domain.FileBean">
+        select *
+        from file
+        where user_id = #{userId,jdbcType=BIGINT}
+          and deleted = 1
+    </select>
+    <select id="selectRecycleFileById" resultType="com.fx.pan.domain.FileBean">
+        select *
+        from file
+        where id = #{fid,jdbcType=BIGINT}
+          and user_id = #{userId,jdbcType=BIGINT}
+          and deleted = 1
+    </select>
+    <delete id="deleteAllRecycleFileByUserId">
+        delete
+        from file
+        where user_id = #{userId,jdbcType=BIGINT}
+          and deleted = 1
+    </delete>
+
+
+</mapper>

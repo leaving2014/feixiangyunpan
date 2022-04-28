@@ -11,21 +11,14 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static com.fx.pan.utils.FileUtil.readImageFile;
+import static com.fx.pan.utils.FileUtils.readImageFile;
 
 /**
  * 百度OCR工具类
+ *
+ * @author leaving
  */
 public class BaiduOcrUtil {
-
-    @Value("${baidu.ocr.APP_ID}")
-    private static String app_id;
-    @Value("${baidu.ocr.API_KEY}")
-    private static String api_key;
-    @Value("${baidu.ocr.SECRET_KEY}")
-    private static String secret_key;
-
-
 
     /**
      * 通用文字识别
@@ -92,22 +85,24 @@ public class BaiduOcrUtil {
     }
 
 
-    /**\
+    /**
+     * \
      *
      * @param bytesFile
      * @return
      * @throws IOException
      */
-    public static Msg baiduGeneralOcr(byte[] bytesFile) throws IOException {
-        AipOcr client = OcrClient.getInstance();
-        System.out.println(client);
+    public static Msg baiduGeneralOcr(byte[] bytesFile, String imagePath) throws IOException {
+        AipOcr client = OcrClient.getAipOcr();
+        System.out.println("百度client===" + client);
         // 传入可选参数调用接口
         HashMap<String, String> options = new HashMap<String, String>();
         options.put("language_type", "CHN_ENG");
         options.put("detect_direction", "true");
         options.put("detect_language", "true");
 
-        JSONObject res = client.basicGeneral(bytesFile, options);
+        JSONObject res = client.basicGeneral(imagePath, options);
+        // basicGeneral(bytesFile, options);
         String fmd = Md5Utils.md5HashCode32(new ByteArrayInputStream(bytesFile));
         return Msg.success("ok").put("result", JSON.parse(res.toString(2))).put("client",
                 client.toString().substring(25, 33)).put("log_id", fmd);

@@ -24,15 +24,16 @@ public interface FileService extends IService<FileBean>  {
 
     /**
      * 文件重命名
+     *
      * @param fileId
      * @param fileName
      */
-    boolean fileRename(Long fileId, String fileName);
+    boolean renameFile(Long fileId, String fileName);
 
     boolean deleteFile(Long id,Long userId);
 
 
-    List getFileList(String path,Long user_id);
+    List getFileList(String path, Long user_id, Integer isDir);
 
     boolean isFolderExist(String filePath, String fileName, Long userId);
 
@@ -63,7 +64,7 @@ public interface FileService extends IService<FileBean>  {
 
     boolean restoreFile(Long id,Long userId);
 
-    void unzip(Long fileId, int unzipMode, String filePath);
+    boolean unzip(Long fileId, int unzipMode, String filePath);
 
     Msg cleanFile(Long userId);
 
@@ -72,14 +73,26 @@ public interface FileService extends IService<FileBean>  {
     List<FileListVo> selectFileByExtendName(List<String> fileNameList, Long beginCount, Long pageCount, long userId);
     Long selectCountByExtendName(List<String> fileNameList, Long beginCount, Long pageCount, long userId);
 
-    List<FileListVo> selectFileNotInExtendNames(List<String> fileNameList, Long beginCount, Long pageCount, long userId);
+    List<FileListVo> selectFileNotInExtendNames(List<String> fileNameList, Long beginCount, Long pageCount,
+                                                long userId);
+
     Long selectCountNotInExtendNames(List<String> fileNameList, Long beginCount, Long pageCount, long userId);
 
     FileBean selectFileById(long longValue);
 
-    List selectChildFileListByPath(String s);
+    List selectChildFileListByPath(String s, Long userId);
 
     int updateFilePathById(Long id, String newPath);
+
+    List selectFileByIdentifier(String identifier);
+
+    List<FileBean> selectFileByParentId(Long id, Long userId);
+
+    List<FileBean> selectFileWithFileSize(long l, Long userId);
+
+
+    // 管理员文件操作
+    List<FileBean> fileList(String path, boolean onlyFile, int page, int size);
 
     // void isFileExist(String filename,String userId){
     //

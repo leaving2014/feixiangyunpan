@@ -1,146 +1,196 @@
 package com.fx.pan.domain;
 
-
-import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.alibaba.fastjson.annotation.JSONField;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.io.Serializable;
 import java.util.Date;
 
+import lombok.Data;
+
 /**
- * 文件分享表(Share)表实体类
+ * 文件分享表
  *
  * @author leaving
- * @since 2022-01-26 23:24:22
+ * @TableName share
  */
-@SuppressWarnings("serial")
-public class Share extends Model<Share> implements Serializable {
-    //主键
+@TableName(value = "share")
+@Data
+public class Share implements Serializable {
+    /**
+     * 主键
+     */
+    @TableId(type = IdType.AUTO)
     private Long id;
-    //文件共享类型(0为公共分享,1为私密分享,2为好友分享)
-    private Integer shareType;
-    //文件分享链接
-    private String shareLink;
-    //分享链接浏览次数
-    private Long browseTimes;
-    //分享文件下载次数
-    private Long downloadTimes;
-    //文件分享时间
-    private Date shareTime;
-    //文件分享有效期,可取值1,7,30,0( 0为永久不过期)
-    private Integer expired;
-    //用户id
-    private Long userId;
-    //文件提取码
-    private String extractionCode;
-    //更新时间
-    private Date updateTime;
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Integer getShareType() {
-        return shareType;
-    }
-
-    public void setShareType(Integer shareType) {
-        this.shareType = shareType;
-    }
-
-    public String getShareLink() {
-        return shareLink;
-    }
-
-    public void setShareLink(String shareLink) {
-        this.shareLink = shareLink;
-    }
-
-    public Long getBrowseTimes() {
-        return browseTimes;
-    }
-
-    public void setBrowseTimes(Long browseTimes) {
-        this.browseTimes = browseTimes;
-    }
-
-    public Long getDownloadTimes() {
-        return downloadTimes;
-    }
-
-    public void setDownloadTimes(Long downloadTimes) {
-        this.downloadTimes = downloadTimes;
-    }
-
-    public Date getShareTime() {
-        return shareTime;
-    }
-
-    public void setShareTime(Date shareTime) {
-        this.shareTime = shareTime;
-    }
-
-    public Integer getExpired() {
-        return expired;
-    }
-
-    public void setExpired(Integer expired) {
-        this.expired = expired;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getExtractionCode() {
-        return extractionCode;
-    }
-
-    public void setExtractionCode(String extractionCode) {
-        this.extractionCode = extractionCode;
-    }
-
-    public Date getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
-    }
 
     /**
-     * 获取主键值
-     *
-     * @return 主键值
+     * 文件共享类型(0为公共分享,1为私密分享,2为好友分享)
      */
+    private Integer type;
+
+    /**
+     * 文件分享批次号
+     */
+    private String batchNum;
+
+    /**
+     * 文件提取码
+     */
+    @JSONField(serialize = false)
+    private String extractionCode;
+
+    /**
+     * 文件id
+     */
+    private Long fileId;
+
+    /**
+     * 文件路径
+     */
+    private String filePath;
+    /**
+     * 分享链接浏览次数
+     */
+    private Long browseTimes;
+
+    /**
+     * 分享文件下载次数
+     */
+    private Long downloadTimes;
+
+    /**
+     * 分享保存次数
+     */
+    private Long saveTimes;
+
+    /**
+     * 文件分享有效期,可取值1,7,30,0( 0为永久不过期)
+     */
+    private Integer expired;
+
+    /**
+     * 分享状态(0正常,1已失效,2已取消分享,3被冻结)
+     */
+    private Integer status;
+
+    /**
+     * 文件分享时间
+     */
+    private Date shareTime;
+
+    /**
+     * 过期时间
+     */
+    private Date expiredTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
+    /**
+     * 用户id
+     */
+    private Long userId;
+
+    /**
+     *
+     */
+    // private Integer deleted;
+
+    @TableField(exist = false)
+    private static final long serialVersionUID = 1L;
+
     @Override
-    public Serializable pkVal() {
-        return this.id;
+    public boolean equals(Object that) {
+        if (this == that) {
+            return true;
+        }
+        if (that == null) {
+            return false;
+        }
+        if (getClass() != that.getClass()) {
+            return false;
+        }
+        Share other = (Share) that;
+        return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
+                && (this.getType() == null ? other.getType() == null : this.getType().equals(other.getType()))
+                && (this.getBatchNum() == null ? other.getBatchNum() == null :
+                this.getBatchNum().equals(other.getBatchNum()))
+                && (this.getExtractionCode() == null ? other.getExtractionCode() == null :
+                this.getExtractionCode().equals(other.getExtractionCode()))
+                && (this.getFileId() == null ? other.getFileId() == null : this.getFileId().equals(other.getFileId()))
+                && (this.getFilePath() == null ? other.getFilePath() == null :
+                this.getFilePath().equals(other.getFilePath()))
+                && (this.getBrowseTimes() == null ? other.getBrowseTimes() == null :
+                this.getBrowseTimes().equals(other.getBrowseTimes()))
+                && (this.getDownloadTimes() == null ? other.getDownloadTimes() == null :
+                this.getDownloadTimes().equals(other.getDownloadTimes()))
+                && (this.getSaveTimes() == null ? other.getSaveTimes() == null :
+                this.getSaveTimes().equals(other.getSaveTimes()))
+                && (this.getExpired() == null ? other.getExpired() == null :
+                this.getExpired().equals(other.getExpired()))
+                && (this.getStatus() == null ? other.getStatus() == null : this.getStatus().equals(other.getStatus()))
+                && (this.getShareTime() == null ? other.getShareTime() == null :
+                this.getShareTime().equals(other.getShareTime()))
+                && (this.getExpiredTime() == null ? other.getExpiredTime() == null :
+                this.getExpiredTime().equals(other.getExpiredTime()))
+                && (this.getUpdateTime() == null ? other.getUpdateTime() == null :
+                this.getUpdateTime().equals(other.getUpdateTime()))
+                && (this.getUserId() == null ? other.getUserId() == null : this.getUserId().equals(other.getUserId()));
+        // && (this.getDeleted() == null ? other.getDeleted() == null : this.getDeleted().equals(other.getDeleted()));
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((getId() == null) ? 0 : getId().hashCode());
+        result = prime * result + ((getType() == null) ? 0 : getType().hashCode());
+        result = prime * result + ((getBatchNum() == null) ? 0 : getBatchNum().hashCode());
+        result = prime * result + ((getExtractionCode() == null) ? 0 : getExtractionCode().hashCode());
+        result = prime * result + ((getFileId() == null) ? 0 : getFileId().hashCode());
+        result = prime * result + ((getFilePath() == null) ? 0 : getFilePath().hashCode());
+        result = prime * result + ((getBrowseTimes() == null) ? 0 : getBrowseTimes().hashCode());
+        result = prime * result + ((getDownloadTimes() == null) ? 0 : getDownloadTimes().hashCode());
+        result = prime * result + ((getSaveTimes() == null) ? 0 : getSaveTimes().hashCode());
+        result = prime * result + ((getExpired() == null) ? 0 : getExpired().hashCode());
+        result = prime * result + ((getStatus() == null) ? 0 : getStatus().hashCode());
+        result = prime * result + ((getShareTime() == null) ? 0 : getShareTime().hashCode());
+        result = prime * result + ((getExpiredTime() == null) ? 0 : getExpiredTime().hashCode());
+        result = prime * result + ((getUpdateTime() == null) ? 0 : getUpdateTime().hashCode());
+        result = prime * result + ((getUserId() == null) ? 0 : getUserId().hashCode());
+        // result = prime * result + ((getDeleted() == null) ? 0 : getDeleted().hashCode());
+        return result;
     }
 
     @Override
     public String toString() {
-        return "Share{" +
-                "id=" + id +
-                ", shareType=" + shareType +
-                ", shareLink='" + shareLink + '\'' +
-                ", browseTimes=" + browseTimes +
-                ", downloadTimes=" + downloadTimes +
-                ", shareTime=" + shareTime +
-                ", expired=" + expired +
-                ", userId=" + userId +
-                ", extractionCode='" + extractionCode + '\'' +
-                ", updateTime=" + updateTime +
-                '}';
+        StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getSimpleName());
+        sb.append(" [");
+        sb.append("Hash = ").append(hashCode());
+        sb.append(", id=").append(id);
+        sb.append(", type=").append(type);
+        sb.append(", batchNum=").append(batchNum);
+        sb.append(", extractionCode=").append(extractionCode);
+        sb.append(", fileId=").append(fileId);
+        sb.append(", filePath=").append(filePath);
+        sb.append(", browseTimes=").append(browseTimes);
+        sb.append(", downloadTimes=").append(downloadTimes);
+        sb.append(", saveTimes=").append(saveTimes);
+        sb.append(", expired=").append(expired);
+        sb.append(", status=").append(status);
+        sb.append(", shareTime=").append(shareTime);
+        sb.append(", expiredTime=").append(expiredTime);
+        sb.append(", updateTime=").append(updateTime);
+        sb.append(", userId=").append(userId);
+        // sb.append(", deleted=").append(deleted);
+        sb.append(", serialVersionUID=").append(serialVersionUID);
+        sb.append("]");
+        return sb.toString();
     }
-
 }
-
