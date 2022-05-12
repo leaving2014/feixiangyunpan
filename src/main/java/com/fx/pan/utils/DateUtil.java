@@ -6,9 +6,9 @@ import java.util.Calendar;
 import java.util.Date;
 
 /**
- * @Author leaving
- * @Date 2022/2/7 10:42
- * @Version 1.0
+ * @author leaving
+ * @date 2022/2/7 10:42
+ * @version 1.0
  */
 
 public class DateUtil {
@@ -33,9 +33,14 @@ public class DateUtil {
         Date date = new Date();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
         String format1 = simpleDateFormat.format(date);
-
         return date;
     }
+
+    public static String formatDate(Date date, String format) {
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        return sdf.format(date);
+    }
+
 
     /**
      * 指定日期加上天数后的日期
@@ -86,5 +91,23 @@ public class DateUtil {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         date = formatter.parse(enddate);
         return date;
+    }
+
+    /**
+     * 获取时间戳格式化后的日期 返回格式：20180808
+     * @param timeStamp 为空时默认当前时间
+     * @return
+     * @throws ParseException
+     */
+    public static String getDateByTimeStamp(String  timeStamp) throws ParseException {
+        SimpleDateFormat sf = new SimpleDateFormat("yyyyMMdd");
+        if (timeStamp == null || timeStamp.equals("")) {
+            long d = System.currentTimeMillis();
+            String date = sf.format(d);
+            return date;
+        } else {
+            String date = sf.format(Long.parseLong(timeStamp));
+            return date;
+        }
     }
 }

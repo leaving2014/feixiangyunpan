@@ -9,9 +9,9 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 /**
- * @Author leaving
- * @Date 2022/3/10 16:07
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/10 16:07
+ * @version 1.0
  */
 
 public class CharsetUtils {

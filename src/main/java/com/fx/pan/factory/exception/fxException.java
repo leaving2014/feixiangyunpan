@@ -1,9 +1,9 @@
 package com.fx.pan.factory.exception;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 11:43
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 11:43
+ * @version 1.0
  */
 
 public class fxException extends RuntimeException{

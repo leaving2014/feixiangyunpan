@@ -1,9 +1,9 @@
 package com.fx.pan.exception;
 
 /**
- * @Author leaving
- * @Date 2022/1/19 14:40
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/19 14:40
+ * @version 1.0
  */
 
 public class CopyException extends RuntimeException {

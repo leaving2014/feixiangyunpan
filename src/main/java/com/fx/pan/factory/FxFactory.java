@@ -15,9 +15,9 @@ import com.fx.pan.factory.upload.Uploader;
 import com.fx.pan.factory.upload.product.LocalStorageUploader;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 11:15
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 11:15
+ * @version 1.0
  */
 
 

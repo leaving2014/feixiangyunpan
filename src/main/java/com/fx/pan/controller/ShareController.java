@@ -2,16 +2,12 @@ package com.fx.pan.controller;
 
 
 import cn.hutool.core.util.RandomUtil;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fx.pan.domain.*;
+import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.common.Constants;
-import com.fx.pan.common.Msg;
-import com.fx.pan.domain.FileBean;
-import com.fx.pan.domain.Share;
-import com.fx.pan.domain.ShareFile;
-import com.fx.pan.domain.Storage;
 import com.fx.pan.dto.share.ShareFileDTO;
 import com.fx.pan.service.FileService;
 import com.fx.pan.service.ShareService;
@@ -47,7 +43,7 @@ public class ShareController {
      * 服务对象
      */
 
-    @Autowired
+    @Resource
     private UserService userService;
     @Resource
     private ShareService shareService;
@@ -55,10 +51,10 @@ public class ShareController {
     @Resource
     private StorageService storageService;
 
-    @Autowired
+    @Resource
     private FileService fileService;
 
-    @Autowired
+    @Resource
     private RedisCache redisCache;
 
 
@@ -67,12 +63,11 @@ public class ShareController {
      */
     @SneakyThrows
     @PostMapping("/create")
-    public Msg shareFile(@RequestBody ShareFileDTO shareSecretDTO) {
+    public ResponseResult createShare(@RequestBody ShareFileDTO shareSecretDTO) {
         Long userId = SecurityUtils.getUserId();
         String uuid = UUID.randomUUID().toString().replace("-", "");
         FileBean shareFile = fileService.selectFileById(shareSecretDTO.getFileId());
         Share share = new Share();
-        // BeanUtil.copyProperties(shareSecretDTO, share);
         Date shareTime = DateUtil.getFormatCurrentTime("yyyy-MM-dd HH:mm:ss");
         share.setShareTime(shareTime);
         share.setUpdateTime(shareTime);
@@ -94,46 +89,39 @@ public class ShareController {
         }
         share.setExpiredTime(expiredTime);
         shareService.save(share);
-        List<ShareFile> fileList = shareSecretDTO.getFiles();
-
-        return Msg.success("分享成功").put("extractionCode", extractionCode).put("batchNum", uuid).put("share", share);
+        // 设置过期自动删除
+        if (shareSecretDTO.getExpired() > 0) {
+            Long daySecond =  86400L;
+            Long totalSecond = (7 + shareSecretDTO.getExpired()) * daySecond;
+            redisCache.set(Constants.REDIS_DELETE_SUFFIX+"-share-uid-"+userId+":"+share.getId(), shareSecretDTO.getExpired(),totalSecond);
+        }
+        Map<String, Object> map = new HashMap<>();
+        map.put("share", share);
+        map.put("extractionCode", extractionCode);
+        map.put("batchNum", uuid);
+        return ResponseResult.success("分享成功", map);
     }
 
 
     @GetMapping("/list")
-    public Msg shareList() {
+    public ResponseResult shareList() {
         Long userId = SecurityUtils.getUserId();
-        // List<Share> shareFile = shareService.getShareList(userId);
-        // List sl = shareService.selectShareAndFileInfo(userId);
         List<ShareFileListVO> list = shareService.selectShareFileList(userId);
         List<ShareFileListVO> listWithoutDuplicates = list.stream().distinct().collect(Collectors.toList());
         listWithoutDuplicates.forEach(item -> {
-            Long browseTimes = redisCache.getCacheObject(Constants.REDIS_DATA_PREFIX + item.batchNum + "-bt");
-            if (browseTimes != null) {
-                item.setBrowseTimes(browseTimes);
-            }
-
+            Double zsetScore = redisCache.getZsetScore(Constants.REDIS_DATA_SUFFIX + "-share-bt", item.getId());
+            item.setBrowseTimes(zsetScore == null ? 0L : zsetScore.intValue());
         });
-
-        // FileBean fileBean = fileService.selectFileById(shareFile.get(0).getFileId());
-        // List fb = new ArrayList();
-        // Map map = new HashMap();
-        //
-        // for (Share share : shareFile) {
-        //     map.put("share",share);
-        //     FileBean fileBean1 = fileService.selectFileById(share.getFileId());
-        //     fb.add(fileBean1);
-        //     map.put("file",fb);
-        //     fb.add(map);
-        // }
-        return Msg.success().put("list", listWithoutDuplicates);
+        Map<String, Object> map = new HashMap<>();
+        map.put("list", listWithoutDuplicates);
+        return ResponseResult.success(map);
     }
 
     @GetMapping("/sharefile/list")
-    public Msg shareFileList(@RequestParam(required = false) Long userId,
-                             @RequestParam(required = false) Long fileId,
-                             @RequestParam(required = false) String batchNum,
-                             @RequestParam(required = false) String path) {
+    public ResponseResult shareFileList(@RequestParam(required = false) Long userId,
+                                        @RequestParam(required = false) Long fileId,
+                                        @RequestParam(required = false) String batchNum,
+                                        @RequestParam(required = false) String path) {
         List fileBeanList;
         FileBean fileBean;
         if (path != null) {
@@ -143,60 +131,53 @@ public class ShareController {
         } else {
             fileBean = fileService.selectFileById(fileId);
         }
-        // List<FileBean> fileList = fileService.getFileList(filePath, userId,0);
         fileBeanList = fileService.selectFileByParentId(fileBean.getId(), userId);
-        // List<FileBean> list = fileService.getShareFileList(filePath,userId);
-        // List shareFileListVOList = BeanCopyUtils.copyBeanList(list, ShareFileListVO.class);
-
-        return Msg.success("获取成功").put("list", fileBeanList);
+        Map<String, Object> map = new HashMap<>();
+        map.put("list", fileBeanList);
+        return ResponseResult.success("获取成功", map);
     }
 
-    // @AnonymousAccess
     @GetMapping("/shareinfo")
-    public Msg shareInfo(@RequestParam("shareBatchNum") String batchNum) {
+    public ResponseResult shareInfo(@RequestParam("shareBatchNum") String batchNum) {
         Share share = shareService.selectShareWithBatchNum(batchNum);
         if (share == null) {
-            return Msg.error(500, "分享不存在");
+            return ResponseResult.error(500, "分享不存在");
         } else {
             FileBean fileBean = fileService.selectFileById(share.getFileId());
-            return Msg.success("获取成功").put("share", share).put("file", fileBean);
+            Map<String, Object> map = new HashMap<>();
+            map.put("share", share);
+            map.put("file", fileBean);
+            return ResponseResult.success("获取成功", map);
         }
 
     }
 
     @GetMapping("/checkextractioncode")
-    public Msg checkExtractionCode(@RequestParam String batchNum, @RequestParam String extractionCode) {
+    public ResponseResult checkExtractionCode(@RequestParam String batchNum, @RequestParam String extractionCode) {
         LambdaQueryWrapper<Share> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(Share::getBatchNum, batchNum)
                 .eq(Share::getExtractionCode, extractionCode);
         List<Share> list = shareService.list(lambdaQueryWrapper);
-
-        Long browseTimes = redisCache.getCacheObject(Constants.REDIS_DATA_PREFIX + batchNum + "-bt");
-        if (browseTimes == null) {
-            browseTimes = 1L;
-        } else {
-            browseTimes = browseTimes + 1;
-        }
-        redisCache.setCacheObject(Constants.REDIS_DATA_PREFIX + batchNum + "-bt", browseTimes);
-        // share.setBrowseTimes(browseTimes);
-
+        redisCache.updateZset(Constants.REDIS_DATA_SUFFIX + "-share-bt", list.get(0).getId(), 1L);
         if (list.isEmpty()) {
-            return Msg.error(500, "分享码错误");
+            return ResponseResult.error(500, "分享码错误");
         } else {
             FileBean fileBean = fileService.selectFileById(list.get(0).getFileId());
-            return Msg.success("验证成功").put("file", fileBean);
+            Map<String, Object> map = new HashMap<>();
+            map.put("file", fileBean);
+            return ResponseResult.success("验证成功", map);
         }
 
     }
 
     @PostMapping("savesharefile")
-    public Msg saveShareFile(@RequestBody ShareFileSaveDTO shareFileSaveDTO) {
-        // Share share = shareService.selectShareWithBatchNum(shareFileSaveDTO.getBatchNum());
+    public ResponseResult saveShareFile(@RequestBody ShareFileSaveDTO shareFileSaveDTO) {
         Long userId = SecurityUtils.getUserId();
         Long[] files = shareFileSaveDTO.getFiles();
+        Share share = shareService.selectShareWithBatchNum(shareFileSaveDTO.getBatchNum());
         Long parentPathId = -1L;
         Long totalFileSize = 0L;
-        if (!shareFileSaveDTO.getFilePath().equals("/")) {
+        if (!"/".equals(shareFileSaveDTO.getFilePath())) {
             FileBean parentFile = fileService.selectByFilePath(shareFileSaveDTO.getFilePath(), userId);
             parentPathId = parentFile.getId();
         }
@@ -212,8 +193,6 @@ public class ShareController {
                 saveFileBean.setUserId(userId);
                 saveFileBean.setParentPathId(parentPathId);
                 fileService.save(saveFileBean);
-                // List<FileBean> fileBeanList = fileService.selectFileByParentId(fileBean.getId(),fileBean.getUserId
-                // ());
                 // 获取保存目录的子文件和目录
                 List<FileBean> saveShareFileList = fileService.selectChildFileListByPath(fileBean.getFileName(),
                         fileBean.getUserId());
@@ -227,8 +206,6 @@ public class ShareController {
                         totalFileSize += fileBean1.getFileSize();
                     }
                 }
-                // storageService.updateStorageUse(totalFileSize,userId);
-                // boolean b = storageService.updateStorageUse(saveFileBean1.getFileSize(), userId);
             } else {
                 FileBean saveFile = BeanCopyUtils.copyBean(fileBean, FileBean.class);
                 saveFile.setUserId(userId);
@@ -244,109 +221,45 @@ public class ShareController {
         }
         Storage storage = storageService.getUserStorage(userId);
         // 更新分享文件的保存次数
-        Long saveTimes = redisCache.getCacheObject(Constants.REDIS_DATA_PREFIX + shareFileSaveDTO.getBatchNum() +
-                "-st");
-        if (saveTimes == null) {
-            saveTimes = 1L;
-        } else {
-            saveTimes = saveTimes + 1;
-        }
-        redisCache.setCacheObject(Constants.REDIS_DATA_PREFIX + shareFileSaveDTO.getBatchNum() + "-st", saveTimes);
-        return Msg.success("保存成功").put("userStorage", storage);
+        redisCache.updateZset(Constants.REDIS_DATA_SUFFIX + "-share-st", share.getId(), 1L);
+        Map<String, Object> map = new HashMap<>();
+        map.put("userStorage", storage);
+        redisCache.deleteObject("fileList-uid:" + userId);
+        return ResponseResult.success("保存成功", map);
     }
 
     @PostMapping("/cancel")
-    public Msg cancelShare(@RequestParam("id") Long id, @RequestParam String batchNum) {
+    public ResponseResult cancelShare(@RequestParam("id") Long id, @RequestParam String batchNum) {
         Long userId = SecurityUtils.getUserId();
         int flag = shareService.deleteShare(id, userId);
-        boolean b = redisCache.hasKey(Constants.REDIS_DATA_PREFIX + batchNum + "-st");
-
-        if (redisCache.hasKey(Constants.REDIS_DATA_PREFIX + batchNum + "-st")) {
-            redisCache.deleteObject(Constants.REDIS_DATA_PREFIX + id + "-st");
+        if (redisCache.hasKey(Constants.REDIS_DATA_SUFFIX + "-share-st")) {
+            redisCache.deleteZset(Constants.REDIS_DATA_SUFFIX + "-share-st", id);
         }
-        if (redisCache.hasKey(Constants.REDIS_DATA_PREFIX + batchNum + "-bt")) {
-            redisCache.deleteObject(Constants.REDIS_DATA_PREFIX + batchNum + "-bt");
+        if (redisCache.hasKey(Constants.REDIS_DATA_SUFFIX + "-share-bt")) {
+            redisCache.deleteZset(Constants.REDIS_DATA_SUFFIX + "-share-bt", id);
         }
         if (flag == 1) {
-            return Msg.success("取消分享成功");
+            return ResponseResult.success("取消分享成功");
         } else {
-            return Msg.error(500, "取消分享失败");
+            return ResponseResult.error(500, "取消分享失败");
         }
     }
 
     @PostMapping("/clearinvalid")
-    public Msg clearInvalid(@RequestBody ShareFileDTO shareFileDTO) {
+    public ResponseResult clearInvalid() {
         Long userId = SecurityUtils.getUserId();
-        List<ShareFile> fileList = shareFileDTO.getFiles();
-        for (ShareFile file : fileList) {
-            // shareService.clearInvalid(file,userId);
+        List<Share> shareList = shareService.selectExpireShareFileList(userId);
+        System.out.println("shareList===========================" + shareList);
+        int i = shareService.deleteExpireShareList(userId);
+        if (i > 1) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("total", i);
+            return ResponseResult.success("清除过期分享成功",map);
+        } else {
+            return ResponseResult.error(0, "没有过期分享");
         }
-        return Msg.success();
     }
 
 
-    /**
-     * 分页查询所有数据
-     *
-     * @param page  分页对象
-     * @param share 查询实体
-     * @return 所有数据
-     */
-    @GetMapping
-    public Msg selectAll(Page<Share> page, Share share) {
-        Long userId = SecurityUtils.getUserId();
-
-        Page<Share> page1 = shareService.page(page, new QueryWrapper<>(share));
-
-        return Msg.success().put("list", page1);
-    }
-
-    /**
-     * 通过主键查询单条数据
-     *
-     * @param id 主键
-     * @return 单条数据
-     */
-    @GetMapping("{id}")
-    public Msg selectOne(@PathVariable Serializable id) {
-        Share res = shareService.getById(id);
-        return Msg.success().put("res", res);
-    }
-
-    /**
-     * 新增数据
-     *
-     * @param share 实体对象
-     * @return 新增结果
-     */
-    @PostMapping
-    public Msg insert(@RequestBody Share share) {
-        boolean save = shareService.save(share);
-        return Msg.success().put("res", save);
-    }
-
-    /**
-     * 修改数据
-     *
-     * @param share 实体对象
-     * @return 修改结果
-     */
-    @PutMapping
-    public Msg update(@RequestBody Share share) {
-        boolean b = shareService.updateById(share);
-        return Msg.success("修改成功");
-    }
-
-    /**
-     * 删除数据
-     *
-     * @param idList 主键结合
-     * @return 删除结果
-     */
-    @DeleteMapping
-    public Msg delete(@RequestParam("idList") List<Long> idList) {
-        boolean b = shareService.removeByIds(idList);
-        return Msg.success();
-    }
 }
 

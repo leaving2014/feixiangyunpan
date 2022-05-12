@@ -1,9 +1,9 @@
 package com.fx.pan.common;
 
 /**
- * @Author leaving
- * @Date 2022/2/8 20:25
- * @Version 1.0
+ * @author leaving
+ * @date 2022/2/8 20:25
+ * @version 1.0
  */
 
 public enum AppHttpCodeEnum {
@@ -21,9 +21,9 @@ public enum AppHttpCodeEnum {
     int code;
     String msg;
 
-    AppHttpCodeEnum(int code, String errorMessage){
+    AppHttpCodeEnum(int code, String message){
         this.code = code;
-        this.msg = errorMessage;
+        this.msg = message;
     }
 
     public int getCode() {

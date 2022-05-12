@@ -7,9 +7,9 @@ import org.apache.ibatis.reflection.MetaObject;
 import java.util.Date;
 
 /**
- * @Author leaving
- * @Date 2022/2/11 16:11
- * @Version 1.0
+ * @author leaving
+ * @date 2022/2/11 16:11
+ * @version 1.0
  */
 
 public class MyMetaObjectHandler implements MetaObjectHandler {

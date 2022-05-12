@@ -3,6 +3,8 @@ package com.fx.pan;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.mapper.FileMapper;
+import com.fx.pan.utils.DateUtil;
+import com.fx.pan.utils.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -11,22 +13,10 @@ import javax.annotation.Resource;
 @SpringBootTest
 class PanApplicationTests {
 
-
-    @Resource
-    private FileMapper fileMapper;
-
-
     @Test
     void contextLoads() {
-
-        // Update update = new LambdaUpdateChainWrapper(fileMapper);
-        // update.setSql(true, "update file set parent_path_id = -1 where file_path = '/'");
-        UpdateWrapper<FileBean> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("file_path", "/").set("parent_path_id", -1);
-        fileMapper.update(null, updateWrapper);
-
-
-
+        System.out.println(org.apache.commons.io.FileUtils.byteCountToDisplaySize(12233L)); //11 KB  Apache commons.io
+        System.out.println(FileUtils.fileSizeUnitConversionAndUnit(12233L));//11.95 KB
     }
 
 

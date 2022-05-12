@@ -2,9 +2,9 @@ package com.fx.pan.exception;
 
 /**
  * 业务异常
- * @Author leaving
- * @Date 2022/1/20 17:08
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/20 17:08
+ * @version 1.0
  *
  */
 

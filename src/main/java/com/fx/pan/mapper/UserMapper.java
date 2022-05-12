@@ -5,9 +5,9 @@ import com.fx.pan.domain.User;
 import org.springframework.stereotype.Repository;
 
 /**
- * @Author leaving
- * @Date 2022/1/14 10:40
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/14 10:40
+ * @version 1.0
  */
 @Repository
 public interface UserMapper extends BaseMapper<User> {

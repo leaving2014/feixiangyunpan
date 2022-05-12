@@ -2,25 +2,42 @@ package com.fx.pan.config;
 
 
 import com.fx.pan.utils.FastJsonRedisSerializer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import javax.annotation.Resource;
 
 
 /**
- * @Author leaving
- * @Date 2022/1/11 22:30
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/11 22:30
+ * @version 1.0
  */
 
 
 @Configuration
 @EnableCaching
 public class RedisConfig extends CachingConfigurerSupport {
+
+    @Autowired
+    RedisConnectionFactory redisConnectionFactory;
+
+    /*
+        redis开启监听配置
+     */
+    @Bean
+    public RedisMessageListenerContainer redisMessageListenerContainer(){
+        RedisMessageListenerContainer redisMessageListenerContainer = new RedisMessageListenerContainer();
+        redisMessageListenerContainer.setConnectionFactory(redisConnectionFactory);
+        return redisMessageListenerContainer;
+    }
 
     @Bean
     @SuppressWarnings(value = { "unchecked", "rawtypes" })

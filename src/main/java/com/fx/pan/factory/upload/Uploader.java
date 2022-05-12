@@ -4,11 +4,12 @@ import com.fx.pan.exception.UploadException;
 import com.fx.pan.factory.locks.RedisLock;
 import com.fx.pan.factory.upload.domain.UploadFile;
 import com.fx.pan.factory.upload.domain.UploadFileResult;
-import com.fx.pan.factory.upload.product.QiwenMultipartFile;
+import com.fx.pan.factory.upload.product.CosMultipartFile;
 import com.fx.pan.utils.RedisCache;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest;
@@ -27,9 +28,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 12:59
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 12:59
+ * @version 1.0
  */
 
 
@@ -83,8 +84,8 @@ public abstract class Uploader {
             Iterator<String> iter = request.getFileNames();
             while (iter.hasNext()) {
                 MultipartFile multipartFile = request.getFile(iter.next());
-                QiwenMultipartFile qiwenMultipartFile = new QiwenMultipartFile(multipartFile);
-                UploadFileResult uploadFileResult = doUploadFlow(qiwenMultipartFile, uploadFile);
+                CosMultipartFile cosMultipartFile = new CosMultipartFile(multipartFile);
+                UploadFileResult uploadFileResult = doUploadFlow(cosMultipartFile, uploadFile);
                 uploadFileResultList.add(uploadFileResult);
 
             }
@@ -95,12 +96,12 @@ public abstract class Uploader {
         return uploadFileResultList;
     }
 
-    protected UploadFileResult doUploadFlow(QiwenMultipartFile qiwenMultipartFile, UploadFile uploadFile) {
+    protected UploadFileResult doUploadFlow(CosMultipartFile cosMultipartFile, UploadFile uploadFile) {
 
         UploadFileResult uploadFileResult;
         try {
-            rectifier(qiwenMultipartFile, uploadFile);
-            uploadFileResult = organizationalResults(qiwenMultipartFile, uploadFile);
+            rectifier(cosMultipartFile, uploadFile);
+            uploadFileResult = organizationalResults(cosMultipartFile, uploadFile);
         } catch (Exception e) {
             throw new UploadException(e);
         }
@@ -114,10 +115,10 @@ public abstract class Uploader {
      */
     public abstract void cancelUpload(UploadFile uploadFile);
 
-    protected abstract void doUploadFileChunk(QiwenMultipartFile qiwenMultipartFile, UploadFile uploadFile)  throws IOException;
-    protected abstract UploadFileResult organizationalResults(QiwenMultipartFile qiwenMultipartFile, UploadFile uploadFile);
+    protected abstract void doUploadFileChunk(CosMultipartFile cosMultipartFile, UploadFile uploadFile)  throws IOException;
+    protected abstract UploadFileResult organizationalResults(CosMultipartFile cosMultipartFile, UploadFile uploadFile);
 
-    private void rectifier(QiwenMultipartFile qiwenMultipartFile, UploadFile uploadFile) {
+    private void rectifier(CosMultipartFile cosMultipartFile, UploadFile uploadFile) {
         String key = "QiwenUploader:Identifier:" + uploadFile.getIdentifier() + ":lock";
         String current_upload_chunk_number = "QiwenUploader:Identifier:" + uploadFile.getIdentifier() + ":current_upload_chunk_number";
 
@@ -149,10 +150,10 @@ public abstract class Uploader {
                 }
             }
 
-            log.info("文件名{},正在上传第{}块, 共{}块>>>>>>>>>>", qiwenMultipartFile.getMultipartFile().getOriginalFilename(),uploadFile.getChunkNumber(), uploadFile.getTotalChunks());
+            log.info("文件名{},正在上传第{}块, 共{}块>>>>>>>>>>", cosMultipartFile.getMultipartFile().getOriginalFilename(),uploadFile.getChunkNumber(), uploadFile.getTotalChunks());
             if (uploadFile.getChunkNumber() == currentUploadChunkNumber) {
-                doUploadFileChunk(qiwenMultipartFile, uploadFile);
-                log.info("文件名{},第{}块上传成功", qiwenMultipartFile.getMultipartFile().getOriginalFilename(), uploadFile.getChunkNumber());
+                doUploadFileChunk(cosMultipartFile, uploadFile);
+                log.info("文件名{},第{}块上传成功", cosMultipartFile.getMultipartFile().getOriginalFilename(), uploadFile.getChunkNumber());
                 this.redisCache.getIncr("QiwenUploader:Identifier:" + uploadFile.getIdentifier() + ":current_upload_chunk_number");
             }
         } catch (Exception e) {

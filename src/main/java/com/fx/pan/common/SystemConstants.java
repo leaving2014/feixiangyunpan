@@ -1,9 +1,9 @@
 package com.fx.pan.common;
 
 /**
- * @Author leaving
- * @Date 2022/2/10 10:17
- * @Version 1.0
+ * @author leaving
+ * @date 2022/2/10 10:17
+ * @version 1.0
  */
 
 public class SystemConstants {

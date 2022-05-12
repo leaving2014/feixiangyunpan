@@ -3,6 +3,7 @@ package com.fx.pan.component;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fx.pan.domain.User;
 import com.fx.pan.mapper.UserMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;

@@ -164,26 +164,38 @@
         where id = #{fileId,jdbcType=BIGINT}
     </update>
     <update id="restoreDeletedFileById">
-        update file set deleted = 0 where id = #{id,jdbcType=BIGINT} and user_id = #{userId,jdbcType=BIGINT}
+        update file
+        set deleted = 0
+        where id = #{id,jdbcType=BIGINT}
+          and user_id = #{userId,jdbcType=BIGINT}
     </update>
     <delete id="deleteRecycleFileById" parameterType="com.fx.pan.domain.FileBean">
-        delete from file where id = #{id,jdbcType=BIGINT} and user_id = #{userId,jdbcType=BIGINT}
+        delete
+        from file
+        where id = #{id,jdbcType=BIGINT}
+          and user_id = #{userId,jdbcType=BIGINT}
     </delete>
 
     <delete id="deleteFileByIdAndUserId">
-        update file set deleted = 1 where id = #{id,jdbcType=BIGINT} and user_id = #{userId,jdbcType=BIGINT}
+        update file
+        set deleted = 1
+        where id = #{id,jdbcType=BIGINT}
+          and user_id = #{userId,jdbcType=BIGINT}
     </delete>
 
-    <select id="selectDeletedFile"  resultType="com.fx.pan.domain.FileBean">
-        select * from file where user_id = #{id,jdbcType=BIGINT} and deleted = 1
+    <select id="selectDeletedFile" resultType="com.fx.pan.domain.FileBean">
+        select *
+        from file
+        where user_id = #{id,jdbcType=BIGINT}
+          and deleted = 1
     </select>
 
     <!--<select id="selectFileByExtendName" resultType="com.fx.pan.vo.FileListVo"></select>-->
 
 
-    <sql id="selectByExtendName" >
+    <sql id="selectByExtendName">
         where file_ext in
-        <foreach collection="fileNameList" open="(" close=")" separator="," item="fileName" >
+        <foreach collection="fileNameList" open="(" close=")" separator="," item="fileName">
             #{fileName}
         </foreach>
         and user_id = #{userId}
@@ -191,7 +203,7 @@
     </sql>
     <sql id="selectByNotExtendName">
         where file_ext not in
-        <foreach collection="fileNameList" open="(" close=")" separator="," item="fileName" >
+        <foreach collection="fileNameList" open="(" close=")" separator="," item="fileName">
             #{fileName}
         </foreach>
         and user_id = #{userId}
@@ -209,7 +221,8 @@
         <include refid="selectByExtendName"></include>
     </select>
 
-    <select id="selectFileNotInExtendNames" parameterType="com.fx.pan.domain.FileBean" resultType="com.fx.pan.vo.FileListVo">
+    <select id="selectFileNotInExtendNames" parameterType="com.fx.pan.domain.FileBean"
+            resultType="com.fx.pan.vo.FileListVo">
         select * from file
         <include refid="selectByNotExtendName"></include>
         limit #{beginCount}, #{pageCount}
@@ -218,6 +231,19 @@
     <select id="selectCountNotInExtendNames" parameterType="com.fx.pan.domain.FileBean" resultType="java.lang.Long">
         select count(*) from file
         <include refid="selectByNotExtendName"></include>
+    </select>
+    <select id="selectFileByIdentifier" resultType="com.fx.pan.vo.FileListVo">
+        select *
+        from file
+        where identifier = #{identifier}
+    </select>
+    <select id="selectFileList" resultType="com.fx.pan.domain.FileBean">
+        select * from file
+        <if test="onlyFile == true">
+            where is_dir = 0
+        </if>
+            order by id desc
+        limit #{pageNum}, #{pageSize}
     </select>
 
 </mapper>

@@ -1,9 +1,17 @@
 package com.fx.pan.controller;
 
-import com.fx.pan.common.Msg;
+import com.fx.pan.common.Constants;
+import com.fx.pan.domain.FileBean;
+import com.fx.pan.domain.ResponseResult;
+import com.fx.pan.factory.fxUtils;
+import com.fx.pan.service.FileService;
 import com.fx.pan.service.OfflineDownloadService;
-import com.fx.pan.utils.OfflineDownload;
+import com.fx.pan.utils.FileUtils;
+import com.fx.pan.utils.OfflineDownloadUtil;
+import com.fx.pan.utils.RedisCache;
+import com.fx.pan.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,39 +20,82 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * @Author leaving
- * @Date 2021/12/18 15:24
- * @Version 1.0
+ * @author leaving
+ * @date 2021/12/18 15:24
+ * @version 1.0
  */
 @RequestMapping("/offline")
 @RestController
 public class OfflineDownloadController {
 
+    @Value("${fx.storageType}")
+    private Integer storageType;
+
+    @Value("${fx.absoluteFilePath}")
+    private String absoluteFilePath;
+
+    @Resource
+    private FileService fileService;
+
+    @Resource
+    private RedisCache redisCache;
+
     @Resource
     private OfflineDownloadService offlineDownloadService;
 
+    // https://mirrors.aliyun.com/apache/accumulo/2.0.1/accumulo-2.0.1-src.tar.gz
 
+    /**
+     * 创建离线下载任务
+     * @param url
+     * @param t
+     * @param type
+     * @param response
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
+     */
     @PostMapping("/new")
-    public Msg newOfflineDownload(@RequestParam("url") String url,
-                                  HttpServletResponse response) throws IOException {
+    public ResponseResult newOfflineDownload(@RequestParam("url") String url,@RequestParam("t") Long t,@RequestParam(
+            "type") String type,HttpServletResponse response) throws IOException, InterruptedException {
+        Long userId = SecurityUtils.getUserId();
         // String fileName = FileUtils.getFileName(url);
-        Msg msg = offlineDownloadService.downloadFromUrl(url);
-        // Msg msg1 = OfflineDownload.downLoadFromUrl(url, "D:\\ideaWorkspace\\pan\\src\\main\\resources" +
-        //         "\\offlinedownload");
+        redisCache.setCacheObject(Constants.REDIS_DATA_SUFFIX +"-"+type+"-"+userId+":"+ t, 0);
 
-        return msg;
+        String fileName = null;
+        FileBean fileBean = new FileBean();
+        // String savePath = fxUtils.getStaticPath() + "/tmp/";
+        Integer fileSize = 0;
+        try {
+            fileName = FileUtils.getFileName(url);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // String saveFilePath = absoluteFilePath + "/tmp/" + fileName;
 
+        // OfflineDownloadUtil.downloadFileFromUrl(url, savePath,t,type);
+
+        // wget下载文件并实时打印下载进度,最后保存到本地
+        offlineDownloadService.downloadFromUrl(url,t,userId,type);
+        Map<String, Object> map = new HashMap<>();
+        map.put("fileName", fileName.replace("\"", ""));
+        map.put("fileSize", fileSize);
+        map.put("filePath", fileBean);
+        map.put("progress", 0);
+        System.out.println("返回结果前...=====" + new Date());
+        redisCache.setCacheObject("remote-" + t + "-" + userId, 0);
+        return ResponseResult.success("任务创建成功", map);
     }
 
     public static void inputStream2File(InputStream is, File file) {
         OutputStream os = null;
-        //https://developer5.baidupan.com/121916bb/2018/07/05/ad1a17747bdb84ddccfbc36babea8900
-        // .rar?st=LUF6kBnovBszMOTu2MklYQ&e=1639904244&b
-        // =A7QMgACXWbhXuAP5Cr5T6FKmD7UFhVf_bA7gJhVDbXrgH7QqQAOZR3gPWX_b8FyQSvVeUA8QOkBepSmA6hUHdUewMODGoAaVkwV2cDJgp0UyVSZg8h&fi=3995631&pid=210-82-53-194&up=2&mp=0&pim=9bb0fb5d994a51c30e1f3531b5687d3e&co=1
         try {
             os = new FileOutputStream(file);
             int bytesRead = 0;
@@ -77,7 +128,8 @@ public class OfflineDownloadController {
     }
 
     @PostMapping("/status")
-    public void downloadStatus(@RequestParam("t") String string, HttpServletResponse response) {
-
+    public ResponseResult downloadStatus(@RequestParam("t") String string, HttpServletResponse response) {
+        int progress = redisCache.getCacheObject(Constants.REDIS_DATA_PREFIX + "-" + string);
+        return ResponseResult.success(0,progress);
     }
 }

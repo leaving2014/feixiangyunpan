@@ -6,9 +6,9 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
- * @Author leaving
- * @Date 2022/4/5 20:52
- * @Version 1.0
+ * @author leaving
+ * @date 2022/4/5 20:52
+ * @version 1.0
  */
 
 @Data

@@ -6,9 +6,9 @@ import lombok.Data;
 import java.util.ArrayList;
 
 /**
- * @Author leaving
- * @Date 2022/4/1 19:46
- * @Version 1.0
+ * @author leaving
+ * @date 2022/4/1 19:46
+ * @version 1.0
  */
 @Data
 public class ShareFileSaveDTO {

@@ -7,9 +7,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 12:27
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 12:27
+ * @version 1.0
  */
 
 public class IOUtils {

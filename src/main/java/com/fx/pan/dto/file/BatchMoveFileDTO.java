@@ -7,9 +7,9 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * @Author leaving
- * @Date 2022/2/8 16:26
- * @Version 1.0
+ * @author leaving
+ * @date 2022/2/8 16:26
+ * @version 1.0
  */
 @Data
 @Schema(name = "批量移动文件DTO",required = true)

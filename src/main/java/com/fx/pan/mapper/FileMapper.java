@@ -8,9 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * @Author leaving
- * @Date 2022/1/19 11:40
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/19 11:40
+ * @version 1.0
  */
 @Repository
 public interface  FileMapper extends BaseMapper<FileBean> {
@@ -32,4 +32,7 @@ public interface  FileMapper extends BaseMapper<FileBean> {
     List<FileListVo> selectFileNotInExtendNames(List<String> fileNameList, Long beginCount, Long pageCount, long userId);
     Long selectCountNotInExtendNames(List<String> fileNameList, Long beginCount, Long pageCount, long userId);
 
+    List selectFileByIdentifier(String identifier);
+
+    List<FileBean> selectFileList(String path, boolean onlyFile, Long userId, int pageNum, int pageSize);
 }

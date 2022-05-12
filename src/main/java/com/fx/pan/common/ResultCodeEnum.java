@@ -1,9 +1,9 @@
 package com.fx.pan.common;
 
 /**
- * @Author leaving
- * @Date 2022/1/19 12:46
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/19 12:46
+ * @version 1.0
  */
 
 
@@ -30,7 +30,7 @@ public enum ResultCodeEnum {
         return this.success;
     }
 
-    public Integer getCode() {
+    public int getCode() {
         return this.code;
     }
 

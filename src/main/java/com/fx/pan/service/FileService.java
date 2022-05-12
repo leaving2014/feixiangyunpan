@@ -1,16 +1,17 @@
 package com.fx.pan.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fx.pan.common.Msg;
+import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.vo.FileListVo;
+import org.checkerframework.checker.initialization.qual.FBCBottom;
 
 import java.util.List;
 
 /**
- * @Author leaving
- * @Date 2022/1/18 19:01
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/18 19:01
+ * @version 1.0
  */
 public interface FileService extends IService<FileBean>  {
 
@@ -35,6 +36,8 @@ public interface FileService extends IService<FileBean>  {
 
     List getFileList(String path, Long user_id, Integer isDir);
 
+    List<FileBean> selectOfflineFileList(Long userId);
+
     boolean isFolderExist(String filePath, String fileName, Long userId);
 
     boolean isFileExist(String filePath, String fileName, Long userId);
@@ -56,9 +59,9 @@ public interface FileService extends IService<FileBean>  {
      */
     boolean deleteRecycleFileById(Long id,Long userId);
 
-    Msg copyFile(Long copyFileId, String copyFilePath,Long userId) ;
+    ResponseResult copyFile(Long copyFileId, String copyFilePath, Long userId) ;
 
-    Msg moveFile(Long fileId, String filePath,Long userId);
+    ResponseResult moveFile(Long fileId, String filePath, Long userId);
 
     FileBean selectByFilePath(String filePath, Long userId);
 
@@ -66,7 +69,7 @@ public interface FileService extends IService<FileBean>  {
 
     boolean unzip(Long fileId, int unzipMode, String filePath);
 
-    Msg cleanFile(Long userId);
+    ResponseResult cleanFile(Long userId);
 
     List getFileListOfType(String s, Long user_id, String fileType);
 
@@ -90,11 +93,8 @@ public interface FileService extends IService<FileBean>  {
 
     List<FileBean> selectFileWithFileSize(long l, Long userId);
 
+    FileBean selectFileByNameAndPath(String fileName, String filePath, Long userId,Integer isDir);
 
-    // 管理员文件操作
-    List<FileBean> fileList(String path, boolean onlyFile, int page, int size);
+    Integer getAuditFileCount(Long userId, Boolean isAudit);
 
-    // void isFileExist(String filename,String userId){
-    //
-    // }
 }

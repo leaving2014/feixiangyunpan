@@ -9,9 +9,9 @@ import com.qcloud.cos.region.Region;
 import org.springframework.beans.factory.annotation.Value;
 
 /**
- * @Author leaving
- * @Date 2022/3/19 16:47
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/19 16:47
+ * @version 1.0
  */
 
 public class TxCosUtil {

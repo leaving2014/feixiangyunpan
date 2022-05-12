@@ -16,6 +16,10 @@ import java.util.List;
 public interface ShareMapper extends BaseMapper<Share> {
 
     List<ShareFileListVO> selectShareFileList(Long userId);
+
+    List<ShareFileListVO> selectShareList(Integer pageNum, Integer pageSize);
+
+    int deleteExpireShareList(Long userId);
 }
 
 

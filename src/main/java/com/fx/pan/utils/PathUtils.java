@@ -6,9 +6,9 @@ import org.springframework.util.ClassUtils;
 import java.io.File;
 
 /**
- * @Author leaving
- * @Date 2021/12/14 9:13
- * @Version 1.0
+ * @author leaving
+ * @date 2021/12/14 9:13
+ * @version 1.0
  */
 
 public class PathUtils {

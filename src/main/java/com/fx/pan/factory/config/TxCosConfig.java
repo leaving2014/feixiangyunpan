@@ -3,24 +3,24 @@ package com.fx.pan.factory.config;
 import com.fx.pan.factory.domain.TxCos;
 
 /**
- * @Author leaving
- * @Date 2022/3/19 16:37
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/19 16:37
+ * @version 1.0
  */
 
 public class TxCosConfig {
 
-    private TxCos oss = new TxCos();
+    private TxCos cos = new TxCos();
 
     public TxCosConfig() {
     }
 
-    public TxCos getOss() {
-        return this.oss;
+    public TxCos getCos() {
+        return this.cos;
     }
 
-    public void setOss(final TxCos oss) {
-        this.oss = oss;
+    public void setCos(final TxCos oss) {
+        this.cos = oss;
     }
 
     @Override
@@ -34,8 +34,8 @@ public class TxCosConfig {
             if (!other.canEqual(this)) {
                 return false;
             } else {
-                Object this$oss = this.getOss();
-                Object other$oss = other.getOss();
+                Object this$oss = this.getCos();
+                Object other$oss = other.getCos();
                 if (this$oss == null) {
                     if (other$oss != null) {
                         return false;
@@ -57,13 +57,13 @@ public class TxCosConfig {
     public int hashCode() {
         boolean PRIME = true;
         int result = 1;
-        Object $oss = this.getOss();
+        Object $oss = this.getCos();
          result = result * 59 + ($oss == null ? 43 : $oss.hashCode());
         return result;
     }
 
     @Override
     public String toString() {
-        return "AliyunConfig(oss=" + this.getOss() + ")";
+        return "AliyunConfig(oss=" + this.getCos() + ")";
     }
 }

@@ -11,9 +11,9 @@ import java.io.IOException;
 import static com.qcloud.cos.demo.BucketRefererDemo.cosClient;
 
 /**
- * @Author leaving
- * @Date 2021/11/25 10:17
- * @Version 1.0
+ * @author leaving
+ * @date 2021/11/25 10:17
+ * @version 1.0
  */
 
 public class fileDownload {

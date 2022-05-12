@@ -14,9 +14,9 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 /**
- * @Author leaving
- * @Date 2022/3/12 16:20
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/12 16:20
+ * @version 1.0
  */
 
 public class FormatConversion {
@@ -50,12 +50,10 @@ public class FormatConversion {
     }
 
 
-    public static boolean Pdf2Doc(String filePath, String savePath) {
+    public static boolean pdf2Doc(String filePath, String savePath) {
         File file = new File(filePath);
         // 创建Pdf工具类对象
         PdfDocument pdf = new PdfDocument();
-        // File file =  new File(savePath+ file.getName());
-
         // 拼接Word文件名
         String projectPath = System.getProperty("user.dir");
         String name = file.getName();

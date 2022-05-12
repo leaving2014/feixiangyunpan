@@ -2,10 +2,12 @@ package com.fx.pan.utils.file;
 
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.log.Log;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.factory.fxUtils;
 import com.fx.pan.utils.FileUtils;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import net.coobird.thumbnailator.name.Rename;
 // import org.bytedeco.javacv.FFmpegFrameGrabber;
@@ -13,6 +15,7 @@ import net.coobird.thumbnailator.name.Rename;
 // import org.bytedeco.javacv.Java2DFrameConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
@@ -32,6 +35,7 @@ import java.util.List;
  * @author lnj
  * createTime 2018-10-19 15:31
  **/
+@Slf4j
 @PropertySource(value = {"classpath:application.yml"},ignoreResourceNotFound = true,encoding="UTF-8")
 @Component
 public class ImageUtil {
@@ -59,25 +63,12 @@ public class ImageUtil {
     // 缩略图后缀
     private static final String SUFFIX = "-thumbnail";
 
-    /**
-     * 生成图片预览图
-     *
-     * @param path 图片路径
-     * @return
-     */
-    public static InputStream generatePreviewPicture(String path) {
-
-        return null;
-    }
-
+    // @Async
     public static void startGenerateThumbnail(String filePath, FileBean fileBean, boolean scale, double scaleSize) throws IOException {
         if (Arrays.asList(IMG_FILE).contains(fileBean.getFileExt())) {
-            // TODO 文件校验是否合规
-            fileBean.setAudit(1);
             ImageUtil.generateThumbnail(filePath, fileBean, true, 0.3);
         } else if (fileBean.getFileType() == 2) {
-            // 视频生成缩略图
-            // TODO 文件校验是否合规
+            // 视频生成缩略图 由于视频生成缩略图依赖过多，暂时不使用
         }
     }
 
@@ -136,7 +127,7 @@ public class ImageUtil {
         } else {
             scaleRatio = 0.3f;
         }
-        System.out.println("图片缩放比例为" + scaleRatio);
+        log.info("图片缩放比例为" + scaleRatio);
 
         String path = FileUtils.getCacheFileFullPath(absoluteCachePath, formatDate,
                 fileName);
@@ -327,9 +318,6 @@ public class ImageUtil {
     /**
      * 执行帧处理
      *
-     * @param f
-     * @param targerFilePath
-     * @param targetFileName
      * @return
      * @throws Exception
      */

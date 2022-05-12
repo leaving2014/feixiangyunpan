@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @Author leaving
- * @Date 2022/3/10 14:47
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/10 14:47
+ * @version 1.0
  */
 
 public class MimeUtils {

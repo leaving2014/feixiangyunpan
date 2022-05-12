@@ -1,10 +1,20 @@
 package com.fx.pan.factory.preview.product;
 
+import com.fx.pan.factory.preview.Previewer;
+
+import java.io.InputStream;
+
 /**
- * @Author leaving
- * @Date 2022/3/10 15:02
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/10 15:02
+ * @version 1.0
  */
 
-public class CosStoragePreviewer {
+public class CosStoragePreviewer extends Previewer {
+
+
+    @Override
+    protected InputStream getInputStream(String fileUrl) {
+        return null;
+    }
 }

@@ -3,9 +3,9 @@ package com.fx.pan.exception.user;
 import com.fx.pan.exception.base.BaseException;
 
 /**
- * @Author leaving
- * @Date 2022/1/19 22:32
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/19 22:32
+ * @version 1.0
  */
 
 public class UserException extends BaseException
@@ -16,4 +16,5 @@ public class UserException extends BaseException
     {
         super("user", code, args, null);
     }
+
 }

@@ -19,9 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 13:02
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 13:02
+ * @version 1.0
  */
 
 @Component
@@ -30,17 +30,17 @@ public class LocalStorageUploader extends Uploader {
     public static Map<String, String> FILE_URL_MAP = new HashMap<>();
 
     @Override
-    protected UploadFileResult doUploadFlow(QiwenMultipartFile qiwenMultipartFile, UploadFile uploadFile) {
+    protected UploadFileResult doUploadFlow(CosMultipartFile cosMultipartFile, UploadFile uploadFile) {
         UploadFileResult uploadFileResult = new UploadFileResult();
         try {
-            String fileUrl = fxUtils.getUploadFileUrl(uploadFile.getIdentifier(), qiwenMultipartFile.getExtendName());
+            String fileUrl = fxUtils.getUploadFileUrl(uploadFile.getIdentifier(), cosMultipartFile.getExtendName());
             if (StringUtils.isNotEmpty(FILE_URL_MAP.get(uploadFile.getIdentifier()))) {
                 fileUrl = FILE_URL_MAP.get(uploadFile.getIdentifier());
             } else {
                 FILE_URL_MAP.put(uploadFile.getIdentifier(), fileUrl);
             }
             String tempFileUrl = fileUrl + "_tmp";
-            String confFileUrl = fileUrl.replace("." + qiwenMultipartFile.getExtendName(), ".conf");
+            String confFileUrl = fileUrl.replace("." + cosMultipartFile.getExtendName(), ".conf");
 
             File file = new File(fxUtils.getStaticPath() + fileUrl);
             File tempFile = new File(fxUtils.getStaticPath() + tempFileUrl);
@@ -53,7 +53,7 @@ public class LocalStorageUploader extends Uploader {
             //第三步 计算偏移量
             long position = (uploadFile.getChunkNumber() - 1) * uploadFile.getChunkSize();
             //第四步 获取分片数据
-            byte[] fileData = qiwenMultipartFile.getUploadBytes();
+            byte[] fileData = cosMultipartFile.getUploadBytes();
             //第五步 写入数据
             fileChannel.position(position);
             fileChannel.write(ByteBuffer.wrap(fileData));
@@ -63,13 +63,13 @@ public class LocalStorageUploader extends Uploader {
             //判断是否完成文件的传输并进行校验与重命名
             boolean isComplete = checkUploadStatus(uploadFile, confFile);
             uploadFileResult.setFileUrl(fileUrl);
-            uploadFileResult.setFileName(qiwenMultipartFile.getFileName());
-            uploadFileResult.setExtendName(qiwenMultipartFile.getExtendName());
+            uploadFileResult.setFileName(cosMultipartFile.getFileName());
+            uploadFileResult.setExtendName(cosMultipartFile.getExtendName());
             uploadFileResult.setFileSize(uploadFile.getTotalSize());
             uploadFileResult.setStorageType(StorageTypeEnum.LOCAL);
 
             if (uploadFile.getTotalChunks() == 1) {
-                uploadFileResult.setFileSize(qiwenMultipartFile.getSize());
+                uploadFileResult.setFileSize(cosMultipartFile.getSize());
             }
 
             if (isComplete) {
@@ -93,12 +93,12 @@ public class LocalStorageUploader extends Uploader {
     }
 
     @Override
-    protected void doUploadFileChunk(QiwenMultipartFile qiwenMultipartFile, UploadFile uploadFile) throws IOException {
+    protected void doUploadFileChunk(CosMultipartFile cosMultipartFile, UploadFile uploadFile) throws IOException {
 
     }
 
     @Override
-    protected UploadFileResult organizationalResults(QiwenMultipartFile qiwenMultipartFile, UploadFile uploadFile) {
+    protected UploadFileResult organizationalResults(CosMultipartFile cosMultipartFile, UploadFile uploadFile) {
         return null;
     }
 

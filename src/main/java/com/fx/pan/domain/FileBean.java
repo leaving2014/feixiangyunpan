@@ -11,9 +11,9 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * @Author leaving
- * @Date 2021/1/18 21:21
- * @Version 1.0
+ * @author leaving
+ * @date 2021/1/18 21:21
+ * @version 1.0
  * @TableName file
  */
 
@@ -282,12 +282,5 @@ public class FileBean implements Serializable,Cloneable{
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }
-    //
-    // @Override
-    // protected Object clone() throws CloneNotSupportedException {
-    //     Object obj=super.clone();
-    //     FileBean a=((FileBean)obj).getAddress();
-    //     ((FileBean)obj).setAddress((FileBean) a.clone());
-    //     return obj;
-    // }
+
 }

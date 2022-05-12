@@ -6,9 +6,9 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * @Author leaving
- * @Date 2022/4/7 17:08
- * @Version 1.0
+ * @author leaving
+ * @date 2022/4/7 17:08
+ * @version 1.0
  */
 
 @Data
@@ -23,6 +23,5 @@ public class UploadFileVo {
     private boolean needMerge;
     @Schema(description = "已经上传的分片", example = "[1,2,3]")
     private List<Integer> uploaded;
-
 
 }

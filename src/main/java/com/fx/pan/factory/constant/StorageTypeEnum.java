@@ -1,9 +1,9 @@
 package com.fx.pan.factory.constant;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 11:12
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 11:12
+ * @version 1.0
  */
 public enum StorageTypeEnum {
     LOCAL(0, "本地存储"),

@@ -6,6 +6,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import javax.annotation.PostConstruct;
 
 /**
  * @author leaving
@@ -17,7 +20,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
         // exclude = { DataSourceAutoConfiguration.class }
 )
 @MapperScan("com.fx.pan.mapper")
-// @EnableAsync
+@EnableAsync
+@EnableTransactionManagement
 public class PanApplication {
     @Bean
     public static PropertySourcesPlaceholderConfigurer placeholderConfigurer() {

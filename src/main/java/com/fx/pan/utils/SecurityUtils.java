@@ -1,9 +1,9 @@
 package com.fx.pan.utils;
 
 /**
- * @Author leaving
- * @Date 2022/1/20 17:05
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/20 17:05
+ * @version 1.0
  */
 
 import com.fx.pan.common.HttpStatus;

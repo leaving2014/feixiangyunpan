@@ -4,14 +4,16 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
- * @Author leaving
- * @Date 2022/4/7 17:33
- * @Version 1.0
+ * @author leaving
+ * @date 2022/4/7 17:33
+ * @version 1.0
  */
 
 @Data
-public class UploadTask {
+public class UploadTask implements Serializable {
 
     private Long uploadTaskId;
 

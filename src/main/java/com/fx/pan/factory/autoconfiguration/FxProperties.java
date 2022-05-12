@@ -6,9 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 11:59
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 11:59
+ * @version 1.0
  */
 
 @ConfigurationProperties(

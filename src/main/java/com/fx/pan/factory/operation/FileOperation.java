@@ -1,14 +1,12 @@
 package com.fx.pan.factory.operation;
 
 /**
- * @Author leaving
- * @Date 2022/3/10 15:18
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/10 15:18
+ * @version 1.0
  */
 
 import com.alibaba.fastjson.JSON;
-import com.github.junrar.Archive;
-import com.github.junrar.rarfile.FileHeader;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
@@ -336,66 +334,66 @@ public class FileOperation {
      * @throws Exception 异常
      * @return 解压文件列表
      */
-    public static List<String> unrar(File sourceFile, String destDirPath) throws Exception {
-        File destDir = new File(destDirPath);
-        Set<String> set = new HashSet<String>();
-        Archive archive = null;
-        FileOutputStream fos = null;
-        System.out.println("Starting 开始解压...");
-        try {
-            archive = new Archive(sourceFile);
-            FileHeader fh = archive.nextFileHeader();
-            int count = 0;
-            File destFileName = null;
-            while (fh != null) {
-                set.add("/" + fh.getFileName());
-                System.out.println((++count) + ") " + fh.getFileName());
-                String compressFileName = fh.getFileName().trim();
-                destFileName = new File(destDir.getAbsolutePath() + "/" + compressFileName);
-                if (fh.isDirectory()) {
-                    if (!destFileName.exists()) {
-                        destFileName.mkdirs();
-                    }
-                    fh = archive.nextFileHeader();
-                    continue;
-                }
-                if (!destFileName.getParentFile().exists()) {
-                    destFileName.getParentFile().mkdirs();
-                }
-
-
-                fos = new FileOutputStream(destFileName);
-                archive.extractFile(fh, fos);
-                fos.close();
-                fos = null;
-                fh = archive.nextFileHeader();
-            }
-
-            archive.close();
-            archive = null;
-            System.out.println("Finished 解压完成!");
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (Exception e) {
-                    log.error("关闭流失败：" + e.getMessage());
-                }
-            }
-            if (archive != null) {
-                try {
-                    archive.close();
-                } catch (Exception e) {
-                    log.error("关闭流失败：" + e.getMessage());
-                }
-            }
-        }
-
-        List<String> res = new ArrayList<>(set);
-        return res;
-    }
+    // public static List<String> unrar(File sourceFile, String destDirPath) throws Exception {
+    //     File destDir = new File(destDirPath);
+    //     Set<String> set = new HashSet<String>();
+    //     Archive archive = null;
+    //     FileOutputStream fos = null;
+    //     System.out.println("Starting 开始解压...");
+    //     try {
+    //         archive = new Archive(sourceFile);
+    //         FileHeader fh = archive.nextFileHeader();
+    //         int count = 0;
+    //         File destFileName = null;
+    //         while (fh != null) {
+    //             set.add("/" + fh.getFileName());
+    //             System.out.println((++count) + ") " + fh.getFileName());
+    //             String compressFileName = fh.getFileName().trim();
+    //             destFileName = new File(destDir.getAbsolutePath() + "/" + compressFileName);
+    //             if (fh.isDirectory()) {
+    //                 if (!destFileName.exists()) {
+    //                     destFileName.mkdirs();
+    //                 }
+    //                 fh = archive.nextFileHeader();
+    //                 continue;
+    //             }
+    //             if (!destFileName.getParentFile().exists()) {
+    //                 destFileName.getParentFile().mkdirs();
+    //             }
+    //
+    //
+    //             fos = new FileOutputStream(destFileName);
+    //             archive.extractFile(fh, fos);
+    //             fos.close();
+    //             fos = null;
+    //             fh = archive.nextFileHeader();
+    //         }
+    //
+    //         archive.close();
+    //         archive = null;
+    //         System.out.println("Finished 解压完成!");
+    //     } catch (Exception e) {
+    //         throw e;
+    //     } finally {
+    //         if (fos != null) {
+    //             try {
+    //                 fos.close();
+    //             } catch (Exception e) {
+    //                 log.error("关闭流失败：" + e.getMessage());
+    //             }
+    //         }
+    //         if (archive != null) {
+    //             try {
+    //                 archive.close();
+    //             } catch (Exception e) {
+    //                 log.error("关闭流失败：" + e.getMessage());
+    //             }
+    //         }
+    //     }
+    //
+    //     List<String> res = new ArrayList<>(set);
+    //     return res;
+    // }
 
     /**
      * 保存数据

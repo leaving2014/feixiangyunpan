@@ -107,12 +107,18 @@ public class Constants
      * redis缓存数据前缀
      */
     public static final String REDIS_DATA_PREFIX = "fxpan_data:";
+
+    public static final String REDIS_DATA_SUFFIX = "fxpan-data";
+    /**
+     * redis定时删除key前缀
+     */
+    public static final String REDIS_DELETE_SUFFIX = "fxpan-delete";
     /**
      * redis协同编辑缓存数据前缀
      */
     public static final String REDIS_COOPERATION_PREFIX = "fxpan_cooperation:";
 
-    public static final String REDIS_UPLOAD_PREFIX = "fxpan_upload:";
+    public static final String REDIS_UPLOAD_PREFIX = "fxpan-upload-";
 
     /**
      * 用户ID

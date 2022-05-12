@@ -16,4 +16,6 @@ public class UpdateFileDTO {
     private Long fileId;
     @Schema(description = "文件内容")
     private String fileContent;
+    @Schema(description = "时间戳")
+    private String timestamp;
 }

@@ -1,35 +1,28 @@
 package com.fx.pan.service.impl;
 
-import cn.hutool.core.date.DateUtil;
-import com.fx.pan.common.Msg;
+import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.factory.fxUtils;
 import com.fx.pan.service.FileService;
 import com.fx.pan.service.OfflineDownloadService;
 import com.fx.pan.service.StorageService;
-import com.fx.pan.utils.BeanCopyUtils;
-import com.fx.pan.utils.FileUtils;
-import com.fx.pan.utils.Md5Utils;
-import com.fx.pan.utils.SecurityUtils;
-import com.fx.pan.utils.file.ImageUtil;
-import org.apache.commons.io.IOUtils;
-import org.springframework.beans.BeanUtils;
+import com.fx.pan.utils.*;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.*;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * @Author leaving
- * @Date 2022/3/28 10:33
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/28 10:33
+ * @version 1.0
  */
 @Service
 public class OfflineDownloadServiceImpl implements OfflineDownloadService {
@@ -40,81 +33,54 @@ public class OfflineDownloadServiceImpl implements OfflineDownloadService {
     @Value("${fx.absoluteFilePath}")
     private String absoluteFilePath;
 
-    @Resource
-    private FileService fileService;
+    @Autowired
+    private RedisCache redisCache;
 
-    @Resource
-    private StorageService storageService;
+    @Autowired
+    private WgetUtil wgetUtil;
 
+    @SneakyThrows
     @Override
-    public Msg downloadFromUrl(String urlStr) {
-        Long userId = SecurityUtils.getUserId();
+    public ResponseResult downloadFromUrl(String urlStr, Long t, Long userId, String type) throws FileNotFoundException {
         String fileName = null;
         FileBean fileBean = new FileBean();
-        String savePath = fxUtils.getStaticPath() + "/tmp";
-        String fileSize = "";
+        Integer fileSize = 0;
         try {
             fileName = FileUtils.getFileName(urlStr);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        long contentLength = 0;
-        try {
+        Date date = new Date(t);
+        String dateStr = DateUtil.formatDate(date, "yyyyMMdd");
 
-            URL url = new URL(urlStr);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        String downloadPath = absoluteFilePath + "/tmp/" + fileName;
+        String fileSavePath = absoluteFilePath + "/";
 
-            // 设置超时间为3秒
-            conn.setConnectTimeout(3 * 1000);
-            // 防止屏蔽程序抓取而返回403错误
-            conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0; Windows NT; DigExt)");
-
-            //获取下载文件大小
-            contentLength = conn.getContentLength();
-            fileSize = FileUtils.fileSizeUnitConversionAndUnit(contentLength);
-            // 得到输入流
-            InputStream inputStream = conn.getInputStream();
-            // 获取字节数组
-            byte[] getData = IOUtils.toByteArray(inputStream);
-            // FileUtils.readInputStream(inputStream);
-
-            // 文件保存位置
-            File saveDir = new File(savePath);
-            if (!saveDir.exists()) {
-                saveDir.mkdir();
-            }
-            String saveFilePath = absoluteFilePath + "/tmp/" + fileName;
-            File file = new File(saveFilePath);
-            Date date = new Date();
-            String dateStr = DateUtil.format(date, "yyyyMMdd");
-            FileOutputStream fos = new FileOutputStream(file);
-            fos.write(getData);
-            if (fos != null) {
-                fos.close();
-            }
-            if (inputStream != null) {
-                inputStream.close();
-            }
-
-            String md5 = Md5Utils.md5HashCode32(saveFilePath);
-            // 获取文本扩展名
-            String fileUrl = dateStr + "/" + md5 + "." + FileUtils.getFileExt(fileName);
-            fileBean = BeanCopyUtils.copyBean(FileUtils.getFileBeanByPath(file.getAbsolutePath(),
-                    fileBean.getFilePath(), date, storageType,
-                    userId), FileBean.class);
-            fileBean.setFileName(fileName);
-            fileService.save(fileBean);
-            if (fileBean.getFileType() == 1 || fileBean.getFileType() == 2) {
-                ImageUtil.startGenerateThumbnail(fxUtils.getStaticPath() + "/" + fileUrl, fileBean, true, 0.3);
-            }
-            storageService.updateStorageUse(file.length(), userId);
-            file.renameTo(new File(fxUtils.getStaticPath() + "/" + fileUrl));
-        } catch (Exception e) {
-            e.printStackTrace();
+        // 文件保存位置
+        File saveDir = new File(fileSavePath+dateStr);
+        if (!saveDir.exists()) {
+            saveDir.mkdir();
         }
-        return Msg.success("下载成功").put("fileName", fileName).put("fileSize", fileSize).put("progress", 0).put("filePath"
-                , fileBean);
+
+        // String url = "https://mirrors.aliyun.com/apache/accumulo/2.0.1/accumulo-2.0.1-src.tar.gz";
+        String option = "-O " + downloadPath;
+        wgetUtil.wgetProgressRation(downloadPath, fileSavePath, fileName, urlStr, t, userId, type,
+                progress -> {});
+        // System.out.println(progress.toJSONString());
+
+
+        // 下载文件并实时打印下载进度,最后保存到本地
+
+        // OfflineDownloadUtil.downloadFileFromUrl(urlStr, savePath,t,type);
+        Map<String, Object> map = new HashMap<>();
+        map.put("fileName", fileName.replace("\"", ""));
+        map.put("fileSize", fileSize);
+        map.put("filePath", fileBean);
+        map.put("progress", 0);
+        System.out.println("返回结果前...=====" + new Date());
+        redisCache.setCacheObject("remote-" + t + "-" + userId, 0);
+        return ResponseResult.success("任务创建成功", map);
 
     }
 }

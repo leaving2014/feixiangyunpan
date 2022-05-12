@@ -12,9 +12,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * @Author leaving
- * @Date 2022/3/3 9:04
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/3 9:04
+ * @version 1.0
  */
 
 public class FileTypeUtils {

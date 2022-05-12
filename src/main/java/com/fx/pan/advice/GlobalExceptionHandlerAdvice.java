@@ -1,17 +1,17 @@
 package com.fx.pan.advice;
 
 /**
- * @Author leaving
- * @Date 2022/1/19 12:43
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/19 12:43
+ * @version 1.0
  */
 
-import com.fx.pan.common.Msg;
+import com.fx.pan.common.AppHttpCodeEnum;
+import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.common.ResultCodeEnum;
 import com.fx.pan.exception.NotLoginException;
 import com.fx.pan.exception.UploadException;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * 是一种作用于控制层的切面通知（Advice），该注解能够将通用的@ExceptionHandler、@InitBinder和@ModelAttributes
  * 方法收集到一个类型，并应用到所有控制器上
+ * @author leaving
  */
 @Slf4j
 @RestControllerAdvice
@@ -31,10 +32,10 @@ public class GlobalExceptionHandlerAdvice {
     @ExceptionHandler(Exception.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Msg error(Exception e) {
+    public ResponseResult error(Exception e) {
         e.printStackTrace();
         log.error("全局异常捕获：" + e);
-        return Msg.fail();    // 通用异常结果
+        return ResponseResult.error(500, e.getMessage());    // 通用异常结果
     }
 
     /**
@@ -43,10 +44,10 @@ public class GlobalExceptionHandlerAdvice {
     @ExceptionHandler(NullPointerException.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Msg error(NullPointerException e) {
+    public ResponseResult error(NullPointerException e) {
         e.printStackTrace();
         log.error("全局异常捕获：" + e);
-        return Msg.error((int) ResultCodeEnum.NULL_POINT.getCode(), ResultCodeEnum.NULL_POINT.getMessage());
+        return ResponseResult.error((int) ResultCodeEnum.NULL_POINT.getCode(), ResultCodeEnum.NULL_POINT.getMessage());
     }
 
     /**
@@ -55,28 +56,28 @@ public class GlobalExceptionHandlerAdvice {
     @ExceptionHandler(IndexOutOfBoundsException.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Msg error(IndexOutOfBoundsException e) {
+    public ResponseResult error(IndexOutOfBoundsException e) {
         e.printStackTrace();
         log.error("全局异常捕获：" + e);
-        return Msg.setResult(ResultCodeEnum.INDEX_OUT_OF_BOUNDS);
+        return ResponseResult.error(ResultCodeEnum.INDEX_OUT_OF_BOUNDS);
     }
 
     @ExceptionHandler(UploadException.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.REQUEST_TIMEOUT)
-    public Msg error(UploadException e) {
+    public ResponseResult error(UploadException e) {
         e.printStackTrace();
         log.error("全局异常捕获：" + e);
-        return Msg.setResult(ResultCodeEnum.REQUEST_TIMEOUT);
+        return ResponseResult.error(ResultCodeEnum.REQUEST_TIMEOUT);
     }
 
     @ExceptionHandler(NotLoginException.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public Msg error(NotLoginException e) {
+    public ResponseResult error(NotLoginException e) {
         e.printStackTrace();
         log.error("全局异常捕获：" + e);
-        return Msg.setResult(ResultCodeEnum.NOT_LOGIN_ERROR);
+        return ResponseResult.error(ResultCodeEnum.NOT_LOGIN_ERROR);
     }
 
 
@@ -86,10 +87,11 @@ public class GlobalExceptionHandlerAdvice {
     @ExceptionHandler(FxException.class)
     @ResponseBody
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Msg error(FxException e) {
+    public ResponseResult error(FxException e) {
         e.printStackTrace();
         log.error("全局异常捕获：" + e);
-        return Msg.error(e.getCode(), e.getMessage());
+        return ResponseResult.error(AppHttpCodeEnum.valueOf(e.getMessage()));
+        // return ResponseResult.error(e.getCode(), e.getMessage());
         // message(e.getMessage()).code(e.getCode());
     }
 

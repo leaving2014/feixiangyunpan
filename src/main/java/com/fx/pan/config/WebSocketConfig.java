@@ -14,19 +14,20 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.*;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
+import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
 
 import javax.annotation.Resource;
 import java.util.Map;
 
 /**
- * @Author leaving
- * @Date 2022/3/28 15:22
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/28 15:22
+ * @version 1.0
  */
 
 @Configuration
 public class WebSocketConfig {
-    // @Resource
+    // @Autowired
     // private MyWebSocketHandler handler;
 
     /**
@@ -62,4 +63,20 @@ public class WebSocketConfig {
     //         }
     //     });
     // }
+
+    /***
+     * 解决：SpringBoot中使用WebSocket传输数据，
+     * 提示 1009|The decoded text message was too big for the output buffer and
+     * @return
+     */
+    @Bean
+    public ServletServerContainerFactoryBean createWebSocketContainer() {
+        ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
+        // 在此处设置bufferSize
+        container.setMaxTextMessageBufferSize(2048000);
+        container.setMaxBinaryMessageBufferSize(2048000);
+        container.setMaxSessionIdleTimeout(15 * 60000L);
+        return container;
+    }
+
 }

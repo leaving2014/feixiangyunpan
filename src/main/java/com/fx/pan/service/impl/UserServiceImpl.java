@@ -3,14 +3,12 @@ package com.fx.pan.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fx.pan.domain.*;
 import com.fx.pan.common.Constants;
-import com.fx.pan.common.Msg;
 import com.fx.pan.component.UserDealComp;
-import com.fx.pan.domain.LoginUser;
-import com.fx.pan.domain.Storage;
-import com.fx.pan.domain.User;
 import com.fx.pan.mapper.StorageMapper;
 import com.fx.pan.mapper.UserMapper;
 import com.fx.pan.service.StorageService;
@@ -29,23 +27,21 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
- * @Author leaving
- * @Date 2022/1/14 10:48
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/14 10:48
+ * @version 1.0
  */
 
 @Slf4j
@@ -59,22 +55,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Value("${fx.file.accessPath}")
     private String accessPath;
-    @Resource
+    @Autowired
     private AuthenticationManager authenticationManager;
 
-    @Resource
+    @Autowired
     private RedisCache redisCache;
 
     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+
+    @Resource
     private UserMapper userMapper;
 
-    @Autowired
+    @Resource
     private UserDealComp userDealComp;
 
-    @Autowired
+    @Resource
     private StorageService storageService;
 
-    @Autowired
+    @Resource
     private StorageMapper storageMapper;
 
     /**
@@ -83,12 +83,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public Msg register(User user) {
+    public ResponseResult register(User user) {
         String msg = "";
         int code = 500;
         boolean userFlag = userDealComp.isUserNameExist(user);
         if (userFlag) {
             msg = "注册用户失败，用户名" + user.getUserName() + "已存在";
+            return ResponseResult.error(500, msg);
         } else {
             boolean flag = userMapper.insertUser(user) > 0;
             if (flag) {
@@ -99,12 +100,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 //添加用户存储空间信息
                 // storageMapper.insert(storage);
                 boolean b = storageService.insertUserStorage(storage);
+                return ResponseResult.success(code, msg);
 
             } else {
                 msg = "注册失败";
+                return ResponseResult.error(500, msg);
             }
         }
-        return Msg.msg(code, msg).put("ts", SysUtil.getTimeStamp());
     }
 
 
@@ -114,7 +116,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public Msg login(String username,String password) {
+    public ResponseResult login(String username, String password) {
         // AuthenticationManager authenticate进行用户认证
         Authentication authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
         Authentication authenticate = authenticationManager.authenticate(authenticationToken);
@@ -128,9 +130,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User saveUserBean = findUserInfoByUserName(loginUser.getUsername());
         loginUser.setUserId(saveUserBean.getId());
         String jwt = JwtUtil.createJWT(JSONObject.toJSONString(loginUser));
-        redisCache.setCacheObject(Constants.REDIS_LOGIN_USER_PREFIX + userId, loginUser);
+        redisCache.set(Constants.REDIS_LOGIN_USER_PREFIX + userId,loginUser,JwtUtil.EXPIRE_TIME);
         User user = loginUser.getUser();
-        return  Msg.success("登录成功").put("token", jwt).put("userInfo",user).put("ts", SysUtil.getTimeStamp());
+        if (user.getStatus() == 1) {
+            return ResponseResult.error(500, "您的账号已被禁用，请联系管理员");
+        }
+        Map map = new HashMap();
+        map.put("userInfo", user);
+        map.put("token", jwt);
+        map.put("ts", System.currentTimeMillis());
+        return new ResponseResult().ok(map);
     }
 
     /**
@@ -138,7 +147,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public Msg logout() {
+    public ResponseResult logout() {
         // 获取securityContextHolder中的用户id
         UsernamePasswordAuthenticationToken authenticationToken =
                 (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext();
@@ -146,7 +155,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Long id = loginUser.getUser().getId();
         // 删除redis中的值
         redisCache.deleteObject(Constants.REDIS_LOGIN_USER_PREFIX+id);
-        return  Msg.success("注销成功");
+
+        return  ResponseResult.success("注销成功");
     }
 
     public User findUserInfoByUserName(String userName){
@@ -168,13 +178,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public Msg updateUser(User user) {
+    public ResponseResult updateUser(User user) {
 
         int flag = userMapper.updateById(user);
+        User user1 = userMapper.selectById(user.getId());
         if (flag>0){
-            return Msg.success("修改成功");
+            Authentication authenticate = SecurityContextHolder.getContext().getAuthentication();
+                    LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
+                    User newUser = userMapper.selectById(user.getId());
+                    loginUser.setUser(newUser);
+            redisCache.set(Constants.REDIS_LOGIN_USER_PREFIX + user.getId(),loginUser,JwtUtil.EXPIRE_TIME);
+            Map map = new HashMap();
+            map.put("userInfo", user1);
+            map.put("ts", System.currentTimeMillis());
+            return ResponseResult.success("修改成功",map);
         }else{
-            return Msg.error(500,"修改失败");
+            return ResponseResult.error(500,"修改失败");
         }
 
     }
@@ -281,6 +300,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return userMapper.insert(user);
         }
 
+    }
+
+    @Override
+    public int modifyPassword(User user, String oldPassword, String newPassword) {
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("id", user.getId());
+        updateWrapper.set("password", passwordEncoder.encode(newPassword));
+        return userMapper.update(user, updateWrapper);
     }
 
 }

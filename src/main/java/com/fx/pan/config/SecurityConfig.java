@@ -7,6 +7,7 @@ import com.fx.pan.handle.LogoutSuccessHandlerImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
@@ -22,9 +23,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * @Author leaving
- * @Date 2022/1/13 17:23
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/13 17:23
+ * @version 1.0
  */
 @Configuration(proxyBeanMethods = false)
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -108,12 +109,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
                 .and()
                 .authorizeRequests()
-                // 对于登录接口 允许匿名访问；已登录，不能访问 ,"/filetransfer/**"
-                // ,"/filetransfer/download","/filetransfer/preview","/filetransfer/image"
-                .antMatchers(HttpMethod.GET,"/filetransfer/preview",
-                        "/filetransfer/image", "/filetransfer/download/*", "/filetransfer/download",
-                        "/filetransfer/media", "/filetransfer/preview/stream","/office/excel/online/data").anonymous()
+
+        // "/filetransfer/preview",
+        //         "/filetransfer/image", "/filetransfer/download/*", "/filetransfer/download",
+        //         "/filetransfer/media", "/filetransfer/preview/stream",
+                .antMatchers(HttpMethod.GET,"/office/excel/online/data").anonymous()
+                // 对于登录接口 允许匿名访问；已登录，不能访问
                 .antMatchers(HttpMethod.POST, "/user/login", "/user/register").anonymous()
+                .antMatchers("/manage/**","/admin/**").hasAnyAuthority("ADMIN","SUPERADMIN","admin","superAdmin")
                 .antMatchers(
                         HttpMethod.GET,
                         "/",
@@ -130,8 +133,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/share/checkextractioncode").permitAll()
                 .antMatchers("/office/excel/check").permitAll()
                 .antMatchers("/office/excel/online/data").permitAll()
+                .antMatchers("/images/**").permitAll()
+                .antMatchers("/image/**").permitAll()
                 // .antMatchers("/share/*").permitAll()
                 .antMatchers("/user/userinfo").permitAll()
+                .antMatchers("/user/captcha").permitAll()
+                .antMatchers("/system/config").permitAll()
 
                 // .antMatchers("/testCors").hasAuthority("system:dept:list22")
 
@@ -157,11 +164,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     RoleHierarchy roleHierarchy(){
         RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
-        String hierarchy = "ROLE_superAdmin > ROLE_admin\n ROLE_admin > ROLE_user";
+        String hierarchy = "ROLE_superAdmin > ROLE_admin ROLE_admin > ROLE_user";
         roleHierarchy.setHierarchy(hierarchy);
         return roleHierarchy;
     }
-
 
 
     /**
@@ -171,7 +177,5 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
     }
-
-
 
 }

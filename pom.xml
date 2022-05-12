@@ -15,6 +15,13 @@
     <description>pan</description>
     <properties>
         <java.version>1.8</java.version>
+
+        <!--依赖输出目录-->
+        <output.dependence.file.path>lib/</output.dependence.file.path>
+        <!--jar输出目录-->
+        <output.jar.file.path>bin/</output.jar.file.path>
+        <!--配置文件输出目录-->
+        <output.resource.file.path>config/</output.resource.file.path>
     </properties>
     <repositories>
         <repository>
@@ -45,10 +52,11 @@
             <artifactId>guava</artifactId>
             <version>29.0-jre</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
-        </dependency>
+        <!--mq-->
+        <!--<dependency>-->
+        <!--    <groupId>org.springframework.boot</groupId>-->
+        <!--    <artifactId>spring-boot-starter-amqp</artifactId>-->
+        <!--</dependency>-->
         <!--redis-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -59,6 +67,8 @@
         <!--    <groupId>org.mariadb.jdbc</groupId>-->
         <!--    <artifactId>mariadb-java-client</artifactId>-->
         <!--</dependency>-->
+
+        <!--websocket-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
@@ -70,22 +80,36 @@
             <optional>true</optional>
         </dependency>
 
+        <!--druid数据源-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+            <version>1.2.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.4.3</version>
+        </dependency>
+
         <!--<dependency>-->
         <!--    <groupId>org.springframework.boot</groupId>-->
         <!--    <artifactId>spring-boot-starter-mail</artifactId>-->
         <!--</dependency>-->
-
-
         <!--spring结束-->
-
-
         <!--腾讯cos-->
         <dependency>
             <groupId>com.qcloud</groupId>
             <artifactId>cos_api</artifactId>
-            <version>5.6.54</version>
+            <version>5.6.77</version>
         </dependency>
 
+        <!--mybatis分页插件-->
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper-spring-boot-starter</artifactId>
+            <version>1.4.2</version>
+        </dependency>
 
         <!--<dependency>-->
         <!--    <groupId>org.mybatis.spring.boot</groupId>-->
@@ -93,12 +117,6 @@
         <!--    <version>2.2.0</version>-->
         <!--</dependency>-->
 
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
 
         <!--<dependency>-->
         <!--    <groupId>org.springframework.amqp</groupId>-->
@@ -123,28 +141,19 @@
         <!--    <groupId>org.springframework.boot</groupId>-->
         <!--    <artifactId>spring-boot-starter-data-mongodb</artifactId>-->
         <!--</dependency>-->
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-mongodb</artifactId>
-            <version>1.9.0.RELEASE</version><!--$NO-MVN-MAN-VER$-->
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
-            <version>3.6.0</version>
-        </dependency>
+        <!--mongodb-->
+        <!--<dependency>-->
+        <!--    <groupId>org.springframework.data</groupId>-->
+        <!--    <artifactId>spring-data-mongodb</artifactId>-->
+        <!--    <version>1.9.0.RELEASE</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+        <!--    <groupId>org.mongodb</groupId>-->
+        <!--    <artifactId>mongo-java-driver</artifactId>-->
+        <!--    <version>3.6.0</version>-->
+        <!--</dependency>-->
 
-        <!--druid数据源-->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-starter</artifactId>
-            <version>1.2.8</version>
-        </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.4.3</version>
-        </dependency>
+
 
         <!--fastjson-->
         <dependency>
@@ -197,6 +206,11 @@
             <artifactId>aspose-words</artifactId>
             <version>15.8.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.aspose</groupId>
+            <artifactId>aspose-cells</artifactId>
+            <version>8.5.2</version>
+        </dependency>
         <!--PDF转word-->
         <dependency>
             <groupId>e-iceblue</groupId>
@@ -228,11 +242,16 @@
         <!--</dependency>-->
 
 
-        <!--Apache-->
+        <!--Apache通用类-->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
         </dependency>
         <!--<dependency>-->
         <!--    <groupId>commons-codec</groupId>-->
@@ -272,6 +291,7 @@
         <!--</dependency>-->
 
 
+        <!--mybatisplus生成器-->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-generator</artifactId>
@@ -293,11 +313,11 @@
 
 
         <!--离线下载-->
-        <dependency>
-            <groupId>com.github.lookfirst</groupId>
-            <artifactId>sardine</artifactId>
-            <version>5.9</version>
-        </dependency>
+        <!--<dependency>-->
+        <!--    <groupId>com.github.lookfirst</groupId>-->
+        <!--    <artifactId>sardine</artifactId>-->
+        <!--    <version>5.9</version>-->
+        <!--</dependency>-->
 
         <!--test-->
         <dependency>
@@ -318,19 +338,25 @@
         <!--    <version>1.5.7</version>-->
         <!--</dependency>-->
 
+        <!--文件解压缩-->
         <!-- https://mvnrepository.com/artifact/com.github.junrar/junrar -->
-        <dependency>
-            <groupId>com.github.junrar</groupId>
-            <artifactId>junrar</artifactId>
-            <version>7.4.0</version>
-        </dependency>
+        <!--<dependency>-->
+        <!--    <groupId>com.github.junrar</groupId>-->
+        <!--    <artifactId>junrar</artifactId>-->
+        <!--    <version>7.4.0</version>-->
+        <!--</dependency>-->
+
+        <!--<dependency>-->
+        <!--    <groupId>com.github.xiaoymin</groupId>-->
+        <!--    <artifactId>knife4j-spring-boot-starter</artifactId>-->
+        <!--    <version>3.0.3</version>-->
+        <!--</dependency>-->
 
         <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-spring-boot-starter</artifactId>
-            <version>3.0.3</version>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
         </dependency>
-
         <!--junit测试-->
         <dependency>
             <groupId>org.junit.platform</groupId>
@@ -338,39 +364,40 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.12.0</version>
-        </dependency>
+
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>
             <version>2.1.4</version>
         </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>1.6.2</version>
+        </dependency>
 
         <!--添加热部署-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <optional>true</optional>
-            <scope>true</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ant</groupId>
-            <artifactId>ant</artifactId>
-            <version>1.9.14</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-            <version>13.0</version>
-            <scope>compile</scope>
-        </dependency>
+        <!--<dependency>-->
+        <!--    <groupId>org.springframework.boot</groupId>-->
+        <!--    <artifactId>spring-boot-devtools</artifactId>-->
+        <!--    <optional>true</optional>-->
+        <!--    <scope>true</scope>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+        <!--    <groupId>org.springframework</groupId>-->
+        <!--    <artifactId>spring-test</artifactId>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+        <!--    <groupId>org.apache.ant</groupId>-->
+        <!--    <artifactId>ant</artifactId>-->
+        <!--    <version>1.9.14</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+        <!--    <groupId>org.jetbrains</groupId>-->
+        <!--    <artifactId>annotations</artifactId>-->
+        <!--    <version>13.0</version>-->
+        <!--    <scope>compile</scope>-->
+        <!--</dependency>-->
 
 
         <!--打包-->
@@ -393,30 +420,114 @@
 
     <build>
         <plugins>
+            <!--<plugin>-->
+            <!--    <groupId>org.springframework.boot</groupId>-->
+            <!--    <artifactId>spring-boot-maven-plugin</artifactId>-->
+            <!--<configuration>-->
+            <!--    &lt;!&ndash; 不打包资源文件（配置文件和依赖包分开） &ndash;&gt;-->
+            <!--    <excludes>-->
+            <!--        <exclude>*.yml</exclude>-->
+            <!--        <exclude>*.properties</exclude>-->
+            <!--        <exclude>mybatis/**</exclude>-->
+            <!--        <exclude>static/**</exclude>-->
+            <!--    </excludes>-->
+            <!--</configuration>-->
+            <!--<configuration>-->
+            <!--    <includeSystemScope>true</includeSystemScope>-->
+            <!--    <mainClass>com.fx.pan.PanApplication</mainClass>-->
+            <!--    <excludes>-->
+            <!--        <exclude>-->
+            <!--            <groupId>org.projectlombok</groupId>-->
+            <!--            <artifactId>lombok</artifactId>-->
+            <!--        </exclude>-->
+            <!--    </excludes>-->
+            <!--    &lt;!&ndash;fork:如果没有该项配置,整个devtools不会起作用&ndash;&gt;-->
+            <!--    &lt;!&ndash;<fork>true</fork>&ndash;&gt;-->
+            <!--</configuration>-->
+            <!--</plugin>-->
+
+            <!--maven的测试用例插件，建议跳过。-->
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <!--<configuration>-->
-                <!--    &lt;!&ndash; 不打包资源文件（配置文件和依赖包分开） &ndash;&gt;-->
-                <!--    <excludes>-->
-                <!--        <exclude>*.yml</exclude>-->
-                <!--        <exclude>*.properties</exclude>-->
-                <!--        <exclude>mybatis/**</exclude>-->
-                <!--        <exclude>static/**</exclude>-->
-                <!--    </excludes>-->
-                <!--</configuration>-->
-                <!--<configuration>-->
-                <!--    <includeSystemScope>true</includeSystemScope>-->
-                <!--    <mainClass>com.fx.pan.PanApplication</mainClass>-->
-                <!--    <excludes>-->
-                <!--        <exclude>-->
-                <!--            <groupId>org.projectlombok</groupId>-->
-                <!--            <artifactId>lombok</artifactId>-->
-                <!--        </exclude>-->
-                <!--    </excludes>-->
-                <!--    &lt;!&ndash;fork:如果没有该项配置,整个devtools不会起作用&ndash;&gt;-->
-                <!--    &lt;!&ndash;<fork>true</fork>&ndash;&gt;-->
-                <!--</configuration>-->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <!-- 打JAR包 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <!-- 不打包资源文件（配置文件和依赖包分开） -->
+                    <excludes>
+                        <exclude>*.yml</exclude>
+                        <exclude>*.properties</exclude>
+                        <exclude>mybatis/**</exclude>
+                        <exclude>static/**</exclude>
+                    </excludes>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <!-- MANIFEST.MF 中 Class-Path 加入前缀 -->
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <!-- jar包不包含唯一版本标识 -->
+                            <useUniqueVersions>false</useUniqueVersions>
+                            <!--指定入口类 -->
+                            <mainClass>com.fx.pan.PanApplication</mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <!--MANIFEST.MF 中 Class-Path 加入资源文件目录 -->
+                            <Class-Path>./config/</Class-Path>
+                        </manifestEntries>
+                    </archive>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                </configuration>
+            </plugin>
+            <!-- 该插件的作用是用于复制依赖的jar包到指定的文件夹里 -->
+            <!--<plugin>-->
+            <!--    <groupId>org.apache.maven.plugins</groupId>-->
+            <!--    <artifactId>maven-dependency-plugin</artifactId>-->
+            <!--    <executions>-->
+            <!--        <execution>-->
+            <!--            <id>copy-dependencies</id>-->
+            <!--            <phase>package</phase>-->
+            <!--            <goals>-->
+            <!--                <goal>copy-dependencies</goal>-->
+            <!--            </goals>-->
+            <!--            <configuration>-->
+            <!--                <outputDirectory>${project.build.directory}/lib/</outputDirectory>-->
+            <!--            </configuration>-->
+            <!--        </execution>-->
+            <!--    </executions>-->
+            <!--</plugin>-->
+
+            <!-- 该插件的作用是用于复制指定的文件 -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution> <!-- 复制配置文件 -->
+                        <id>copy-resources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <includes>
+                                        <include>*.yml</include>
+                                        <include>*.properties</include>
+                                        <include>mybatis/**</include>
+                                        <include>static/**</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${project.build.directory}/config</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

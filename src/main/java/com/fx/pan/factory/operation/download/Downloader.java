@@ -5,9 +5,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 11:08
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 11:08
+ * @version 1.0
  */
 
 public abstract class Downloader {

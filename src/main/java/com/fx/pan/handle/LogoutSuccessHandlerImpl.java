@@ -4,7 +4,7 @@ import com.fx.pan.common.Constants;
 import com.fx.pan.domain.LoginUser;
 import com.fx.pan.service.TokenService;
 import com.fx.pan.utils.RedisCache;
-import com.fx.pan.utils.StringUtils;
+import com.fx.pan.utils.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
@@ -16,9 +16,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * @Author leaving
- * @Date 2022/1/19 16:56
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/19 16:56
+ * @version 1.0
  */
 
 @Configuration
@@ -41,7 +41,7 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler
             throws IOException, ServletException
     {
         LoginUser loginUser = tokenService.getLoginUser(request);
-        if (StringUtils.isNotNull(loginUser))
+        if (StringUtil.isNotNull(loginUser))
         {
             Long id = loginUser.getUser().getId();
             // 删除redis中的值

@@ -1,16 +1,14 @@
 package com.fx.pan.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.fx.pan.common.Msg;
+import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.ExcelBean;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.factory.fxUtils;
 import com.fx.pan.service.ExcelService;
 import com.fx.pan.service.FileService;
-import com.fx.pan.utils.BeanCopyUtils;
-import com.fx.pan.utils.SecretUtil;
+import com.fx.pan.utils.Base64Util;
 import com.fx.pan.utils.SecurityUtils;
 import com.fx.pan.utils.office.ExcelUtils;
 import com.google.gson.JsonObject;
@@ -18,15 +16,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.poi.xssf.usermodel.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -34,14 +31,16 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLDecoder;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 /**
  * Office操作
  *
- * @Author leaving
- * @Date 2022/3/16 20:48
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/16 20:48
+ * @version 1.0
  */
 
 @Tag(name = "office", description = "该接口为ffice文件操作接口，主要用来做一些文档的编辑，浏览等。")
@@ -159,13 +158,15 @@ public class OfficeController {
         }
         // return filebyte;
         String filePath = "D:/ideaWorkspace/pan/static/file/20220321/b703fe71087c8533c2bf9fefdf3058eb.xlsx";
-        return SecretUtil.encodeBase64File(filePath);
+        return Base64Util.encodeBase64File(filePath);
     }
 
     @PostMapping("/excel/info")
-    public Msg excelInfo(@RequestParam Long id) throws Exception {
+    public ResponseResult excelInfo(@RequestParam Long id) throws Exception {
         FileBean fileBean = fileService.selectFileById(id);
-        return Msg.success("获取成功").put("file", fileBean);
+        Map<String, Object> map = new HashMap<>();
+        map.put("file", fileBean);
+        return ResponseResult.success("获取成功",map);
     }
 
     /**
@@ -175,7 +176,7 @@ public class OfficeController {
      * @throws Exception
      */
     @PostMapping("/excel/create/online")
-    public Msg createExcelOnline() {
+    public ResponseResult createExcelOnline() {
         Long userId = SecurityUtils.getUserId();
         String identifier = UUID.randomUUID().toString().replace("-", "");
         ExcelBean excelBean = new ExcelBean();
@@ -186,14 +187,16 @@ public class OfficeController {
         excelBean.setUpdateTime(new Date());
         boolean save = excelService.save(excelBean);
         if (save) {
-            return Msg.success("在线表格创建成功").put("sheet", excelBean);
+            Map<String, Object> map = new HashMap<>();
+            map.put("sheet", excelBean);
+            return ResponseResult.success("在线表格创建成功",map);
         } else {
-            return Msg.error(500, "保创建失败");
+            return ResponseResult.error(500, "保创建失败");
         }
     }
 
     @PostMapping("/excel/collaborate")
-    public Msg excelCollaborate(@RequestParam Long id, @RequestParam Integer collaborate, @RequestParam Long fid) throws Exception {
+    public ResponseResult excelCollaborate(@RequestParam Long id, @RequestParam Integer collaborate, @RequestParam Long fid) throws Exception {
         Long userId = SecurityUtils.getUserId();
         ExcelBean excelBean = excelService.getById(id);
         FileBean fileBean = fileService.selectFileById(fid);
@@ -214,11 +217,14 @@ public class OfficeController {
             boolean update = excelService.update(updateWrapper);
 
             if (update) {
-                return Msg.success("协作成功").put("sheet", createExcel)
-                        .put("status", true).put("create", true).put("eid", createExcel.getId());
-                // return Msg.success("协作成功").put("sheet", createExcel).put("status", true).put("create", true);
+                Map<String, Object> map = new HashMap<>();
+                map.put("sheet", createExcel);
+                map.put("status", true);
+                map.put("create", true);
+                map.put("eid", createExcel.getId());
+                return ResponseResult.success("协作成功",map);
             } else {
-                return Msg.error(500, "开启协作失败");
+                return ResponseResult.error(500, "开启协作失败");
             }
 
         } else {
@@ -228,22 +234,14 @@ public class OfficeController {
             updateWrapper.set("collaborate", collaborate);
             boolean update = excelService.update(updateWrapper);
             if (update) {
-                return Msg.success("取消协作成功").put("sheet", excelBean).put("status", false);
+                Map<String, Object> map = new HashMap<>();
+                map.put("sheet", excelBean);
+                map.put("status", false);
+                return ResponseResult.success("取消协作成功",map);
             } else {
-                return Msg.error(500, "取消协作失败");
+                return ResponseResult.error(500, "取消协作失败");
             }
         }
-
-
-        // if (update) {
-        //     if (collaborate == 1) {
-        //         return Msg.success("文档协同开启成功").put("status", true);
-        //     }else{
-        //         return Msg.success("文档协同关闭成功").put("status", false);
-        //     }
-        // } else {
-        //     return Msg.error(500,"文档协同操作失败");
-        // }
 
     }
 
@@ -252,39 +250,43 @@ public class OfficeController {
         Long userId = SecurityUtils.getUserId();
         FileBean fileBean = fileService.selectFileById(id);
         String filePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
-        return SecretUtil.encodeBase64File(filePath);
+        return Base64Util.encodeBase64File(filePath);
     }
 
     @PostMapping("/excel/online")
-    public Msg excelOnline(@RequestParam Long id, @RequestParam String data) throws Exception {
+    public ResponseResult excelOnline(@RequestParam Long id, @RequestParam String data) throws Exception {
         Long userId = SecurityUtils.getUserId();
         FileBean fileBean = fileService.selectFileById(id);
         String filePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
-        return Msg.success("同步成功").put("file", data);
+        Map map = new HashMap();
+        map.put("file", data);
+        return ResponseResult.success("同步成功",map);
     }
 
     @PostMapping("/excel/export")
-    public Msg downExcelFile(@RequestParam(value = "excelData") String excelData, @RequestParam Long id,
-                             @ApiIgnore HttpServletRequest request, @ApiIgnore HttpServletResponse response) {
+    public ResponseResult downExcelFile(@RequestParam(value = "excelData") String excelData, @RequestParam Long id,
+                                        HttpServletRequest request, HttpServletResponse response) {
         Long userId = SecurityUtils.getUserId();
         FileBean fileBean = fileService.selectFileById(id);
         excelData = excelData.replace("&#xA;", "\\r\\n");//去除luckysheet中 &#xA 的换行
         ExcelUtils.exportLuckySheetXlsx(excelData, request, response);
-        return Msg.success("导出成功").put("file", fileBean);
-        // return Msg.success("下载成功");
+        Map map = new HashMap();
+        map.put("file", fileBean);
+        return ResponseResult.success("导出成功",map);
+        // return ResponseResult.success("下载成功");
     }
 
     @PostMapping("/excel/online/data")
-    public String excelOnlineData(@RequestParam Long gridKey) throws Exception {
+    public String excelOnlineData(@RequestParam Long id) throws Exception {
         // Long userId = SecurityUtils.getUserId();
-        ExcelBean excelBean = excelService.getById(gridKey);
+        ExcelBean excelBean = excelService.getById(id);
         if (excelBean == null) {
             return "";
         } else {
             if (excelBean.getData() == null) {
                 File file = null;
                 try {
-                    file = new File(URLDecoder.decode(ResourceUtils.getURL("classpath:static/xlsx.json").getPath(),
+                    file = new File(URLDecoder.decode(ResourceUtils.getURL("classpath:static/newXlsx.json").getPath(),
                             "utf-8"));
                 } catch (FileNotFoundException e) {
                     // TODO Auto-generated catch block
@@ -304,22 +306,28 @@ public class OfficeController {
     public Object checkExcel(@RequestParam Long id) throws Exception {
         Long userId = SecurityUtils.getUserId();
         ExcelBean excelBean = excelService.checkExist(id);
+        System.out.println("excelBean:" + excelBean);
 
         if (excelBean == null) {
             FileBean fileBean = fileService.selectFileById(id);
             String filePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
-            return Msg.success("获取成功").put(
-                    "file", fileBean);
-            // put("data", SecretUtil.encodeBase64File(filePath)).put("type", "file")
+            Map map = new HashMap();
+            map.put("file", fileBean);
+            return ResponseResult.success("获取成功",map);
+            // put("data", Base64Util.encodeBase64File(filePath)).put("type", "file")
         } else {
             Object parse = null;
             if (excelBean.getData() != null) {
                 String excelData = excelBean.getData().replace("\\", "");
                 parse = JSON.parse(excelData);
             }
-
             excelBean.setData("");
-            return Msg.success("获取成功").put("data", parse).put("excel", excelBean).put("type", "excel");
+            Map map = new HashMap();
+            map.put("data", parse);
+            map.put("excel", excelBean);
+            map.put("type", "excel");
+
+            return ResponseResult.success("获取成功",map);
         }
         //
         // FileBean fileBean = fileService.selectFileById(id);
@@ -327,32 +335,32 @@ public class OfficeController {
         // if (fileBean == null) {
         //     ExcelBean excelBean = excelService.checkExist(id);
         //     if (excelBean == null) {
-        //         return Msg.error(0,"在线文档未创建");
+        //         return ResponseResult.error(0,"在线文档未创建");
         //     }else {
-        //         return Msg.success("获取成功").put("data", excelBean.getData());
+        //         return ResponseResult.success("获取成功").put("data", excelBean.getData());
         //     }
         // } else {
         //     String filePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
-        //     return SecretUtil.encodeBase64File(filePath);
+        //     return Base64Util.encodeBase64File(filePath);
         //
-        //     // return Msg.success("获取成功").put("data", excelBean.getData());
+        //     // return ResponseResult.success("获取成功").put("data", excelBean.getData());
         //
         // }
     }
 
     @PostMapping("/excel/save")
-    public Msg saveExcelData(@RequestParam Long id, @RequestParam String sheetData) throws Exception {
+    public ResponseResult saveExcelData(@RequestParam Long id, @RequestParam String sheetData) throws Exception {
         boolean b = excelService.updateExcelData(id, sheetData);
         if (b) {
-            return Msg.success("保存成功");
+            return ResponseResult.success("保存成功");
         } else {
-            return Msg.error(500, "保存失败");
+            return ResponseResult.error(500, "保存失败");
         }
     }
 
 
     @PostMapping("/excel/update")
-    public Msg updateExcel(@RequestParam Long id, @RequestParam String data, @RequestParam Integer type) throws Exception {
+    public ResponseResult updateExcel(@RequestParam Long id, @RequestParam String data, @RequestParam Integer type) throws Exception {
         Long userId = SecurityUtils.getUserId();
         FileBean fileBean = fileService.selectFileById(id);
         ExcelBean excelBean;
@@ -382,8 +390,9 @@ public class OfficeController {
             fileOutputStream.close();
         }
 
-
-        return Msg.success("更新成功").put("file", fileBean);
+        Map map = new HashMap();
+        map.put("file", fileBean);
+        return ResponseResult.success("更新成功",map);
     }
 
 }

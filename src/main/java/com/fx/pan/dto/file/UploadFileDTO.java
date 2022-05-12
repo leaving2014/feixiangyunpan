@@ -3,9 +3,9 @@ package com.fx.pan.dto.file;
 import lombok.Data;
 import io.swagger.v3.oas.annotations.media.Schema;
 /**
- * @Author leaving
- * @Date 2022/1/23 22:43
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/23 22:43
+ * @version 1.0
  */
 
 @Data
@@ -16,7 +16,7 @@ public class UploadFileDTO {
     private String filePath;
 
     @Schema(description = "文件名")
-    private String fileName;
+    private String filename;
 
     @Schema(description = "切片数量")
     private int chunkNumber;

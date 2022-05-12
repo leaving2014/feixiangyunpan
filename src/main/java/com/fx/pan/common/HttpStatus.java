@@ -1,9 +1,9 @@
 package com.fx.pan.common;
 
 /**
- * @Author leaving
- * @Date 2022/1/18 18:24
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/18 18:24
+ * @version 1.0
  */
 
 public class HttpStatus
@@ -11,7 +11,7 @@ public class HttpStatus
     /**
      * 操作成功
      */
-    public static final int SUCCESS = 200;
+    public static final int SUCCESS = 0;
 
     /**
      * 对象创建成功

@@ -1,13 +1,13 @@
 package com.fx.pan.exception.base;
 
 import com.fx.pan.utils.MessageUtils;
-import com.fx.pan.utils.StringUtils;
+import com.fx.pan.utils.StringUtil;
 
 
 /**
- * @Author leaving
- * @Date 2022/1/19 22:33
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/19 22:33
+ * @version 1.0
  */
 
 public class BaseException extends RuntimeException
@@ -66,7 +66,7 @@ public class BaseException extends RuntimeException
     public String getMessage()
     {
         String message = null;
-        if (!StringUtils.isEmpty(code))
+        if (!StringUtil.isEmpty(code))
         {
             message = MessageUtils.message(code, args);
         }

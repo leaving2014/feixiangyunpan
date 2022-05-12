@@ -4,9 +4,9 @@ import com.fx.pan.common.ResultCodeEnum;
 import lombok.Data;
 
 /**
- * @Author leaving
- * @Date 2022/1/19 12:48
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/19 12:48
+ * @version 1.0
  */
 @Data
 public class FxException extends RuntimeException {

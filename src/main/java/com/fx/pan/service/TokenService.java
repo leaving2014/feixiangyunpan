@@ -1,15 +1,15 @@
 package com.fx.pan.service;
 
 /**
- * @Author leaving
- * @Date 2022/1/19 16:58
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/19 16:58
+ * @version 1.0
  */
 
 import com.fx.pan.common.Constants;
 import com.fx.pan.domain.LoginUser;
 import com.fx.pan.utils.RedisCache;
-import com.fx.pan.utils.StringUtils;
+import com.fx.pan.utils.StringUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -63,7 +63,7 @@ public class TokenService {
     {
         // 获取请求携带的令牌
         String token = getToken(request);
-        if (StringUtils.isNotEmpty(token))
+        if (StringUtil.isNotEmpty(token))
         {
             try
             {
@@ -134,7 +134,7 @@ public class TokenService {
     public String getToken(HttpServletRequest request)
     {
         String token = request.getHeader(header);
-        if (StringUtils.isNotEmpty(token) && token.startsWith(Constants.TOKEN_PREFIX))
+        if (StringUtil.isNotEmpty(token) && token.startsWith(Constants.TOKEN_PREFIX))
         {
             token = token.replace(Constants.TOKEN_PREFIX, "");
         }

@@ -6,9 +6,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.Serializable;
 
 /**
- * @Author leaving
- * @Date 2021/12/14 9:10
- * @Version 1.0
+ * @author leaving
+ * @date 2021/12/14 9:10
+ * @version 1.0
  */
 
 @Data

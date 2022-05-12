@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
- * @Author leaving
- * @Date 2021/11/24 21:21
- * @Version 1.0
+ * @author leaving
+ * @date 2021/11/24 21:21
+ * @version 1.0
  */
 
 @EqualsAndHashCode(callSuper = false)

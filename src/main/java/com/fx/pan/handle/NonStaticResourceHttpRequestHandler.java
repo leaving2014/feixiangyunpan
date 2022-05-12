@@ -8,9 +8,9 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import javax.servlet.http.HttpServletRequest;
 import java.nio.file.Path;
 /**
- * @Author leaving
- * @Date 2022/3/18 21:17
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/18 21:17
+ * @version 1.0
  */
 
 @Component

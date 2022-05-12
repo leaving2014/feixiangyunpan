@@ -1,6 +1,6 @@
 package com.fx.pan.utils.file;
 
-import com.fx.pan.utils.StringUtils;
+import com.fx.pan.utils.StringUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.util.ResourceUtils;
 
@@ -12,9 +12,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * @Author leaving
- * @Date 2022/3/10 18:44
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/10 18:44
+ * @version 1.0
  */
 
 public class FileTypeUtils {
@@ -108,7 +108,7 @@ public class FileTypeUtils {
 
     public static String getStaticPath() {
         String localStoragePath = LOCAL_STORAGE_PATH;
-        if (StringUtils.isNotEmpty(localStoragePath)) {
+        if (StringUtil.isNotEmpty(localStoragePath)) {
             return (new File(localStoragePath)).getPath() + File.separator;
         } else {
             String projectRootAbsolutePath = getProjectRootPath();

@@ -2,6 +2,7 @@ package com.fx.pan.vo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fx.pan.domain.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,9 +10,9 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * @Author leaving
- * @Date 2022/2/9 17:13
- * @Version 1.0
+ * @author leaving
+ * @date 2022/2/9 17:13
+ * @version 1.0
  */
 @Data
 @NoArgsConstructor
@@ -86,5 +87,17 @@ public class FileListVo {
      * 文件创建时间
      */
     private Date fileCreateTime;
+
+    /**
+     * 是否删除
+     */
+    private Integer deleted;
+    /**
+     * 文件审核状态
+     */
+
+    private Integer audit;
+
+    public UserVo user;
 
 }

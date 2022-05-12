@@ -5,9 +5,9 @@ import com.fx.pan.factory.constant.UploadFileStatusEnum;
 import lombok.Data;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 13:01
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 13:01
+ * @version 1.0
  */
 
 @Data

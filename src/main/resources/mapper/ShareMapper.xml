@@ -31,6 +31,9 @@
         expired_time,update_time,user_id,
         deleted
     </sql>
+    <delete id="deleteExpireShareList">
+        DELETE FROM share WHERE expired = 1 AND deleted = 0
+    </delete>
     <select id="selectShareAndFileInfo" resultType="java.util.List">
         select *
         from share a
@@ -39,10 +42,26 @@
         where a.user_id = #{userId}
     </select>
     <select id="selectShareFileList" resultType="com.fx.pan.vo.share.ShareFileListVO">
-        select *
+        select s.*,
+               f.file_name,
+               f.file_path,
+               f.file_size,
+               f.file_type,
+               f.identifier,
+               f.is_dir,
+               f.file_ext,
+               f.file_create_time,
+               f.file_update_time
+        from share s
+                 inner join
+             file f on
+                 s.file_id = f.id
+        where s.user_id = #{userId}
+    </select>
+    <select id="selectShareList" resultType="com.fx.pan.vo.share.ShareFileListVO">
+        select distinct *
         from share a
                  LEFT JOIN share ON share.user_id = a.user_id
                  left join file b on b.id = a.file_id
-        where a.user_id = #{userId}
     </select>
 </mapper>

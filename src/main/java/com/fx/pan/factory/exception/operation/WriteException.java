@@ -1,9 +1,9 @@
 package com.fx.pan.factory.exception.operation;
 
 /**
- * @Author leaving
- * @Date 2022/3/19 16:33
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/19 16:33
+ * @version 1.0
  */
 
 public class WriteException extends RuntimeException {

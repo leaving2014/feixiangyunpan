@@ -1,9 +1,9 @@
 package com.fx.pan.factory.constant;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 13:07
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 13:07
+ * @version 1.0
  */
 
 public enum UploadFileStatusEnum {

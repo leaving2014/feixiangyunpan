@@ -1,9 +1,9 @@
 package com.fx.pan.factory.operation.write.domain;
 
 /**
- * @Author leaving
- * @Date 2022/3/19 16:29
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/19 16:29
+ * @version 1.0
  */
 
 public class WriteFile {

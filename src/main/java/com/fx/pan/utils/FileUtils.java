@@ -6,28 +6,28 @@ import com.fx.pan.domain.Chunk;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.service.FileService;
 import com.fx.pan.service.StorageService;
-import com.fx.pan.service.UserService;
 import com.fx.pan.utils.file.FileTypeUtils;
 import com.fx.pan.utils.file.ImageUtil;
+import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.imageio.ImageIO;
-import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
-import java.net.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -36,13 +36,12 @@ import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-
 import static org.apache.commons.io.FileUtils.copyInputStreamToFile;
 
 /**
- * @Author leaving
- * @Date 2021/11/25 10:58
- * @Version 1.0
+ * @author leaving
+ * @date 2021/11/25 10:58
+ * @version 1.0
  */
 @Component
 public class FileUtils {
@@ -79,38 +78,6 @@ public class FileUtils {
     public @PostConstruct
     void init2() {
         storageService = storage;
-    }
-
-    /**
-     * 离线下载
-     *
-     * @param response
-     * @throws MalformedURLException
-     */
-    public void downloadNet(HttpServletResponse response) throws MalformedURLException {
-        // 下载网络文件
-        int bytesum = 0;
-        int byteread = 0;
-
-        URL url = new URL("windine.blogdriver.com/logo.gif");
-
-        try {
-            URLConnection conn = url.openConnection();
-            InputStream inStream = conn.getInputStream();
-            FileOutputStream fs = new FileOutputStream("c:/abc.gif");
-
-            byte[] buffer = new byte[1204];
-            int length;
-            while ((byteread = inStream.read(buffer)) != -1) {
-                bytesum += byteread;
-                System.out.println(bytesum);
-                fs.write(buffer, 0, byteread);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public static byte[] readImageFile(String path) {
@@ -180,6 +147,9 @@ public class FileUtils {
         URL url = new URL(imgurl);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.connect();
+
+        // 获取下载文件大小
+        int fileSize = conn.getContentLength();
         //获取文件名和扩展名
         // 先连接一次，解决跳转下载
         conn.getResponseCode();
@@ -215,6 +185,11 @@ public class FileUtils {
             }
         }
         return fileName;
+    }
+
+    public static FileBean getDownloadFileBean(){
+
+        return new FileBean();
     }
 
     /**
@@ -388,28 +363,31 @@ public class FileUtils {
         f.setIdentifier(chunk.getIdentifier());
         f.setStorageType(storageType);
         Integer fileType = FileTypeUtils.getFileTypeByExtendName(FileUtils.getFileExt(fileName));
-        System.out.println("文件类型:" + fileType);
-
         f.setFileCreateTime(date);
         f.setFileUpdateTime(date);
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("YYYYMMdd");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
         String formatDate = simpleDateFormat.format(date);
 
         f.setFileUrl(formatDate + "/" + chunk.getIdentifier() + "." + extendName);
 
         // 生成缩略图     || fileType == 2
         if (fileType == 1) {
+            f.setAudit(0);
+
             ImageUtil.startGenerateThumbnail(absoluteFilePath + "/" + formatDate + "/" + chunk.getIdentifier() + "." + extendName, f, true, 0.3);
         }
+        if (fileType == 2) {
+            f.setAudit(0);
+        }
+        f.setAudit(1);
 
         f.setFileType(fileType);
-
         f.setUserId(userId);
-        System.out.println("文件信息:" + f.toString());
         return f;
     }
 
     // 返回文件转换FileBean对象
+    @SneakyThrows
     public static FileBean getFileBeanByPath(String filePath, String path, Date date, Integer storageType,
                                              Long userId) throws FileNotFoundException {
         FileBean f = new FileBean();
@@ -425,17 +403,25 @@ public class FileUtils {
         f.setFileSize(file.length());
 
         String extendName = FileUtils.getFileExt(fileName);
+
         f.setFileExt(extendName);
         f.setIdentifier(Md5Utils.md5HashCode32(filePath));
         f.setStorageType(storageType);
         Integer fileType = FileTypeUtils.getFileTypeByExtendName(FileUtils.getFileExt(fileName));
+
+        if (fileType == 1 || fileType == 2) {
+            f.setAudit(-1);
+        }
         f.setFileCreateTime(date);
         f.setFileUpdateTime(date);
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("YYYYMMdd");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
         String formatDate = simpleDateFormat.format(date);
-        f.setFileUrl(formatDate + "/" + f.getIdentifier() + "." + extendName);
+        String fileUrl = formatDate + "/" + f.getIdentifier() + "." + extendName;
+        f.setFileUrl(fileUrl);
         f.setFileType(fileType);
         f.setUserId(userId);
+
+
         return f;
     }
 
@@ -479,13 +465,13 @@ public class FileUtils {
         ZipArchiveOutputStream out = null;
         InputStream is = null;
         try {
-
             out = new ZipArchiveOutputStream(new BufferedOutputStream(new FileOutputStream(destFile), bufferSize));
 
             for (File srcFile : srcFiles) {
                 is = new BufferedInputStream(new FileInputStream(srcFile), bufferSize);
                 ZipArchiveEntry entry = new ZipArchiveEntry(srcFile.getName());
                 entry.setSize(srcFile.length());
+
                 out.putArchiveEntry(entry);
                 IOUtils.copy(is, out);
             }
@@ -504,7 +490,6 @@ public class FileUtils {
         fileBean.setFileCreateTime(new Date());
         fileBean.setFileUpdateTime(new Date());
         File file = new File(filePath);
-        // FileBean parentFileBean = fileService.selectByFilePath(path,userId);
         // 判断文件是否是目录
         if (file.isDirectory()) {
             fileBean.setIsDir(1);
@@ -520,7 +505,6 @@ public class FileUtils {
             fileBean.setFileType(FileTypeUtils.getFileTypeByExtendName(FileUtils.getFileExt(file.getName())));
             fileBean.setFilePath(path);
             fileBean.setFileExt(FileUtils.getFileExt(file.getName()));
-            // fileBean.setParentPathId(parentFileBean.getId());
 
         }
         return fileBean;
@@ -534,8 +518,9 @@ public class FileUtils {
      * @return
      * @throws Exception
      */
-    public static boolean unzipFile(String zipFilePath, String desDirectory, FileBean zipFileBean, String path,
-                                    PropertyChangeListener propertyChangeListener) throws Exception {
+    @Async
+    public void unzipFile(String zipFilePath, String desDirectory, FileBean zipFileBean, String path,
+                                         PropertyChangeListener propertyChangeListener) throws Exception {
         Date date = new Date();
         String dateStr = DateUtil.format(date, "yyyyMMdd");
         File desDir = new File(desDirectory);
@@ -562,7 +547,6 @@ public class FileUtils {
 
             if (zipEntry.isDirectory()) { // 文件夹
                 // 直接创建
-                // mkdir(new File(unzipFilePath));
                 System.out.println("文件夹FileBean:" + fileBean);
                 FileBean parentFileBean = fileService.selectByFilePath(path, zipFileBean.getUserId());
                 fileBean.setParentPathId(parentFileBean.getId());
@@ -574,10 +558,8 @@ public class FileUtils {
                     fileService.save(fileBean);
                 }
             } else { // 文件
-                // String unzipFilePath = desDirectory + File.separator + zipEntry.getName();
                 File file = new File(unzipFilePath);
                 totalSize += file.length();
-
                 // 创建父目录
                 System.out.println("创建父目录:" + file.getParentFile());
                 mkdir(file.getParentFile());
@@ -590,7 +572,6 @@ public class FileUtils {
                     bufferedOutputStream.write(bytes, 0, readLen);
                 }
                 bufferedOutputStream.close();
-
                 // 写出文件后在对文件进行md5校验
                 String md5 = Md5Utils.md5HashCode32(unzipFilePath);
                 fileBean.setIdentifier(md5);
@@ -603,7 +584,6 @@ public class FileUtils {
                 fileBean.setParentPathId(parentFileBean.getId());
                 fileService.save(fileBean);
                 System.out.println("文件FileBean:" + i + " " + fileBean);
-
                 // 对文件重命名
                 String newFilePath = desDirectory + "/" + md5 + "." + FileUtils.getFileExt(zipEntry.getName());
                 file.renameTo(new File(newFilePath));
@@ -623,7 +603,7 @@ public class FileUtils {
         }
         storageService.updateStorageUse(totalSize, zipFileBean.getUserId());
         zipInputStream.close();
-        return true;
+        // return true;
     }
 
     // 如果父目录不存在则创建
@@ -639,7 +619,6 @@ public class FileUtils {
      * 从输入流中获取字节数组
      *
      * @param inputStream
-     * @return
      * @throws IOException
      */
     public static byte[] readInputStream(InputStream inputStream) throws IOException {

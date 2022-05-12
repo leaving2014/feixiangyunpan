@@ -1,115 +1,198 @@
 package com.fx.pan.admin.controller;
 
-import com.fx.pan.common.Msg;
-import com.fx.pan.domain.Chunk;
+import com.alibaba.fastjson.JSONObject;
+import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.FileBean;
-import com.fx.pan.dto.file.UploadFileDTO;
+import com.fx.pan.domain.User;
+import com.fx.pan.admin.service.FileManageService;
+import com.fx.pan.service.CosFileService;
 import com.fx.pan.service.FileService;
+import com.fx.pan.service.UserService;
+import com.fx.pan.utils.BeanCopyUtils;
+import com.fx.pan.vo.FileListVo;
+import com.fx.pan.vo.UserVo;
+import com.qcloud.cos.model.ciModel.auditing.ImageAuditingResponse;
+import org.checkerframework.checker.initialization.qual.FBCBottom;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.w3c.dom.stylesheets.LinkStyle;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * @Author leaving
- * @Date 2022/4/25 18:52
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/25 18:52
+ * @version 1.0
  */
 
 
 @RestController
-@RequestMapping("/admin/file")
+@RequestMapping("/manage/file")
 public class FileMangeController {
 
     @Resource
     private FileService fileService;
 
-    // 所有文件列表分页查看
-    @GetMapping("/lsit")
-    public Msg list(@RequestParam("path") String path, @RequestParam("page") int page,
-                    @RequestParam("size") int size,@RequestParam("onlyFile") boolean onlyFile) {
+    @Resource
+    private UserService userService;
 
-        List<FileBean> fileBeanList= fileService.fileList(path,onlyFile, page, size);
-        // Integer total = fileService.fileTotal()
-        return Msg.success("成功").put("list",fileBeanList);
+    @Resource
+    private FileManageService fileManageService;
+
+    @Resource
+    private CosFileService cosFileService;
+
+    // 所有文件列表分页查看
+    @GetMapping("/list")
+    public ResponseResult list(@RequestParam(value = "path", required = false, defaultValue = "/") String path,
+                               @RequestParam("pageNum") int pageNum,
+                               @RequestParam("query") String query,
+                               @RequestParam("pageSize") int pageSize,
+                               @RequestParam(value = "onlyFile", defaultValue = "") boolean onlyFile,
+                               @RequestParam(value = "uid", defaultValue = "") Long uid) {
+        Map userMap = new HashMap();
+
+        List<FileBean> fileBeanList = fileManageService.fileList(path, query, pageNum, pageSize, onlyFile, uid);
+        for (FileBean fileBean : fileBeanList) {
+            Long userId = fileBean.getUserId();
+            if (userMap.get(userId) == null) {
+                User user = userService.selectUserById(userId);
+                userMap.put(userId, BeanCopyUtils.copyBean(user, UserVo.class));
+            }
+        }
+        // Map userMap = fileBeanList.stream().map()
+        List<FileListVo> fileListVos = fileBeanList.stream().map(fileBean -> {
+            FileListVo fileListVo = BeanCopyUtils.copyBean(fileBean, FileListVo.class);
+            fileListVo.setUser((UserVo) userMap.get(fileBean.getUserId()));
+            return fileListVo;
+        }).collect(Collectors.toList());
+        Integer total = fileManageService.fileListTotal(path, query, onlyFile, pageNum, pageSize, uid);
+        Map map = new HashMap();
+        map.put("list", fileListVos);
+        map.put("total", total);
+        return ResponseResult.success(map);
+        // .put("list", fileListVos).put("total", total);
     }
 
+
     // 按照文件类型查看
-    @GetMapping("/list/type")
-    public Msg listType(@RequestParam("fileType") String fileType,@RequestParam("page") int page,
-                           @RequestParam("size") int size) {
+    @GetMapping("/type")
+    public ResponseResult listType(@RequestParam("fileType") Integer fileType, @RequestParam("pageNum") int pageNum,
+                                   @RequestParam("pageSize") int pageSize) {
+        List<FileBean> fileBeanList = fileManageService.fileListByType(fileType, pageNum, pageSize);
+        List<FileListVo> fileListVos = fileBeanList.stream().map(fileBean -> {
+            FileListVo fileListVo = BeanCopyUtils.copyBean(fileBean, FileListVo.class);
+            fileListVo.setUser(BeanCopyUtils.copyBean(userService.selectUserById(fileBean.getUserId()), UserVo.class));
+            return fileListVo;
+        }).collect(Collectors.toList());
+        Integer total = fileManageService.fileListByTypeTotal(fileType);
+        Map map = new HashMap();
+        map.put("list", fileListVos);
+        map.put("total", total);
 
-
-        return Msg.success("");
+        return ResponseResult.success(map);
+        //.put("list", fileListVos).put("total", total);
 
     }
 
 
     @GetMapping("/search")
-    public Msg search(@RequestParam("keyword") String keyword,@RequestParam("page") int page,
-                         @RequestParam("size") int size) {
-
-        return Msg.success("");
+    public ResponseResult search(@RequestParam("keyword") String keyword, @RequestParam("pageNum") int pageNum,
+                                 @RequestParam("pageSize") int pageSize) {
+        List<FileBean> fileBeanList = fileManageService.search(keyword, pageNum, pageSize);
+        Integer total = fileManageService.searchTotal(keyword);
+        Map map = new HashMap();
+        map.put("list", fileBeanList);
+        map.put("total", total);
+        return ResponseResult.success(map);
+        //.put("list", fileBeanList).put("total", total);
     }
 
-    @GetMapping("/upload")
-    public Msg upload(UploadFileDTO uploadFileDto, @ModelAttribute Chunk chunk) {
-
-        return Msg.success("");
-    }
 
     @GetMapping("/download")
-    public Msg download(@RequestParam("file") Long[] files) {
+    public ResponseResult download(@RequestParam("file") Long[] files) {
 
-        return Msg.success("");
+        return ResponseResult.success("");
     }
 
     @PostMapping("/rename")
-    public Msg rename(@RequestParam("id") Long id,@RequestParam("name") String name) {
-
-        return Msg.success("");
+    public ResponseResult rename(@RequestParam("id") Long id, @RequestParam("name") String name) {
+        int res = fileManageService.rename(id, name);
+        return ResponseResult.success("");
     }
 
     @PostMapping("/delete")
-    public Msg delete(@RequestParam("id") Long id) {
+    public ResponseResult delete(@RequestParam("id") Long id) {
+        int i = fileManageService.deleteFileById(id);
 
-        return Msg.success("");
+        return ResponseResult.success("删除成功");
     }
 
-    @PostMapping("/move")
-    public Msg move(@RequestParam("id") Long id,@RequestParam("pathId") Long pathId) {
-
-        return Msg.success("");
+    // 批量删除
+    @PostMapping("/delete/batch")
+    public ResponseResult deleteBatch(@RequestParam("ids") Long[] ids) {
+        for (Long id : ids) {
+            fileManageService.deleteFileById(id);
+        }
+        return ResponseResult.success("删除成功");
     }
 
-    @PostMapping("/copy")
-    public Msg copy(@RequestParam("id") Long id,@RequestParam("pathId") Long pathId) {
-
-        return Msg.success("");
-    }
 
     @PostMapping("/create")
-    public Msg create(@RequestParam("id") Long id,@RequestParam("name") String name) {
+    public ResponseResult create(@RequestParam("id") Long id, @RequestParam("name") String name) {
 
-        return Msg.success("");
+        return ResponseResult.success("");
     }
 
     @PostMapping("/create/folder")
-    public Msg createFolder(@RequestParam("id") Long id,@RequestParam("name") String name) {
+    public ResponseResult createFolder(@RequestParam("id") Long id, @RequestParam("name") String name) {
 
-        return Msg.success("");
+        return ResponseResult.success("");
     }
-
 
 
     @GetMapping("/detail")
-    public Msg detail(@RequestParam("id") Long id) {
-
-        return Msg.success("");
+    public ResponseResult detail(@RequestParam("id") Long id) {
+        FileBean fileBean = fileManageService.selectFileById(id);
+        return ResponseResult.success("");
     }
 
+    @PostMapping("/audit")
+    public ResponseResult audit(@RequestParam("fileId") Long fileId, @RequestParam("audit") Integer audit) {
+        int i = fileManageService.updateAudit(fileId, audit);
+        if (i > 0) {
+            return ResponseResult.success("审核状态成功");
+        } else {
+            return ResponseResult.error(500, "审核状态失败");
+        }
+    }
 
+    @PostMapping("/cos/audit")
+    public ResponseResult cosAudit(@RequestParam("id") Long id, @RequestParam("detectUrl") String detectUrl) {
+        FileBean fileBean = fileManageService.selectFileById(id);
+        Integer audit = fileBean.getAudit();
+        Integer auditResult;
+        ImageAuditingResponse response = cosFileService.fileAudit(fileBean, true);
+        Integer terroristScore = Integer.valueOf(response.getTerroristInfo().getScore());
+        Integer pornScore = Integer.valueOf(response.getPornInfo().getScore());
+        Map map = new HashMap();
+        map.put("terroristScore", terroristScore);
+        map.put("pornScore", pornScore);
+        map.put("detectUrl", response);
+        if (terroristScore > 91 || pornScore > 91) {
+            auditResult = -1;
+        } else {
+            auditResult = 1;
+        }
+        map.put("status", auditResult);
+        if (!audit.equals(auditResult)) {
+            fileManageService.updateAudit(fileBean.getId(), auditResult);
+        }
+        return ResponseResult.success("更新审核状态成功", map);
+    }
 
 
 }

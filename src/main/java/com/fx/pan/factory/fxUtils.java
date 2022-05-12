@@ -13,9 +13,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 11:39
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 11:39
+ * @version 1.0
  */
 
 public class fxUtils {

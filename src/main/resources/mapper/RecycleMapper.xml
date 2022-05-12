@@ -169,6 +169,11 @@
         where id = #{id,jdbcType=BIGINT}
           and user_id = #{userId,jdbcType=BIGINT}
     </update>
+    <update id="recoverFile">
+        update file
+        set deleted = 0
+        where id = #{id,jdbcType=BIGINT}
+    </update>
     <delete id="deleteRecycleFileById" parameterType="com.fx.pan.domain.FileBean">
         delete
         from file
@@ -248,12 +253,37 @@
           and user_id = #{userId,jdbcType=BIGINT}
           and deleted = 1
     </select>
+
     <delete id="deleteAllRecycleFileByUserId">
         delete
         from file
         where user_id = #{userId,jdbcType=BIGINT}
           and deleted = 1
     </delete>
+    <delete id="delelteRecycleFile">
+        delete
+        from file
+        where id = #{fid,jdbcType=BIGINT}
+          and deleted = 1
+    </delete>
+    <select id="secletRecycleList"  resultType="com.fx.pan.domain.FileBean">
+        select *
+        from file
+        where deleted = 1
+        <if test="query != null and query!=''">
+            and file_name like concat('%',#{query,jdbcType=VARCHAR},'%')
+        </if>
+
+    </select>
+    <select id="selectRecycleCount" parameterType="string" resultType="java.lang.Integer">
+        select count(*)
+        from file
+        where deleted = 1
+        <if test="query != null and query!=''">
+            and file_name like concat('%',#{query,jdbcType=VARCHAR},'%')
+        </if>
+
+    </select>
 
 
 </mapper>

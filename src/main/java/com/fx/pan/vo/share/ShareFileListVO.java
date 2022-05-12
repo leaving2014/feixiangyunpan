@@ -1,5 +1,6 @@
 package com.fx.pan.vo.share;
 
+import com.fx.pan.vo.UserVo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.bouncycastle.util.Times;
@@ -7,15 +8,15 @@ import org.bouncycastle.util.Times;
 import java.util.Date;
 
 /**
- * @Author leaving
- * @Date 2022/3/31 15:41
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/31 15:41
+ * @version 1.0
  */
 @Data
 @Schema(description = "分享文件列表VO")
 public class ShareFileListVO {
     private Long id;
-
+    private Long fileId;
     private String fileName;
     private String filePath;
     private Long fileSize;
@@ -41,5 +42,7 @@ public class ShareFileListVO {
     private Date expiredTime;
     private Date updateTime;
     private Integer expired;
+
+    public UserVo user;
 
 }

@@ -1,14 +1,11 @@
 package com.fx.pan.service.impl;
 
-import cn.hutool.Hutool;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fx.pan.common.Msg;
+import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.factory.fxUtils;
 import com.fx.pan.mapper.FileMapper;
@@ -16,37 +13,39 @@ import com.fx.pan.service.FileService;
 import com.fx.pan.utils.BeanCopyUtils;
 import com.fx.pan.utils.FileUtils;
 import com.fx.pan.utils.RedisCache;
+import com.fx.pan.utils.WgetUtil;
 import com.fx.pan.vo.FileListVo;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
- * @Author leaving
- * @Date 2022/1/18 19:01
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/18 19:01
+ * @version 1.0
  */
 
 @Service
 public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implements FileService {
-    @Autowired
+    @Resource
     private FileMapper fileMapper;
 
     @Autowired
     private RedisCache redisCache;
 
+    @Autowired
+    private FileUtils fileUtils;
+
+
 
     @Override
     public boolean createFolder(FileBean createFile) {
+        createFile.setAudit(1);
         return fileMapper.insert(createFile) > 0;
         // return fileMapper.insertFile(createFile)>0;
     }
@@ -67,10 +66,19 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implement
         if (isDir == 1) {
             queryWrapper.eq(FileBean::getIsDir, 1);
         }
+        queryWrapper.eq(FileBean::getAudit, 1);
         queryWrapper.eq(FileBean::getFilePath, s);
         queryWrapper.eq(FileBean::getUserId, user_id);
         List<FileBean> list = fileMapper.selectList(queryWrapper);
         return list;
+    }
+
+    @Override
+    public List<FileBean> selectOfflineFileList(Long userId) {
+        LambdaQueryWrapper<FileBean> queryWrapper = new LambdaQueryWrapper();
+        queryWrapper.eq(FileBean::getUserId, userId);
+        queryWrapper.eq(FileBean::getOrigin, 1);
+        return fileMapper.selectList(queryWrapper);
     }
 
     /**
@@ -122,7 +130,8 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implement
 
     @Override
     public boolean insertFileInfo(FileBean fileBean) {
-        return fileMapper.insertFile(fileBean) > 0;
+        return fileMapper.insert(fileBean) > 0;
+        // return fileMapper.insertFile(fileBean) > 0;
     }
 
     @Override
@@ -147,12 +156,12 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implement
     }
 
     @Override
-    public Msg copyFile(Long copyFileId, String copyFilePath, Long userId) {
+    public ResponseResult copyFile(Long copyFileId, String copyFilePath, Long userId) {
         FileBean copyFileBean = fileMapper.selectById(copyFileId);
         boolean fileExist = isFileExist(copyFilePath, copyFileBean.getFileName(),
                 copyFileBean.getUserId());
         if (fileExist) {
-            return Msg.error(500, "文件已存在");
+            return ResponseResult.error(500, "文件已存在");
         }
         FileBean fileBean = BeanCopyUtils.copyBean(copyFileBean, FileBean.class);
         fileBean.setFilePath(copyFilePath);
@@ -164,9 +173,9 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implement
         Long parentId = selectByFilePath(copyFilePath, userId).getId();
         fileBean.setParentPathId(parentId);
         if (fileMapper.insert(fileBean) > 0) {
-            return Msg.success("复制成功");
+            return ResponseResult.success("复制成功");
         } else {
-            return Msg.error(500, "复制失败");
+            return ResponseResult.error(500, "复制失败");
         }
     }
 
@@ -184,16 +193,16 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implement
     }
 
     @Override
-    public Msg moveFile(Long fileId, String filePath, Long userId) {
+    public ResponseResult moveFile(Long fileId, String filePath, Long userId) {
 
         FileBean target = fileMapper.selectById(fileId);
         UpdateWrapper<FileBean> updateWrapper = new UpdateWrapper();
         updateWrapper.eq("id", fileId).eq("user_id", userId).set("file_path", filePath);
         int flag = fileMapper.update(target, updateWrapper);
         if (flag > 0) {
-            return Msg.success("移动成功");
+            return ResponseResult.success("移动成功");
         } else {
-            return Msg.error(500, "移动失败");
+            return ResponseResult.error(500, "移动失败");
         }
 
     }
@@ -211,31 +220,28 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implement
         String dateStr = DateUtil.format(date, "yyyyMMdd");
         String zipFilePath = fxUtils.getStaticPath() + '/' + zipFileBean.getFileUrl();
         String destPath = fxUtils.getStaticPath() + '/' + dateStr;
-        // FileUtils.unzip(zipFilePath, destPath);
-
-        boolean unzip = FileUtils.unzipFile(zipFilePath, destPath, zipFileBean, filePath, new PropertyChangeListener() {
+        fileUtils.unzipFile(zipFilePath, destPath, zipFileBean, filePath, new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 redisCache.set("unzip-" + fileId + "-" + zipFileBean.getUserId(), evt.getNewValue(), 60 * 60 * 24);
-                // System.out.println(">>>Source:" + evt.getSource());
-                // System.out.println(">>>NewValue:" + evt.getNewValue());
             }
         });
-        // FileUtils.unzip(fileId,unzipMode,filePath);
         redisCache.deleteObject("unzip-" + fileId + "-" + zipFileBean.getUserId());
-        return unzip;
+        Map<String, Object> map = new HashMap<>();
+        return true;
     }
 
     @Override
-    public Msg cleanFile(Long userId) {
+    public ResponseResult cleanFile(Long userId) {
         LambdaQueryWrapper<FileBean> queryWrapper = new LambdaQueryWrapper();
         queryWrapper.eq(FileBean::getUserId, userId);
         queryWrapper.eq(FileBean::getIsDir, "0");
         queryWrapper.orderByDesc(FileBean::getFileUpdateTime);
         List<FileBean> list = fileMapper.selectList(queryWrapper);
         List<FileListVo> fileListVos = BeanCopyUtils.copyBeanList(list, FileListVo.class);
-
-        return Msg.success().put("rows", fileListVos);
+        Map<String, Object> map = new HashMap<>();
+        map.put("rows", fileListVos);
+        return ResponseResult.success(map);
     }
 
     @Override
@@ -300,7 +306,10 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implement
     public List selectFileByIdentifier(String identifier) {
         LambdaQueryWrapper<FileBean> queryWrapper = new LambdaQueryWrapper();
         queryWrapper.eq(FileBean::getIdentifier, identifier);
+        queryWrapper.in(FileBean::getDeleted, 0, 1);
         return fileMapper.selectList(queryWrapper);
+        // return fileMapper.selectFileByIdentifier(identifier);
+        // return fileMapper.selectList(queryWrapper);
     }
 
     @Override
@@ -319,15 +328,26 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implement
         return fileMapper.selectList(queryWrapper);
     }
 
+
     @Override
-    public List<FileBean> fileList(String path, boolean onlyFile, int page, int size) {
+    public FileBean selectFileByNameAndPath(String fileName, String filePath, Long userId,Integer isDir) {
         LambdaQueryWrapper<FileBean> queryWrapper = new LambdaQueryWrapper();
-        queryWrapper.eq(path!=null, FileBean::getFilePath, path);
-        queryWrapper.eq(onlyFile==true, FileBean::getIsDir, 0);
-        // queryWrapper.orderByDesc(FileBean::getFileCreateTime);
-        Page<FileBean> pageBean = new Page<>(page, size);
-        IPage<FileBean> iPage = fileMapper.selectPage(pageBean, queryWrapper);
-        return iPage.getRecords();
+        queryWrapper.eq(FileBean::getFileName, fileName);
+        queryWrapper.eq(FileBean::getFilePath, filePath);
+        queryWrapper.eq(FileBean::getIsDir, isDir);
+        FileBean fileBean = fileMapper.selectOne(queryWrapper);
+        System.out.println("fileBean = " + fileBean);
+        return fileBean;
     }
+
+    @Override
+    public Integer getAuditFileCount(Long userId, Boolean isAudit) {
+        LambdaQueryWrapper<FileBean> queryWrapper = new LambdaQueryWrapper();
+        queryWrapper.eq(FileBean::getUserId, userId);
+        queryWrapper.in(isAudit==false,FileBean::getAudit, Arrays.asList(-1, 0));
+        queryWrapper.in(isAudit==true,FileBean::getAudit, Arrays.asList(1));
+        return fileMapper.selectCount(queryWrapper);
+    }
+
 
 }

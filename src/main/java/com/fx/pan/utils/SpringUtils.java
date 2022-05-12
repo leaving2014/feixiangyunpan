@@ -140,6 +140,6 @@ public final class SpringUtils implements BeanFactoryPostProcessor, ApplicationC
     public static String getActiveProfile()
     {
         final String[] activeProfiles = getActiveProfiles();
-        return StringUtils.isNotEmpty(activeProfiles) ? activeProfiles[0] : null;
+        return StringUtil.isNotEmpty(activeProfiles) ? activeProfiles[0] : null;
     }
 }

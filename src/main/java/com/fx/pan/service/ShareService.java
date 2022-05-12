@@ -1,6 +1,5 @@
 package com.fx.pan.service;
 
-import com.fx.pan.common.Msg;
 import com.fx.pan.domain.Share;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fx.pan.vo.share.ShareFileListVO;
@@ -24,4 +23,8 @@ public interface ShareService extends IService<Share> {
 
 
     List<ShareFileListVO> selectShareFileList(Long userId);
+
+    int deleteExpireShareList(Long userId);
+
+    List<Share> selectExpireShareFileList(Long userId);
 }

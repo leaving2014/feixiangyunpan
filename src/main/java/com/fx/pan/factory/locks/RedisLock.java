@@ -1,13 +1,14 @@
 package com.fx.pan.factory.locks;
 
 /**
- * @Author leaving
- * @Date 2022/3/4 13:22
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/4 13:22
+ * @version 1.0
  */
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.RedisCallback;
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * redis锁
+ * @author leaving
  */
 @Component
 public class RedisLock {

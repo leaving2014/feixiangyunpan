@@ -18,9 +18,9 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * @Author leaving
- * @Date 2022/4/2 13:17
- * @Version 1.0
+ * @author leaving
+ * @date 2022/4/2 13:17
+ * @version 1.0
  */
 @Service
 public class RecycleServiceImpl extends ServiceImpl<RecycleMapper, FileBean> implements RecycleService {

@@ -1,9 +1,9 @@
 package com.fx.pan.exception;
 
 /**
- * @Author leaving
- * @Date 2022/1/19 14:42
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/19 14:42
+ * @version 1.0
  */
 
 public class UploadException extends RuntimeException {

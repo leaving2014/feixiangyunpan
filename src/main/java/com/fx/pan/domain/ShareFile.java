@@ -6,9 +6,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
- * @Author leaving
- * @Date 2022/3/30 14:04
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/30 14:04
+ * @version 1.0
  */
 
 @Data

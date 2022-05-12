@@ -6,9 +6,9 @@ import com.fx.pan.domain.FileBean;
 import java.util.List;
 
 /**
- * @Author leaving
- * @Date 2022/3/8 12:20
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/8 12:20
+ * @version 1.0
  */
 public interface RecycleService extends IService<FileBean> {
     List<FileBean> selectRecycleByUserId(Long userId);

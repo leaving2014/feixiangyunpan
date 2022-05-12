@@ -10,9 +10,9 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.*;
 
 /**
- * @Author leaving
- * @Date 2022/1/12 11:32
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/12 11:32
+ * @version 1.0
  */
 
 public class JwtUtil {
@@ -31,7 +31,7 @@ public class JwtUtil {
     /**
      * 设置秘钥明文
      */
-    public static final String JWT_KEY = "sangeng";
+    public static final String JWT_KEY = "fxclouddisc";
 
     public static String getUUID() {
         String token = UUID.randomUUID().toString().replaceAll("-", "");

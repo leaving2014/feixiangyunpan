@@ -8,9 +8,9 @@ import com.qcloud.cos.model.COSObject;
 import java.io.InputStream;
 
 /**
- * @Author leaving
- * @Date 2022/3/19 17:06
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/19 17:06
+ * @version 1.0
  */
 
 public class TxCosDownloader {

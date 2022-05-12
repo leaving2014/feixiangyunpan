@@ -4,9 +4,10 @@ import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @Author leaving
- * @Date 2022/4/16 23:12
- * @Version 1.0
+ * 限流注解
+ * @author leaving
+ * @date 2022/4/16 23:12
+ * @version 1.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})

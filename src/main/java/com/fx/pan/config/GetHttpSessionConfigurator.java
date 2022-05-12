@@ -6,6 +6,10 @@ import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerEndpointConfig;
 import javax.websocket.server.ServerEndpointConfig.Configurator;
 
+/**
+ * @author leaving
+ * @date 2022年4月5日
+ */
 public class GetHttpSessionConfigurator extends Configurator {
 
 	@Override

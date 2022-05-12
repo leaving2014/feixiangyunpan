@@ -4,9 +4,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
- * @Author leaving
- * @Date 2022/3/10 14:35
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/10 14:35
+ * @version 1.0
  */
 
 @Data

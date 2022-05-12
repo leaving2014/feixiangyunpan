@@ -1,6 +1,6 @@
 package com.fx.pan.service;
 
-import com.fx.pan.common.Msg;
+import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.User;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -9,22 +9,22 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * @Author leaving
- * @Date 2022/1/14 10:47
- * @Version 1.0
+ * @author leaving
+ * @date 2022/1/14 10:47
+ * @version 1.0
  */
 
 public interface UserService{
 
-    Msg register(User user);
+    ResponseResult register(User user);
 
-    Msg login(String username,String password);
+    ResponseResult login(String username, String password);
 
-    Msg logout();
+    ResponseResult logout();
 
     User seletUserWithUserName(String username);
 
-    Msg updateUser(User user);
+    ResponseResult updateUser(User user);
 
     User getUserBeanByToken(String token);
 
@@ -35,4 +35,6 @@ public interface UserService{
     List<User> getUserList(String query, int pageNum, int pageSize);
 
     int adminRegister(User user);
+
+    int modifyPassword(User user, String oldPassword, String newPassword);
 }

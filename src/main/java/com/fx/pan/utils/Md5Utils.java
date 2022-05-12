@@ -9,9 +9,9 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 
 /**
- * @Author leaving
- * @Date 2021/11/25 11:03
- * @Version 1.0
+ * @author leaving
+ * @date 2021/11/25 11:03
+ * @version 1.0
  */
 
 public class Md5Utils {
@@ -21,15 +21,8 @@ public class Md5Utils {
             String filePath = "C:/Users/leaving/Pictures/my.jpg";
             // e2e54cf84250b3ef86eae694c71c8cef：文件的md5值 ,可能不是32位
             // e2e54cf84250b3ef86eae694c71c8cef：文件32位的md5值
-
-
             String md5Hashcode = md5HashCode(filePath);
             String md5Hashcode32 = md5HashCode32(filePath);
-
-            System.out.println(md5Hashcode + "：文件的md5值");
-            System.out.println(md5Hashcode32+"：文件32位的md5值");
-
-            //System.out.println(-100 & 0xff);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -66,7 +59,6 @@ public class Md5Utils {
         try {
             //拿到一个MD5转换器,如果想使用SHA-1或SHA-256，则传入SHA-1,SHA-256
             MessageDigest md = MessageDigest.getInstance("MD5");
-
             //分多次将一个文件读入，对于大型文件而言，比较推荐这种方式，占用内存比较少。
             byte[] buffer = new byte[1024];
             int length = -1;
@@ -93,7 +85,6 @@ public class Md5Utils {
         try {
             //拿到一个MD5转换器,如果想使用SHA-1或SHA-256，则传入SHA-1,SHA-256
             MessageDigest md = MessageDigest.getInstance("MD5");
-
             //分多次将一个文件读入，对于大型文件而言，比较推荐这种方式，占用内存比较少。
             byte[] buffer = new byte[1024];
             int length = -1;
@@ -146,18 +137,12 @@ public class Md5Utils {
     }
 
     public static String String2Md5(String inStr){
-
         MessageDigest md5 = null;
-
         try{
-
             md5 = MessageDigest.getInstance("MD5");
-
         }catch (Exception e){
-
             System.out.println(e.toString());
             e.printStackTrace();
-
             return "";
         }
 
@@ -167,24 +152,17 @@ public class Md5Utils {
         for (int i = 0; i < charArray.length; i++) {
             byteArray[i] = (byte) charArray[i];
         }
-
         byte[] md5Bytes = md5.digest(byteArray);
         StringBuffer hexValue = new StringBuffer();
-
         for (int i = 0; i < md5Bytes.length; i++){
-
             int val = ((int) md5Bytes[i]) & 0xff;
-            if (val < 16)
+            if (val < 16) {
                 hexValue.append("0");
+            }
             hexValue.append(Integer.toHexString(val));
         }
-
         return hexValue.toString();
-
     }
-
-
-
 
     /**
      * 方法md5HashCode32 中     ((int) md5Bytes[i]) & 0xff   操作的解释：

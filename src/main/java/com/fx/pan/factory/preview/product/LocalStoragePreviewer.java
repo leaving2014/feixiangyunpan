@@ -10,9 +10,9 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 /**
- * @Author leaving
- * @Date 2022/3/10 15:01
- * @Version 1.0
+ * @author leaving
+ * @date 2022/3/10 15:01
+ * @version 1.0
  */
 
 public class LocalStoragePreviewer extends Previewer {

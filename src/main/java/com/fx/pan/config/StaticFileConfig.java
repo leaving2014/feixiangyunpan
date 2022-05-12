@@ -8,9 +8,9 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * @Author leaving
- * @Date 2022/4/17 22:35
- * @Version 1.0
+ * @author leaving
+ * @date 2022/4/17 22:35
+ * @version 1.0
  */
 @Configuration
 @PropertySource(value = {"classpath:application.yml"})
