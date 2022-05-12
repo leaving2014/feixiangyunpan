@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -61,6 +62,22 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
     @Override
     public List<ShareFileListVO> selectShareFileList(Long userId) {
         return shareMapper.selectShareFileList(userId);
+    }
+
+    @Override
+    public int deleteExpireShareList(Long userId) {
+        LambdaQueryWrapper<Share> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Share::getUserId, userId);
+        queryWrapper.lt(Share::getExpiredTime, new Date());
+        return shareMapper.delete(queryWrapper);
+    }
+
+    @Override
+    public List<Share> selectExpireShareFileList(Long userId) {
+        LambdaQueryWrapper<Share> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Share::getUserId, userId);
+        queryWrapper.lt(Share::getExpiredTime, new Date());
+        return shareMapper.selectList(queryWrapper);
     }
 }
 
