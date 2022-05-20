@@ -9,10 +9,12 @@ import com.fx.pan.service.StorageService;
 import com.fx.pan.utils.file.FileTypeUtils;
 import com.fx.pan.utils.file.ImageUtil;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -21,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
 import javax.imageio.ImageIO;
+import javax.naming.Name;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -31,9 +34,11 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import static org.apache.commons.io.FileUtils.copyInputStreamToFile;
@@ -44,7 +49,10 @@ import static org.apache.commons.io.FileUtils.copyInputStreamToFile;
  * @version 1.0
  */
 @Component
+@Slf4j
 public class FileUtils {
+
+    private static final int buffer = 2048;
 
     static int bufferSize = 8192;//单位bytes
     private static String absoluteFilePath;
@@ -342,6 +350,48 @@ public class FileUtils {
         return newFile;
     }
 
+    public static String getPath(String[] paths, int index) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < index; i++) {
+            sb.append("/").append(paths[i]);
+        }
+        return sb.toString();
+    }
+
+
+    public static String filePathResolve(String relativePath,String filePath,Long userId) {
+        String path1 = "上传文件夹/上传内1/上传1内index.js";
+        // 获取relativePath中"/"的个数
+        int pathNum = StringUtil.appearNumber(relativePath, "/");
+        String[] pathArray = relativePath.split("/");
+
+        for (int i = 0; i < pathNum; i++) {
+            String path = filePath.equals("/") ? "/" : filePath + getPath(pathArray, i);
+            String pathName = pathArray[i];
+            boolean folderExist = fileService.isFolderExist(path, pathName, userId);
+            System.out.println("检测目录是否存在====path:" + path + " pathName:" + pathName + " folderExist:" + folderExist);
+            if (!folderExist) {
+                FileBean folder = new FileBean();
+                folder.setFileName(pathName);
+                folder.setIsDir(1);
+                folder.setFilePath(path);
+                folder.setFileCreateTime(new Date());
+                folder.setFileUpdateTime(new Date());
+                folder.setUserId(userId);
+                if (folder.getFilePath().equals("/")) {
+                    folder.setParentPathId(-1L);
+                } else {
+                    System.out.println("获取父目录id====path:" + folder.getFilePath()+ "          pathName:" + pathName);
+                    // FileBean fileBean = fileService.selectParentPath(path, pathName,userId);
+                    // folder.setParentPathId(fileBean.getId());
+                }
+
+                fileService.createFolder(folder);
+            }
+        }
+
+        return "";
+    }
     /**
      * 返回上传文件对象
      *
@@ -353,13 +403,27 @@ public class FileUtils {
         FileBean f = new FileBean();
         String fileName = chunk.getFilename();
         f.setFileName(fileName);
-        f.setFilePath(chunk.getFilePath());
+        // if (chunk.getRelativePath().contains("/")) {
+        //     if (!chunk.getRelativePath().equals("/")) {
+        //         filePathResolve(chunk.getRelativePath(),chunk.getFilePath(),userId);
+        //         f.setFilePath("/"+chunk.getRelativePath().replace("/"+fileName, ""));
+        //     } else {
+        //         f.setFilePath(chunk.getFilePath());
+        //     }
+        // } else {
+        //     f.setFilePath(chunk.getFilePath());
+        // }
+        filePathResolve(chunk.getRelativePath(),chunk.getFilePath(),userId);
+        if (chunk.getRelativePath().contains("/")) {
+            f.setFilePath(chunk.getFilePath() + "/" +  chunk.getRelativePath().replace("/" + fileName, ""));
+        } else {
+            f.setFilePath(chunk.getFilePath());
+        }
+
         f.setIsDir(0);
         f.setFileSize(chunk.getTotalSize());
-
         String extendName = FileUtils.getFileExt(fileName);
         f.setFileExt(extendName);
-
         f.setIdentifier(chunk.getIdentifier());
         f.setStorageType(storageType);
         Integer fileType = FileTypeUtils.getFileTypeByExtendName(FileUtils.getFileExt(fileName));
@@ -373,7 +437,6 @@ public class FileUtils {
         // 生成缩略图     || fileType == 2
         if (fileType == 1) {
             f.setAudit(0);
-
             ImageUtil.startGenerateThumbnail(absoluteFilePath + "/" + formatDate + "/" + chunk.getIdentifier() + "." + extendName, f, true, 0.3);
         }
         if (fileType == 2) {
@@ -510,16 +573,220 @@ public class FileUtils {
         return fileBean;
     }
 
+    public void unzipFile(String zipPath, String saveFilePath, FileBean zipFileBean, String path, Long t,
+                             PropertyChangeListener propertyChangeListener) throws IOException {
+        int count = -1;
+        String savepath = "";
+        long readSize = 0;
+        Long totalSize = 0L;
+        long totalFileSize = new File(zipPath).length();// 总大小
+        File file = null;
+        InputStream is = null;
+        FileOutputStream fos = null;
+        BufferedOutputStream bos = null;
+        String destDirPath = absoluteFilePath + "/tmp/"+t+"/";
+        //保存解压文件目录
+        if (StringUtils.isNotBlank(destDirPath)) {
+            savepath = new File(destDirPath) + File.separator;
+        } else {
+            savepath = new File(zipPath).getParent() + File.separator;
+        }
+
+        // new File(savepath).mkdir(); //创建保存目录
+        new File(destDirPath).mkdir(); //创建保存目录
+        ZipFile zipFile = null;
+        try {
+            //解决中文乱码问题  格式有GBK  UTF8
+            zipFile = new ZipFile(zipPath, Charset.forName(Constants.GBK));
+            Enumeration<?> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                byte buf[] = new byte[buffer];
+                ZipEntry entry = (ZipEntry) entries.nextElement();
+                String filename = entry.getName();
+                boolean ismkdir = false;
+                //检查此文件是否带有文件夹
+                if (filename.lastIndexOf("/") != -1) {
+                    ismkdir = true;
+                }
+                filename = savepath + filename;
+                //如果是文件夹先创建
+                if (entry.isDirectory()) {
+                    file = new File(filename);
+                    file.mkdirs();
+                    continue;
+                }
+                file = new File(filename);
+                if (!file.exists()) {
+                    //如果是目录先创建
+                    if (ismkdir) {
+                        //目录先创建
+                        new File(filename.substring(0, filename.lastIndexOf("/"))).mkdirs();
+                    }
+                }
+                //创建文件
+                file.createNewFile();
+                is = zipFile.getInputStream(entry);
+                fos = new FileOutputStream(file);
+                bos = new BufferedOutputStream(fos, buffer);
+                while ((count = is.read(buf)) > -1) {
+                    bos.write(buf, 0, count);
+                }
+                Integer oldValue = (int) ((readSize * 1.0 / totalFileSize) * 100);// 已解压的字节大小占总字节的大小的百分比
+                readSize += entry.getCompressedSize();// 累加字节长度
+
+                Integer newValue = (int) ((readSize * 1.0 / totalFileSize) * 100);// 已解压的字节大小占总字节的大小的百分比
+                if (totalFileSize < 1024) {
+                    newValue = 100;
+                }
+                if (propertyChangeListener != null) {// 通知调用者解压进度发生改变
+                    propertyChangeListener.propertyChange(new PropertyChangeEvent(zipPath, "progress", oldValue,
+                            newValue));
+                }
+                bos.flush();
+                bos.close();
+                fos.close();
+                is.close();
+            }
+            zipFile.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } finally {
+            try {
+                if (bos != null) {
+                    bos.close();
+                }
+                if (fos != null) {
+                    fos.close();
+                }
+                if (is != null) {
+                    is.close();
+                }
+                if (zipFile != null) {
+                    zipFile.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * 解压文件
+     * @param zipFilePath
+     * @param desDirectory
+     * @param zipFileBean
+     * @param path
+     * @param t
+     * @param propertyChangeListener
+     */
+    @SneakyThrows
+    public void unzipFile2(String zipFilePath, String desDirectory, FileBean zipFileBean, String path, Long t,
+                          PropertyChangeListener propertyChangeListener) {
+        long readSize = 0;
+        Long totalSize = 0L;
+        long totalFileSize = new File(zipFilePath).length();// 总大小
+        String destDirPath = absoluteFilePath + "/tmp/"+t+"/";
+        File destDir = new File(destDirPath);
+        if (!destDir.exists()) {
+            destDir.mkdirs();
+        }
+        File srcFile = new File(zipFilePath);//获取当前压缩文件
+        // 判断源文件是否存在
+        if (!srcFile.exists()) {
+            throw new Exception(srcFile.getPath() + "所指文件不存在");
+        }
+        // ZipFile zipFile = new ZipFile(srcFile);//创建压缩文件对象
+        //
+        // //开始解压
+        // Enumeration<?> entries = zipFile.entries();
+        // Integer zipEntryNum = ent
+
+
+        // 读入流
+        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFilePath),
+                Charset.forName(Constants.GBK));
+        // 遍历每一个文件
+        ZipEntry zipEntry = zipInputStream.getNextEntry();
+
+        // long orginFileSize = zipInputStream.
+        while (zipEntry != null) {
+            log.info("解压文件：{},文件大小:{}" , zipEntry.getName(), zipEntry.getSize());
+            // System.out.println("zipEntry.getName()=========" + zipEntry.getName());
+            String unzipFilePath = destDirPath + File.separator + zipEntry.getName();
+            ZipEntry entry = zipInputStream.getNextEntry();
+            // 如果是文件夹，就创建个文件夹
+            if (zipEntry.isDirectory()) {
+                String dirPath = destDirPath + "/" + entry.getName();
+                File dir = new File(dirPath);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+            } else {
+                File file = new File(destDirPath);
+                totalSize += file.length();
+                // 创建父目录
+                if (!file.getParentFile().exists()) {
+                    System.out.println("创建父目录:" + file.getParentFile());
+                    mkdir(file.getParentFile());
+                }
+                // 写出文件流
+                BufferedOutputStream bufferedOutputStream =
+                        new BufferedOutputStream(new FileOutputStream(unzipFilePath));
+                byte[] bytes = new byte[1024];
+                int readLen;
+                while ((readLen = zipInputStream.read(bytes)) != -1) {
+                    bufferedOutputStream.write(bytes, 0, readLen);
+                }
+                bufferedOutputStream.close();
+
+
+                // // 如果是文件，就先创建一个文件，然后用io流把内容copy过去
+                // File targetFile = new File(destDirPath + "/" + zipEntry.getName());
+                // // 保证这个文件的父文件夹必须要存在
+                // if (!targetFile.getParentFile().exists()) {
+                //     targetFile.getParentFile().mkdirs();
+                // }
+                // targetFile.createNewFile();
+                // // 将压缩文件内容写入到这个文件中
+                // InputStream is = zipFile.getInputStream(zipEntry);
+                // FileOutputStream fos = new FileOutputStream(targetFile);
+                // int len;
+                // byte[] buf = new byte[1024];
+                // while ((len = is.read(buf)) != -1) {
+                //     fos.write(buf, 0, len);
+                // }
+
+                Integer oldValue = (int) ((readSize * 1.0 / totalFileSize) * 100);// 已解压的字节大小占总字节的大小的百分比
+                readSize += entry.getCompressedSize();// 累加字节长度
+                Integer newValue = (int) ((readSize * 1.0 / totalFileSize) * 100);// 已解压的字节大小占总字节的大小的百分比
+                if (propertyChangeListener != null) {// 通知调用者解压进度发生改变
+                    propertyChangeListener.propertyChange(new PropertyChangeEvent(zipFilePath, "progress", oldValue,
+                            newValue));
+                }
+
+                // 关流顺序，先打开的后关闭
+                // fos.close();
+                // is.close();
+            }
+            zipInputStream.closeEntry();
+            zipEntry = zipInputStream.getNextEntry();
+        }
+        zipInputStream.close();
+
+
+    }
+
+    // 原来的方法
     /**
      * @param zipFilePath  待解压文件
      * @param desDirectory 解压到的目录
      * @param zipFileBean  解压文件对象
-     * @param path         数据库存储目录
+     * @param baseFilePath         数据库存储目录
      * @return
      * @throws Exception
      */
     @Async
-    public void unzipFile(String zipFilePath, String desDirectory, FileBean zipFileBean, String path,
+    public void unzipFile1(String zipFilePath, String desDirectory, FileBean zipFileBean, String baseFilePath,Long t,
                                          PropertyChangeListener propertyChangeListener) throws Exception {
         Date date = new Date();
         String dateStr = DateUtil.format(date, "yyyyMMdd");
@@ -538,25 +805,26 @@ public class FileUtils {
                 Charset.forName(Constants.GBK));
         // 遍历每一个文件
         ZipEntry zipEntry = zipInputStream.getNextEntry();
+
         System.out.println("zipEntry:" + zipEntry);
         int i = 0;
         while (zipEntry != null) {
             i++;
             String unzipFilePath = desDirectory + File.separator + zipEntry.getName();
-            FileBean fileBean = BeanCopyUtils.copyBean(getUnzipFileBean(unzipFilePath, path), FileBean.class);
+            // FileBean fileBean = BeanCopyUtils.copyBean(getUnzipFileBean(unzipFilePath, path), FileBean.class);
 
             if (zipEntry.isDirectory()) { // 文件夹
                 // 直接创建
-                System.out.println("文件夹FileBean:" + fileBean);
-                FileBean parentFileBean = fileService.selectByFilePath(path, zipFileBean.getUserId());
-                fileBean.setParentPathId(parentFileBean.getId());
-                fileBean.setFileType(null);
-                fileBean.setFileExt(null);
-                System.out.println("文件夹FileBean:" + i + " " + fileBean);
-                // 当压缩包内有一个和压缩包名相同的文件夹时，会出现重复文件夹的情况
-                if (!zipEntry.getName().equals(zipFileBean.getFileName())) {
-                    fileService.save(fileBean);
-                }
+                // System.out.println("文件夹FileBean:" + fileBean);
+                // FileBean parentFileBean = fileService.selectByFilePath(path, zipFileBean.getUserId());
+                // fileBean.setParentPathId(parentFileBean.getId());
+                // fileBean.setFileType(null);
+                // fileBean.setFileExt(null);
+                // System.out.println("文件夹FileBean:" + i + " " + fileBean);
+                // // 当压缩包内有一个和压缩包名相同的文件夹时，会出现重复文件夹的情况
+                // if (!zipEntry.getName().equals(zipFileBean.getFileName())) {
+                //     fileService.save(fileBean);
+                // }
             } else { // 文件
                 File file = new File(unzipFilePath);
                 totalSize += file.length();
@@ -573,22 +841,21 @@ public class FileUtils {
                 }
                 bufferedOutputStream.close();
                 // 写出文件后在对文件进行md5校验
-                String md5 = Md5Utils.md5HashCode32(unzipFilePath);
-                fileBean.setIdentifier(md5);
-                fileBean.setFileSize(file.length());
-                fileBean.setFileUrl(dateStr + "/" + md5 + "." + FileUtils.getFileExt(file.getName()));
-                System.out.println("文件FileBean:" + fileBean);
-                FileBean parentFileBean = fileService.selectByFilePath(path, zipFileBean.getUserId());
-                // fileService.selectParentPathById();
-                //
-                fileBean.setParentPathId(parentFileBean.getId());
-                fileService.save(fileBean);
-                System.out.println("文件FileBean:" + i + " " + fileBean);
-                // 对文件重命名
-                String newFilePath = desDirectory + "/" + md5 + "." + FileUtils.getFileExt(zipEntry.getName());
-                file.renameTo(new File(newFilePath));
-                // 删除临时文件
-                file.delete();
+                // String md5 = Md5Utils.md5HashCode32(unzipFilePath);
+                // fileBean.setIdentifier(md5);
+                // fileBean.setFileSize(file.length());
+                // fileBean.setFileUrl(dateStr + "/" + md5 + "." + FileUtils.getFileExt(file.getName()));
+                // System.out.println("文件FileBean:" + fileBean);
+                // FileBean parentFileBean = fileService.selectByFilePath(path, zipFileBean.getUserId());
+                // // fileService.selectParentPathById();
+                // fileBean.setParentPathId(parentFileBean.getId());
+                // fileService.save(fileBean);
+                // System.out.println("文件FileBean:" + i + " " + fileBean);
+                // // 对文件重命名
+                // String newFilePath = desDirectory + "/" + md5 + "." + FileUtils.getFileExt(zipEntry.getName());
+                // file.renameTo(new File(newFilePath));
+                // // 删除临时文件
+                // file.delete();
             }
             Integer oldValue = (int) ((readSize * 1.0 / totalFileSize) * 100);// 已解压的字节大小占总字节的大小的百分比
             readSize += zipEntry.getCompressedSize();// 累加字节长度

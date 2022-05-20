@@ -2,19 +2,18 @@ package com.fx.pan.controller;
 
 import cn.hutool.core.date.DateUtil;
 import com.fx.pan.annotation.Limit;
+import com.fx.pan.common.Constants;
 import com.fx.pan.domain.Chunk;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.dto.file.UploadFileDTO;
-import com.fx.pan.factory.fxUtils;
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.service.FileService;
 import com.fx.pan.service.FileTransferService;
 import com.fx.pan.service.StorageService;
 import com.fx.pan.utils.*;
-import com.fx.pan.utils.file.Word2PdfAsposeUtil;
 import com.fx.pan.utils.file.convert.FormatConversion;
 import com.fx.pan.vo.file.UploadFileVo;
-import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -74,7 +73,7 @@ public class FileTransferController {
      *
      * @return
      */
-    @ApiOperation(value = "极速上传", notes = "根据MD5进行极速上传")
+    // @ApiOperation(value = "极速上传", notes = "根据MD5进行极速上传")
     @GetMapping("/upload")
     public ResponseResult quickUpload(UploadFileDTO uploadFileDto, @ModelAttribute Chunk chunk) {
         Long userId = SecurityUtils.getUserId();
@@ -151,7 +150,7 @@ public class FileTransferController {
             response.setContentLength((int) file.length());
             // 设置文件名
             response.addHeader("Content-Disposition",
-                    "attachment;filename=" + new String(file.getName().getBytes("utf-8"),
+                    "attachment;filename=" + new String(fileBean.getFileName().getBytes("utf-8"),
                             "ISO8859-1"));
             byte[] buffer = new byte[1024];
             FileInputStream fis = null;
@@ -280,13 +279,15 @@ public class FileTransferController {
      */
     @RequestMapping(value = "/image", produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseBody
-    public byte[] image(Long time, String id, String fileType, String extensionName) {
+    public byte[] image(Long time, String id, String fileType, String extensionName,HttpServletResponse response) {
         Date d = new Date(time);
         SimpleDateFormat sf = new SimpleDateFormat("yyyyMMdd");
         String date = sf.format(d);
         String filePath = absoluteFilePath + "/" + date + "/" + id + "." + extensionName;
         File file = new File(filePath);
         FileInputStream inputStream = null;
+        // 设置响应头
+        response.setHeader("Cache-Control", "max-age=2592000");
         try {
             inputStream = new FileInputStream(file);
         } catch (FileNotFoundException e) {
@@ -318,19 +319,17 @@ public class FileTransferController {
     @SneakyThrows
     @RequestMapping(value = "/preview", produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseBody
-    public byte[] preview(String time, String id, int fileType, String extensionName) {
+    public byte[] preview(String time, String id, int fileType, String extensionName,HttpServletResponse response) {
         Long identity = Long.valueOf(time);
         Date d = new Date(identity);
         SimpleDateFormat sf = new SimpleDateFormat("yyyyMMdd");
         String date = sf.format(d);
         String filePath;
         byte[] bytes = new byte[0];
+        // 设置响应头
+        response.setHeader("Cache-Control", "max-age=2592000");
         // 图片类型预览
         if (fileType == 1) {
-            // String mime= MimeUtils.getMime(extensionName);
-            // httpServletResponse.setHeader("Content-Type", mime);
-            // httpServletRequest.setAttribute("produces",MediaType.IMAGE_JPEG_VALUE);
-            // produces = MediaType.IMAGE_JPEG_VALUE
             filePath = absoluteCachePath + "/" + date + "/" + id + "." + extensionName;
             File file = new File(filePath);
             FileInputStream inputStream = null;
@@ -379,7 +378,7 @@ public class FileTransferController {
 
     @RequestMapping(value = "/preview/document")
     @ResponseBody
-    public byte[] previewDocument(HttpServletRequest request, HttpServletResponse response,
+    public byte[] previewDocument(HttpServletResponse response,
                                   Long time, String id, int fileType, String extensionName) {
         Date d = new Date(time);
         SimpleDateFormat sf = new SimpleDateFormat("yyyyMMdd");
@@ -388,7 +387,7 @@ public class FileTransferController {
         String filePath;
         byte[] bytes = new byte[0];
         response.setHeader("Accept-Ranges", "bytes");
-        filePath = fxUtils.getStaticPath() + "\\" + date + "\\" + id + "." + extensionName;
+        filePath = FxUtils.getStaticPath() + "\\" + date + "\\" + id + "." + extensionName;
         File file1 = new File(filePath);
         if (!file1.exists()) {
             throw new RuntimeException("文件预览失败");
@@ -478,9 +477,10 @@ public class FileTransferController {
 
     @PostMapping("/formatconversion")
     @Limit(key = "limit2", permitsPerSecond = 0.2, timeout = 500, msg =
-            "请求过于频繁，请稍后再试！请求频率限制在4秒/此！")
+            "请求过于频繁，请稍后再试！")
     public ResponseResult formatConversion(@RequestParam String fileExt, @RequestParam String convertExt,
-                                           @RequestParam Long fileId) throws FileNotFoundException {
+                                           @RequestParam Long fileId,@RequestParam Long t) throws FileNotFoundException {
+        String type = "conversion";
         Long userId = SecurityUtils.getUserId();
         String[] doc = {"doc", "docx"};
         String[] xls = {"xls", "xlsx"};
@@ -489,18 +489,28 @@ public class FileTransferController {
         Long fileSize = 0L;
         FileBean fileBean = fileService.selectFileById(fileId);
         FileBean newFileBean = new FileBean();
-        String orginFilePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
+        String orginFilePath = FxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
         String convertFilePath = absoluteFilePath + "/tmp/" + fileBean.getFileName().replace(fileBean.getFileExt(),
                 convertExt);
+
+        redisCache.setCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId + "-file" +
+                        ":" + t,
+                fileBean);
+        redisCache.setCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId +
+                        ":" + t,
+                0);
         // 判断doc是否包含fileExt
         if (Arrays.asList(doc).contains(fileExt)) {
             if ("pdf".equals(convertExt)) {
-                flag = Word2PdfAsposeUtil.doc2pdf(orginFilePath, convertFilePath);
+                FormatConversion.doc2pdf(orginFilePath, convertFilePath,fileBean,userId,type,t);
+                return ResponseResult.success("Word文档转PDF文件任务创建成功！");
             }
         } else if (Arrays.asList(xls).contains(fileExt)) {
-            flag = FormatConversion.excel2pdf(orginFilePath, convertFilePath);
+            FormatConversion.excel2pdf(orginFilePath, convertFilePath);
+            return ResponseResult.success("表格转PDF文件任务创建成功！");
         } else if ("pdf".equals(fileExt)) {
-            flag = FormatConversion.pdf2Doc(orginFilePath, convertFilePath);
+            FormatConversion.pdf2Doc(orginFilePath, convertFilePath,fileBean,userId,type,t);
+            return ResponseResult.success("PDF文件转Word文档任务创建成功！");
         }
         if (flag) {
             Date date = new Date();
@@ -511,16 +521,17 @@ public class FileTransferController {
             newFileBean = BeanCopyUtils.copyBean(FileUtils.getFileBeanByPath(convertFilePath, fileBean.getFilePath(),
                     date, storageType, userId), FileBean.class);
             fileService.save(newFileBean);
+            redisCache.setCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId + "-file"+
+                    ":" + t, newFileBean);
             fileSize = newFileBean.getFileSize();
             boolean b = storageService.updateStorageUse(fileSize, userId);
             // 移动文件到文件存储路径
-            File moveFolder = new File(fxUtils.getStaticPath() + "/" + dateStr);
-            System.out.println("moveFolder:" + moveFolder.getAbsolutePath());
+            File moveFolder = new File(com.fx.pan.factory.FxUtils.getStaticPath() + "/" + dateStr);
             // 判断目录moveFolder是否存在，不存在则创建
             if (!moveFolder.exists()) {
                 moveFolder.mkdirs();
             }
-            convertFile.renameTo(new File(fxUtils.getStaticPath() + "/" + fileUrl));
+            convertFile.renameTo(new File(com.fx.pan.factory.FxUtils.getStaticPath() + "/" + fileUrl));
         }
         if(flag){
             Map<String, Object> map = new HashMap<>();

@@ -46,26 +46,21 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         // 获得cookie
         Cookie[] cookies = request.getCookies();
 
-        // // 没有cookie信息，则重定向到登录界面
+         // 没有cookie信息
         if (null == cookies) {
             filterChain.doFilter(request, response);
             return;
         }
-        // // 定义cookie_username，用户的一些登录信息，例如：用户名，密码等
-        // String cookie_username = null;
         // // 获取cookie里面的一些用户信息
         String userToken = null;
         for (Cookie item : cookies) {
             if ("token".equals(item.getName())) {
                 userToken = item.getValue();
-                log.info("userToken: {}", userToken);
-                // break;
             }
         }
 
 
         // 获取 token ( 前端，用户登录后，将 token 放到请求头当中。所以这里从请求头中获取 token )
-        // String token = tokenService.getToken(request);
         if (!StringUtils.hasText(userToken)) {
             filterChain.doFilter(request, response);
             return;
@@ -74,7 +69,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         // token 不为空，解析 token
         Long uesrId;
         try {
-            // System.out.println("开始解析token:" + token);
+
             Claims claims = JwtUtil.parseJWT(userToken);
             LoginUser user = JSON.parseObject(claims.getSubject(), LoginUser.class);
             uesrId = user.getUserId();

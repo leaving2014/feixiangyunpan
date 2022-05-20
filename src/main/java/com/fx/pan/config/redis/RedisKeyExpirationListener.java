@@ -1,4 +1,4 @@
-package com.fx.pan.config;
+package com.fx.pan.config.redis;
 
 import com.fx.pan.service.RecycleService;
 import com.fx.pan.service.ShareService;

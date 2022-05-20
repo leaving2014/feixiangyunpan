@@ -2,7 +2,7 @@ package com.fx.pan.utils;
 
 import com.fx.pan.common.Constants;
 import com.fx.pan.domain.FileBean;
-import com.fx.pan.factory.fxUtils;
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.service.FileService;
 import com.fx.pan.utils.file.ImageUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -143,7 +143,7 @@ public class WgetUtil {
                         fileBean);
                 if (fileBean.getFileType() == 1 || fileBean.getFileType() == 2) {
                     try {
-                        ImageUtil.startGenerateThumbnail(fxUtils.getStaticPath() + "/" + fileUrl, fileBean, true,
+                        ImageUtil.startGenerateThumbnail(FxUtils.getStaticPath() + "/" + fileUrl, fileBean, true,
                                 0.3);
                     } catch (IOException e) {
                         throw new RuntimeException(e);

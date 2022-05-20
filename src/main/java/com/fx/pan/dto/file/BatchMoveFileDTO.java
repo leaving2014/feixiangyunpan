@@ -18,4 +18,6 @@ public class BatchMoveFileDTO {
     private List<FileBean> fileList;
     @Schema(description="目的文件路径", required = true)
     private String filePath;
+
+    private Long userId;
 }

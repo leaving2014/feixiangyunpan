@@ -1,13 +1,11 @@
 package com.fx.pan.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.fx.pan.config.cos.CosProperties;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.domain.ResponseResult;
-import com.fx.pan.factory.fxUtils;
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.service.CosFileService;
-import com.google.gson.JsonObject;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
@@ -65,7 +63,7 @@ public class CosFileServiceImpl implements CosFileService {
         String bucketName = this.bucketName;
         // 简单文件上传, 最大支持 5 GB, 适用于小文件上传, 建议 20 M 以下的文件使用该接口
         // 大文件上传请参照 API 文档高级 API 上传
-        String filePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
+        String filePath = FxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
         File localFile = new File(filePath);
         try {
             // 指定要上传到 COS 上的路径

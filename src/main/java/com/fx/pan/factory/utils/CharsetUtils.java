@@ -1,6 +1,6 @@
 package com.fx.pan.factory.utils;
 
-import com.fx.pan.factory.fxUtils;
+import com.fx.pan.factory.FxUtils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -18,7 +18,7 @@ public class CharsetUtils {
 
     public static byte[] convertCharset(byte[] bytes, String extendName) {
 
-        if(Arrays.asList(fxUtils.TXT_FILE).contains(extendName)) {
+        if(Arrays.asList(FxUtils.TXT_FILE).contains(extendName)) {
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
             try {
                 String str = new String(bytes, getFileCharsetName(byteArrayInputStream));

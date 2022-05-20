@@ -1,10 +1,7 @@
 package com.fx.pan.utils.file;
 
 
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.log.Log;
 import com.fx.pan.domain.FileBean;
-import com.fx.pan.factory.fxUtils;
 import com.fx.pan.utils.FileUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -15,14 +12,10 @@ import net.coobird.thumbnailator.name.Rename;
 // import org.bytedeco.javacv.Java2DFrameConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;

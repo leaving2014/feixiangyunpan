@@ -18,13 +18,13 @@ import javax.annotation.Resource;
 @Configuration
 @EnableConfigurationProperties(BaiduOcrProperties.class)
 public class BaiduOcrClient {
-    @Autowired
+    @Resource
     private BaiduOcrProperties baiduOcrProperties;
 
     @Bean
     public AipOcr aipOcr() {
-        AipOcr aipOcr = new AipOcr(baiduOcrProperties.getApp_id(), baiduOcrProperties.getApp_id(),
-                baiduOcrProperties.getSecret_key());
+        AipOcr aipOcr = new AipOcr(baiduOcrProperties.getAPP_ID(), baiduOcrProperties.getAPI_KEY(),
+                baiduOcrProperties.getSECRET_KEY());
         return aipOcr;
     }
 }

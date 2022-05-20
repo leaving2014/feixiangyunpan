@@ -122,10 +122,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Authentication authenticate = authenticationManager.authenticate(authenticationToken);
         // 如果认证没通过
         if (Objects.isNull(authenticate)) {
-            throw new RuntimeException("登录失败");
+            return ResponseResult.error(500, "用户名或密码错误");
         }
         //如果认证通过
         LoginUser loginUser = (LoginUser) authenticate.getPrincipal();
+        System.out.println("loginUser=========" + loginUser);
         String userId = loginUser.getUser().getId().toString();
         User saveUserBean = findUserInfoByUserName(loginUser.getUsername());
         loginUser.setUserId(saveUserBean.getId());

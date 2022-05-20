@@ -8,7 +8,6 @@ import com.fx.pan.service.FileService;
 import com.fx.pan.utils.FileUtils;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,7 +31,7 @@ import java.text.SimpleDateFormat;
 @Slf4j
 @RequestMapping("/image")
 @RestController
-public class BaiduController {
+public class OcrController {
 
     @Resource
     private BaiduOcrService baiduOcrService;
@@ -78,7 +77,6 @@ public class BaiduController {
         SimpleDateFormat sf = new SimpleDateFormat("yyyyMMdd");
         String date = sf.format(fileBean.getFileCreateTime());
         String imagePath = FileUtils.getLocalStorageFilePathByFileBean(fileBean);
-        log.info("文字Spring Boot图片路径===" + imagePath);
         ResponseResult responseResult = baiduOcrService.baiduGeneralOcr(FileUtils.readImageFile(imagePath), imagePath);
         return responseResult;
     }

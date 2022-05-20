@@ -18,7 +18,7 @@ import java.util.*;
  * @version 1.0
  */
 
-public class fxUtils {
+public class FxUtils {
     public static Map<String, String> PATH_MAP = new HashMap();
     public static String LOCAL_STORAGE_PATH;
     public static final String[] IMG_FILE = new String[]{"bmp", "jpg", "png", "tif", "gif", "jpeg"};
@@ -174,12 +174,12 @@ public class fxUtils {
     }
 
     public static File getLocalSaveFile(String fileUrl) {
-        String localSavePath = fxUtils.getStaticPath() + fileUrl;
+        String localSavePath = com.fx.pan.factory.FxUtils.getStaticPath() + fileUrl;
         return new File(localSavePath);
     }
 
     public static File getCacheFile(String fileUrl) {
-        String cachePath = fxUtils.getStaticPath() + "cache" + File.separator + fileUrl;
+        String cachePath = com.fx.pan.factory.FxUtils.getStaticPath() + "cache" + File.separator + fileUrl;
 
         return new File(cachePath);
     }

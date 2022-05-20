@@ -1,7 +1,7 @@
 package com.fx.pan.factory.operation.write.product;
 
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.factory.exception.operation.WriteException;
-import com.fx.pan.factory.fxUtils;
 import com.fx.pan.factory.operation.write.Writer;
 import com.fx.pan.factory.operation.write.domain.WriteFile;
 import org.slf4j.Logger;
@@ -27,8 +27,8 @@ public class LocalStorageWriter extends Writer {
     @Override
     public void write(InputStream inputStream, WriteFile writeFile) {
         try {
-            System.out.println("写文件路径-=======" + fxUtils.getStaticPath() + "/" + writeFile.getFileUrl());
-            FileOutputStream out = new FileOutputStream(fxUtils.getStaticPath() + "/" + writeFile.getFileUrl());
+            System.out.println("写文件路径-=======" + FxUtils.getStaticPath() + "/" + writeFile.getFileUrl());
+            FileOutputStream out = new FileOutputStream(com.fx.pan.factory.FxUtils.getStaticPath() + "/" + writeFile.getFileUrl());
             Throwable var4 = null;
 
             try {

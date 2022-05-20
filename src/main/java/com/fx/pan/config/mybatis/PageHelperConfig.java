@@ -1,4 +1,4 @@
-package com.fx.pan.config;
+package com.fx.pan.config.mybatis;
 
 import com.github.pagehelper.PageHelper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

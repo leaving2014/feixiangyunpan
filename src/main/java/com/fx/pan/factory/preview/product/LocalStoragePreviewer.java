@@ -1,7 +1,7 @@
 package com.fx.pan.factory.preview.product;
 
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.factory.domain.ThumbImage;
-import com.fx.pan.factory.fxUtils;
 import com.fx.pan.factory.preview.Previewer;
 
 import java.io.File;
@@ -26,7 +26,7 @@ public class LocalStoragePreviewer extends Previewer {
     @Override
     public InputStream getInputStream(String fileUrl) {
         //设置文件路径
-        File file = fxUtils.getLocalSaveFile(fileUrl);
+        File file = FxUtils.getLocalSaveFile(fileUrl);
         InputStream inputStream = null;
         try {
             inputStream = new FileInputStream(file);

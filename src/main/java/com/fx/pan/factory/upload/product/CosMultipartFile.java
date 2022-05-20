@@ -1,6 +1,6 @@
 package com.fx.pan.factory.upload.product;
 
-import com.fx.pan.factory.fxUtils;
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.utils.FileUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,12 +42,12 @@ public class CosMultipartFile {
 
     public String getFileUrl() {
         String uuid = UUID.randomUUID().toString();
-        String fileUrl = fxUtils.getUploadFileUrl(uuid, getExtendName());
+        String fileUrl = FxUtils.getUploadFileUrl(uuid, getExtendName());
         return fileUrl;
     }
 
     public String getFileUrl(String identify) {
-        String fileUrl = fxUtils.getUploadFileUrl(identify, getExtendName());
+        String fileUrl = com.fx.pan.factory.FxUtils.getUploadFileUrl(identify, getExtendName());
         return fileUrl;
     }
 

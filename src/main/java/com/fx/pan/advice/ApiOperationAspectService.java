@@ -100,7 +100,6 @@ public class ApiOperationAspectService {
         // 获取SecurityContextHolder中的用户信息
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
-        LOGGER.info("principal:{}",principal);
         // 将principal转换为LoginUser对象
         if (!principal.toString().equals("anonymousUser")) {
             LoginUser loginUser = (LoginUser) principal;
@@ -210,7 +209,6 @@ public class ApiOperationAspectService {
                 platformType = request.getHeader("platformType");
             }
             // sysLog.setPlatformType(Integer.parseInt(platformType));
-            //TODO insert日志
             sysOperationLogMapper.insert(sysLog);
 
         }catch (Exception e){

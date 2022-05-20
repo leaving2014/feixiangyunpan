@@ -3,6 +3,7 @@ package com.fx.pan.admin.controller;
 import com.fx.pan.admin.service.ShareManageService;
 import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.common.Constants;
+import com.fx.pan.domain.Share;
 import com.fx.pan.domain.User;
 import com.fx.pan.service.UserService;
 import com.fx.pan.utils.BeanCopyUtils;

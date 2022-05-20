@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fx.pan.domain.Role">
+    <resultMap id="BaseResultMap" type="com.fx.pan.domain.Role">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="available" jdbcType="CHAR" property="available" />
+        <result column="description" jdbcType="VARCHAR" property="description" />
+        <result column="role" jdbcType="VARCHAR" property="role" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, available, description, `role`
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from role
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from role
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.fx.pan.domain.Role" useGeneratedKeys="true">
+        insert into role (available, description, `role`
+        )
+        values (#{available,jdbcType=CHAR}, #{description,jdbcType=VARCHAR}, #{role,jdbcType=VARCHAR}
+               )
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.fx.pan.domain.Role" useGeneratedKeys="true">
+        insert into role
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="available != null">
+                available,
+            </if>
+            <if test="description != null">
+                description,
+            </if>
+            <if test="role != null">
+                `role`,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="available != null">
+                #{available,jdbcType=CHAR},
+            </if>
+            <if test="description != null">
+                #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="role != null">
+                #{role,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.fx.pan.domain.Role">
+        update role
+        <set>
+            <if test="available != null">
+                available = #{available,jdbcType=CHAR},
+            </if>
+            <if test="description != null">
+                description = #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="role != null">
+                `role` = #{role,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.fx.pan.domain.Role">
+        update role
+        set available = #{available,jdbcType=CHAR},
+            description = #{description,jdbcType=VARCHAR},
+            `role` = #{role,jdbcType=VARCHAR}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+</mapper>

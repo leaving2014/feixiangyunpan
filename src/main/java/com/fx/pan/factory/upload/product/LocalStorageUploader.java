@@ -1,9 +1,9 @@
 package com.fx.pan.factory.upload.product;
 
 import com.fx.pan.exception.UploadException;
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.factory.constant.StorageTypeEnum;
 import com.fx.pan.factory.constant.UploadFileStatusEnum;
-import com.fx.pan.factory.fxUtils;
 import com.fx.pan.factory.upload.Uploader;
 import com.fx.pan.factory.upload.domain.UploadFile;
 import com.fx.pan.factory.upload.domain.UploadFileResult;
@@ -33,7 +33,7 @@ public class LocalStorageUploader extends Uploader {
     protected UploadFileResult doUploadFlow(CosMultipartFile cosMultipartFile, UploadFile uploadFile) {
         UploadFileResult uploadFileResult = new UploadFileResult();
         try {
-            String fileUrl = fxUtils.getUploadFileUrl(uploadFile.getIdentifier(), cosMultipartFile.getExtendName());
+            String fileUrl = com.fx.pan.factory.FxUtils.getUploadFileUrl(uploadFile.getIdentifier(), cosMultipartFile.getExtendName());
             if (StringUtils.isNotEmpty(FILE_URL_MAP.get(uploadFile.getIdentifier()))) {
                 fileUrl = FILE_URL_MAP.get(uploadFile.getIdentifier());
             } else {
@@ -42,9 +42,9 @@ public class LocalStorageUploader extends Uploader {
             String tempFileUrl = fileUrl + "_tmp";
             String confFileUrl = fileUrl.replace("." + cosMultipartFile.getExtendName(), ".conf");
 
-            File file = new File(fxUtils.getStaticPath() + fileUrl);
-            File tempFile = new File(fxUtils.getStaticPath() + tempFileUrl);
-            File confFile = new File(fxUtils.getStaticPath() + confFileUrl);
+            File file = new File(FxUtils.getStaticPath() + fileUrl);
+            File tempFile = new File(com.fx.pan.factory.FxUtils.getStaticPath() + tempFileUrl);
+            File confFile = new File(com.fx.pan.factory.FxUtils.getStaticPath() + confFileUrl);
 
             //第一步 打开将要写入的文件
             RandomAccessFile raf = new RandomAccessFile(tempFile, "rw");
@@ -89,7 +89,6 @@ public class LocalStorageUploader extends Uploader {
 
     @Override
     public void cancelUpload(UploadFile uploadFile) {
-        // TODO
     }
 
     @Override

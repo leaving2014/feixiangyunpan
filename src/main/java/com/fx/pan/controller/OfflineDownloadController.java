@@ -3,14 +3,11 @@ package com.fx.pan.controller;
 import com.fx.pan.common.Constants;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.domain.ResponseResult;
-import com.fx.pan.factory.fxUtils;
 import com.fx.pan.service.FileService;
 import com.fx.pan.service.OfflineDownloadService;
 import com.fx.pan.utils.FileUtils;
-import com.fx.pan.utils.OfflineDownloadUtil;
 import com.fx.pan.utils.RedisCache;
 import com.fx.pan.utils.SecurityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -71,7 +68,7 @@ public class OfflineDownloadController {
 
         String fileName = null;
         FileBean fileBean = new FileBean();
-        // String savePath = fxUtils.getStaticPath() + "/tmp/";
+        // String savePath = FxUtils.getStaticPath() + "/tmp/";
         Integer fileSize = 0;
         try {
             fileName = FileUtils.getFileName(url);

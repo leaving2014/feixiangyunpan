@@ -17,6 +17,7 @@ import com.fx.pan.utils.BeanCopyUtils;
 import com.fx.pan.utils.DateUtil;
 import com.fx.pan.utils.RedisCache;
 import com.fx.pan.utils.SecurityUtils;
+import com.fx.pan.vo.UserVo;
 import com.fx.pan.vo.share.ShareFileListVO;
 import com.fx.pan.vo.share.ShareFileSaveDTO;
 import lombok.SneakyThrows;
@@ -144,9 +145,11 @@ public class ShareController {
             return ResponseResult.error(500, "分享不存在");
         } else {
             FileBean fileBean = fileService.selectFileById(share.getFileId());
+            UserVo userVo = BeanCopyUtils.copyBean(userService.selectUserById(share.getUserId()), UserVo.class);
             Map<String, Object> map = new HashMap<>();
             map.put("share", share);
             map.put("file", fileBean);
+            map.put("user", userVo);
             return ResponseResult.success("获取成功", map);
         }
 

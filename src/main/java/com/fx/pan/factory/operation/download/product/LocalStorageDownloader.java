@@ -1,8 +1,8 @@
 package com.fx.pan.factory.operation.download.product;
 
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.factory.operation.download.Downloader;
 import com.fx.pan.factory.operation.download.domain.DownloadFile;
-import com.fx.pan.factory.fxUtils;
 import com.fx.pan.factory.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +27,7 @@ public class LocalStorageDownloader extends Downloader{
     public void download(HttpServletResponse httpServletResponse, DownloadFile downloadFile) {
         BufferedInputStream bis = null;
         byte[] buffer = new byte[1024];
-        File file = new File(fxUtils.getStaticPath() + downloadFile.getFileUrl());
+        File file = new File(FxUtils.getStaticPath() + downloadFile.getFileUrl());
         if (file.exists()) {
             FileInputStream fis = null;
 
@@ -43,7 +43,7 @@ public class LocalStorageDownloader extends Downloader{
 
     @Override
     public InputStream getInputStream(DownloadFile downloadFile) {
-        File file = new File(fxUtils.getStaticPath() + "\\" + downloadFile.getFileUrl());
+        File file = new File(com.fx.pan.factory.FxUtils.getStaticPath() + "\\" + downloadFile.getFileUrl());
         FileInputStream inputStream = null;
 
         try {

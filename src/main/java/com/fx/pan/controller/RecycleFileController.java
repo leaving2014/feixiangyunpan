@@ -3,16 +3,16 @@ package com.fx.pan.controller;
 import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.domain.Storage;
-import com.fx.pan.factory.fxUtils;
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.service.FileService;
 import com.fx.pan.service.RecycleService;
 import com.fx.pan.service.StorageService;
+import com.fx.pan.utils.FileUtils;
 import com.fx.pan.utils.RedisCache;
 import com.fx.pan.utils.SecurityUtils;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -104,19 +104,19 @@ public class RecycleFileController {
     @PostMapping("/delete")
     public ResponseResult deleteRecycleFile(@RequestBody List<Long> fileList) {
         Long userId = SecurityUtils.getUserId();
-        System.out.println(userId);
         for (Long id : fileList) {
             FileBean fileBean = recycleService.selectRecycleFileById(id, userId);
             recycleService.deleteRecycleFileById(id, userId);
             // 删除我看看
             if (fileBean.getIsDir() == 1) {
                 if (fileBean.getFilePath().equals("/")) {
+
                 } else {
                     List<FileBean> list = fileService.selectChildFileListByPath(fileBean.getFilePath(), userId);
                     if (list.size() == 0) {
                         List<FileBean> fileBeanList = fileService.selectFileByIdentifier(fileBean.getIdentifier());
                         if (fileBeanList.size() == 1) {
-                            File file = fxUtils.getLocalSaveFile(fileBean.getFileUrl());
+                            File file = com.fx.pan.factory.FxUtils.getLocalSaveFile(fileBean.getFileUrl());
                             file.delete();
                         }
                         recycleService.deleteRecycleFileById(id, userId);
@@ -125,7 +125,7 @@ public class RecycleFileController {
                         for (FileBean fileBean1 : list) {
                             List<FileBean> fileBeanList = fileService.selectFileByIdentifier(fileBean.getIdentifier());
                             if (fileBeanList.size() == 1) {
-                                File file = fxUtils.getLocalSaveFile(fileBean.getFileUrl());
+                                File file = FxUtils.getLocalSaveFile(fileBean.getFileUrl());
                                 file.delete();
                             }
                             recycleService.deleteRecycleFileById(fileBean1.getId(), userId);
@@ -133,10 +133,13 @@ public class RecycleFileController {
                     }
                 }
             } else {
+                System.out.println("fileBean.getIdentifier() = " + fileBean.getIdentifier());
                 List<FileBean> fileBeanList = fileService.selectFileByIdentifier(fileBean.getIdentifier());
                 System.out.println("删除文件列表fileBeanList:" + fileBeanList);
                 if (fileBeanList.size() == 1) {
-                    File file = fxUtils.getLocalSaveFile(fileBean.getFileUrl());
+                    String filePath = FileUtils.getLocalStorageFilePathByFileBean(fileBean);
+                    File file = new File(filePath);
+                    System.out.println("删除物理文件file:" + file.getAbsolutePath());
                     file.delete();
                 }
                 recycleService.deleteRecycleFileById(id, userId);

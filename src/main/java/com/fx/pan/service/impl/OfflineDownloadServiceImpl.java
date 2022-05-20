@@ -2,18 +2,13 @@ package com.fx.pan.service.impl;
 
 import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.FileBean;
-import com.fx.pan.factory.fxUtils;
-import com.fx.pan.service.FileService;
 import com.fx.pan.service.OfflineDownloadService;
-import com.fx.pan.service.StorageService;
 import com.fx.pan.utils.*;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.io.*;
 import java.util.Date;
 import java.util.HashMap;
@@ -78,7 +73,6 @@ public class OfflineDownloadServiceImpl implements OfflineDownloadService {
         map.put("fileSize", fileSize);
         map.put("filePath", fileBean);
         map.put("progress", 0);
-        System.out.println("返回结果前...=====" + new Date());
         redisCache.setCacheObject("remote-" + t + "-" + userId, 0);
         return ResponseResult.success("任务创建成功", map);
 

@@ -1,5 +1,7 @@
 package com.fx.pan.annotation;
 
+import org.springframework.stereotype.Component;
+
 import java.lang.annotation.*;
 import java.util.concurrent.TimeUnit;
 

@@ -122,7 +122,6 @@ public class OfflineDownloadUtil {
                     try {
                         url = new URL(href);
                     } catch (MalformedURLException e1) {
-                        // TODO Auto-generated catch block
                         e1.printStackTrace();
                     }
                     try {
@@ -203,7 +202,6 @@ public class OfflineDownloadUtil {
         try {
             fos = new FileOutputStream(savePath + fileName);
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         for (int i = 0; i < blockNum; i++) {
@@ -211,7 +209,6 @@ public class OfflineDownloadUtil {
             try {
                 fis = new FileInputStream(savePath + fileName + "_" + (i + 1));
             } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             byte[] buffer = new byte[1024];
@@ -221,20 +218,17 @@ public class OfflineDownloadUtil {
                     fos.write(buffer, 0, count);
                 }
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             try {
                 fis.close();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
         try {
             fos.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         Date date = new Date();

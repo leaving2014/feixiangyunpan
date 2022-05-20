@@ -2,10 +2,10 @@ package com.fx.pan.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.ExcelBean;
 import com.fx.pan.domain.FileBean;
-import com.fx.pan.factory.fxUtils;
+import com.fx.pan.domain.ResponseResult;
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.service.ExcelService;
 import com.fx.pan.service.FileService;
 import com.fx.pan.utils.Base64Util;
@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.poi.xssf.usermodel.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -249,7 +248,7 @@ public class OfficeController {
     public String ExcelData(@RequestParam Long id) throws Exception {
         Long userId = SecurityUtils.getUserId();
         FileBean fileBean = fileService.selectFileById(id);
-        String filePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
+        String filePath = com.fx.pan.factory.FxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
         return Base64Util.encodeBase64File(filePath);
     }
 
@@ -257,7 +256,7 @@ public class OfficeController {
     public ResponseResult excelOnline(@RequestParam Long id, @RequestParam String data) throws Exception {
         Long userId = SecurityUtils.getUserId();
         FileBean fileBean = fileService.selectFileById(id);
-        String filePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
+        String filePath = FxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
         Map map = new HashMap();
         map.put("file", data);
         return ResponseResult.success("同步成功",map);
@@ -289,7 +288,6 @@ public class OfficeController {
                     file = new File(URLDecoder.decode(ResourceUtils.getURL("classpath:static/newXlsx.json").getPath(),
                             "utf-8"));
                 } catch (FileNotFoundException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
@@ -310,7 +308,7 @@ public class OfficeController {
 
         if (excelBean == null) {
             FileBean fileBean = fileService.selectFileById(id);
-            String filePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
+            String filePath = com.fx.pan.factory.FxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
             Map map = new HashMap();
             map.put("file", fileBean);
             return ResponseResult.success("获取成功",map);
@@ -340,7 +338,7 @@ public class OfficeController {
         //         return ResponseResult.success("获取成功").put("data", excelBean.getData());
         //     }
         // } else {
-        //     String filePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
+        //     String filePath = FxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
         //     return Base64Util.encodeBase64File(filePath);
         //
         //     // return ResponseResult.success("获取成功").put("data", excelBean.getData());
@@ -380,7 +378,7 @@ public class OfficeController {
                 boolean b = excelService.updateExcelData(id, data);
             }
         } else {
-            String filePath = fxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
+            String filePath = com.fx.pan.factory.FxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
             File file = new File(filePath);
             if (!file.exists()) {
                 file.createNewFile();

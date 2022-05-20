@@ -1,5 +1,6 @@
 package com.fx.pan.service;
 
+import com.fx.pan.domain.FileBean;
 import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.Chunk;
 import com.fx.pan.dto.file.DownloadFileDTO;
@@ -20,4 +21,5 @@ public interface FileTransferService {
 
     ResponseResult fileUploadPost(Chunk chunk, HttpServletResponse response, String filePath, String relativePath);
     UploadFileVo uploadFileSpeed(UploadFileDTO uploadFileDto);
+
 }

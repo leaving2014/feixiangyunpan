@@ -104,6 +104,10 @@ public class Constants
      */
     public static final String REDIS_LOGIN_USER_PREFIX = "fxpanlogin:";
     /**
+     * 文件列表缓存
+     */
+    public static final String REDIS_FILE_LIST_PREFIX = "fileList-uid:";
+    /**
      * redis缓存数据前缀
      */
     public static final String REDIS_DATA_PREFIX = "fxpan_data:";

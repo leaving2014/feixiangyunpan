@@ -3,6 +3,7 @@ package com.fx.pan.controller;
 import cn.hutool.captcha.CaptchaUtil;
 import cn.hutool.captcha.CircleCaptcha;
 import cn.hutool.captcha.LineCaptcha;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fx.pan.domain.*;
@@ -19,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -47,6 +49,9 @@ import java.util.Map;
 @Tag(name = "user", description = "该接口为用户接口，主要做用户登录，注册,退出和获取用户信息等操作")
 @RestController
 @RequestMapping("/user")
+
+@CacheConfig(cacheNames = Constants.REDIS_DATA_SUFFIX)//注意,用于同一配置给其它注解配置名称
+
 public class UserController {
 
     @Resource
@@ -155,12 +160,6 @@ public class UserController {
         Map map = new HashMap();
         if (userId == null) {
             userId = SecurityUtils.getUserId();
-        }
-        Object cacheObject = redisCache.getCacheObject(Constants.REDIS_LOGIN_USER_PREFIX + userId);
-        if (cacheObject != null) {
-            LoginUser loginUser = (LoginUser) cacheObject;
-            map.put("userInfo", loginUser.getUser());
-            return ResponseResult.success("成功", map);
         }
         User user = userService.selectUserById(userId);
 

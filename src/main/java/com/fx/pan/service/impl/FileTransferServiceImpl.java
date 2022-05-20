@@ -1,26 +1,28 @@
 package com.fx.pan.service.impl;
 
+import com.aspose.cells.Workbook;
+import com.aspose.words.Document;
+import com.aspose.words.License;
+import com.aspose.words.PdfSaveOptions;
+import com.aspose.words.SaveFormat;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.common.Constants;
 import com.fx.pan.domain.*;
-import com.fx.pan.dto.file.PreviewDTO;
 import com.fx.pan.dto.file.UploadFileDTO;
-import com.fx.pan.exception.UploadException;
 import com.fx.pan.factory.FxFactory;
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.factory.constant.UploadFileStatusEnum;
-import com.fx.pan.factory.fxUtils;
-import com.fx.pan.factory.upload.Uploader;
-import com.fx.pan.factory.upload.domain.UploadFile;
-import com.fx.pan.factory.upload.domain.UploadFileResult;
 import com.fx.pan.mapper.FileMapper;
 import com.fx.pan.mapper.StorageMapper;
 import com.fx.pan.service.CosFileService;
 import com.fx.pan.service.FileService;
 import com.fx.pan.service.FileTransferService;
 import com.fx.pan.service.StorageService;
-import com.fx.pan.utils.*;
+import com.fx.pan.utils.DateUtil;
+import com.fx.pan.utils.FileUtils;
+import com.fx.pan.utils.RedisCache;
+import com.fx.pan.utils.SecurityUtils;
 import com.fx.pan.vo.file.UploadFileVo;
 import com.qcloud.cos.model.ciModel.auditing.ImageAuditingResponse;
 import lombok.Data;
@@ -29,10 +31,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -103,19 +106,20 @@ public class FileTransferServiceImpl extends ServiceImpl<FileMapper, FileBean> i
             fileBean.setUserId(userId);
             String relativePath = uploadFileDTO.getRelativePath();
             if (relativePath.contains("/")) {
-                fileBean.setFilePath(uploadFileDTO.getFilePath() + fxUtils.getParentPath(relativePath) + "/");
+                fileBean.setFilePath(uploadFileDTO.getFilePath() + com.fx.pan.factory.FxUtils.getParentPath(relativePath) + "/");
             } else {
                 fileBean.setFilePath(uploadFileDTO.getFilePath());
             }
 
             String fileName = uploadFileDTO.getFilename();
-            fileBean.setFileName(fxUtils.getFileNameNotExtend(fileName));
+            fileBean.setFileName(com.fx.pan.factory.FxUtils.getFileNameNotExtend(fileName));
             fileBean.setFileExt(FileUtils.getFileExtendName(fileName));
             fileBean.setDeleted(0);
             Map<String, Object> map = new HashMap<>();
             map.put("file_name", fileName);
             map.put("user_id", fileBean.getUserId());
             List<FileBean> userFileList = fileMapper.selectByMap(map);
+            System.out.println("userFileList====" + userFileList);
             if (userFileList.size() <= 0) {
                 fileBean.setIsDir(0);
                 fileBean.setFileUpdateTime(new Date());
@@ -149,7 +153,7 @@ public class FileTransferServiceImpl extends ServiceImpl<FileMapper, FileBean> i
                     uploadTask.setFileName(uploadFileDTO.getFilename());
                     String relativePath = uploadFileDTO.getRelativePath();
                     if (relativePath.contains("/")) {
-                        uploadTask.setFilePath(uploadFileDTO.getFilePath() + fxUtils.getParentPath(relativePath) + "/");
+                        uploadTask.setFilePath(uploadFileDTO.getFilePath() + FxUtils.getParentPath(relativePath) + "/");
                     } else {
                         uploadTask.setFilePath(uploadFileDTO.getFilePath());
                     }
@@ -164,6 +168,7 @@ public class FileTransferServiceImpl extends ServiceImpl<FileMapper, FileBean> i
         }
         return uploadFileVo;
     }
+
 
     @Override
     @SneakyThrows
@@ -215,7 +220,6 @@ public class FileTransferServiceImpl extends ServiceImpl<FileMapper, FileBean> i
         try (
                 //将块文件写入文件中
                 InputStream fos = chunk.getFile().getInputStream();
-
                 RandomAccessFile raf = new RandomAccessFile(file, "rw");
         ) {
             int len = -1;
@@ -242,6 +246,13 @@ public class FileTransferServiceImpl extends ServiceImpl<FileMapper, FileBean> i
                 System.out.println("审核结果 = " + res);
                 fileBean.setAudit(1);
             }
+            System.out.println("上传的fileBean = " + fileBean);
+            if (fileBean.getFilePath().equals("/")) {
+                fileBean.setParentPathId(-1L);
+            } else {
+                fileBean.setParentPathId(fileService.selectParentPath(fileBean.getFilePath(),"",userId).getId());
+            }
+
             fileMapper.insert(fileBean);
             storageService.updateStorageUse(chunk.getTotalSize(), userId);
             LambdaQueryWrapper<Storage> queryWrapper = new LambdaQueryWrapper();
@@ -249,6 +260,7 @@ public class FileTransferServiceImpl extends ServiceImpl<FileMapper, FileBean> i
             Storage storage = storageMapper.selectOne(queryWrapper);
             Map<String, Object> map = new HashMap<>();
             map.put("storage", storage);
+            redisCache.deleteObject(Constants.REDIS_UPLOAD_PREFIX + chunk.getIdentifier() + ":" + chunk.getChunkNumber());
             return ResponseResult.success("上传成功", map);
         } else {
             response.setStatus(201);

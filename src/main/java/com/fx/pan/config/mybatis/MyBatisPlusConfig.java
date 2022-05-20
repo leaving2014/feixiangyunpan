@@ -1,4 +1,4 @@
-package com.fx.pan.config;
+package com.fx.pan.config.mybatis;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.config.GlobalConfig;

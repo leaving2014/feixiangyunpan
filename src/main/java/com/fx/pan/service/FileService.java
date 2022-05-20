@@ -67,7 +67,7 @@ public interface FileService extends IService<FileBean>  {
 
     boolean restoreFile(Long id,Long userId);
 
-    boolean unzip(Long fileId, int unzipMode, String filePath);
+    boolean unzip(Long fileId, int unzipMode, String filePath, Long t,Long userId);
 
     ResponseResult cleanFile(Long userId);
 
@@ -97,4 +97,7 @@ public interface FileService extends IService<FileBean>  {
 
     Integer getAuditFileCount(Long userId, Boolean isAudit);
 
+    int saveUnzipFile(FileBean fileBean, String filePath,Long t,Integer unzipMode);
+
+    FileBean selectParentPath(String path, String pathName, Long userId);
 }

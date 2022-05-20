@@ -1,9 +1,8 @@
 package com.fx.pan.factory.autoconfiguration;
 
 import com.fx.pan.factory.FxFactory;
-import com.fx.pan.factory.fxUtils;
+import com.fx.pan.factory.FxUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +27,7 @@ public class FxAutoConfiguration {
 
     @Bean
     public FxFactory FxFactory() {
-        fxUtils.LOCAL_STORAGE_PATH = fxProperties.getLocalStoragePath();
+        FxUtils.LOCAL_STORAGE_PATH = fxProperties.getLocalStoragePath();
         return new FxFactory(fxProperties);
     }
 

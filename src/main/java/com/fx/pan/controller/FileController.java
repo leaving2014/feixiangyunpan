@@ -3,16 +3,13 @@ package com.fx.pan.controller;
 import com.fx.pan.advice.FxException;
 import com.fx.pan.annotation.Limit;
 import com.fx.pan.common.Constants;
-import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.FileBean;
 import com.fx.pan.domain.LoginUser;
+import com.fx.pan.domain.ResponseResult;
 import com.fx.pan.domain.Storage;
-import com.fx.pan.dto.file.BatchCopyFileDTO;
-import com.fx.pan.dto.file.BatchMoveFileDTO;
-import com.fx.pan.dto.file.UnzipFileDTO;
-import com.fx.pan.dto.file.UpdateFileDTO;
+import com.fx.pan.dto.file.*;
 import com.fx.pan.factory.FxFactory;
-import com.fx.pan.factory.fxUtils;
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.factory.operation.download.domain.DownloadFile;
 import com.fx.pan.factory.operation.write.Writer;
 import com.fx.pan.factory.operation.write.domain.WriteFile;
@@ -24,8 +21,11 @@ import com.fx.pan.vo.FileListVo;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -34,7 +34,7 @@ import java.text.ParseException;
 import java.util.*;
 
 /**
- * 本地文件操作
+ * 文件操作
  *
  * @author leaving
  * @date 2021/11/24 22:24
@@ -46,6 +46,12 @@ import java.util.*;
 @RequestMapping(value = "/file")
 @RestController
 public class FileController {
+
+    @Value("${fx.absoluteFilePath}")
+    String absoluteFilePath;
+
+    @Value("${fx.storageType}")
+    Integer storageType;
 
 
     @Resource
@@ -71,7 +77,7 @@ public class FileController {
 
 
     /**
-     * 新建文件夹 本地
+     * 新建文件夹
      *
      * @param createFile
      * @return
@@ -83,12 +89,11 @@ public class FileController {
         createFile.setIsDir(1);
         createFile.setFileCreateTime(new Date());
         createFile.setFileUpdateTime(new Date());
-        // fileService.se
         if (!"/".equals(createFile.getFilePath())) {
             Long parentpPathId = fileService.selectByFilePath(createFile.getFilePath(), userId).getId();
             createFile.setParentPathId(parentpPathId);
         } else {
-            redisCache.deleteObject("fileList-uid:" + userId);
+            redisCache.deleteObject(Constants.REDIS_FILE_LIST_PREFIX + userId);
             createFile.setParentPathId(-1L);
         }
         boolean folderExist = fileService.isFolderExist(createFile.getFilePath(), createFile.getFileName(), userId);
@@ -107,16 +112,14 @@ public class FileController {
      * 文件重命名
      */
     @PostMapping("/rename")
-    public ResponseResult rename(@RequestParam Long fileId, @RequestParam String fileName,
+    public ResponseResult rename(@RequestParam Long userId, @RequestParam Long fileId, @RequestParam String fileName,
                                  @RequestParam("filePath") String filePath,@RequestParam("isDir") Integer isDir) {
-        Long userId = SecurityUtils.getUserId();
         FileBean fileBean1 = fileService.selectFileByNameAndPath(fileName, filePath, userId,isDir);
         boolean flag;
         if (fileBean1 != null) {
             return ResponseResult.error(500, "文件名已存在");
         }
         FileBean fileBean = fileService.selectFileById(fileId);
-
         // 判断 重命名是否是文件夹 ,文件夹重命名需要更新文件夹下所有的子目录和文件的目录
         if (fileBean.getIsDir() == 1) {
             // 先对重命名的子目录和文件重命名
@@ -144,10 +147,9 @@ public class FileController {
      * 文件复制
      */
     @PostMapping("/copy")
-    public ResponseResult copyFile(@RequestParam Long fileId, @RequestParam String filePath) {
-        Long userId = SecurityUtils.getUserId();
+    public ResponseResult copyFile(@RequestParam Long userId, @RequestParam Long fileId, @RequestParam String filePath) {
         if (filePath.endsWith("/")) {
-            redisCache.deleteObject("fileList-uid:" + userId);
+            redisCache.deleteObject(Constants.REDIS_FILE_LIST_PREFIX + userId);
         }
         ResponseResult msg = fileService.copyFile(fileId, filePath, userId);
         return msg;
@@ -157,17 +159,16 @@ public class FileController {
      * 文件移动
      */
     @PostMapping("/move")
-    public ResponseResult moveFile(@RequestParam Long fileId, @RequestParam String filePath) {
-        Long userId = SecurityUtils.getUserId();
+    public ResponseResult moveFile(@RequestParam Long userId, @RequestParam Long fileId,@RequestParam String filePath) {
         if (filePath.endsWith("/")) {
-            redisCache.deleteObject("fileList-uid:" + userId);
+            redisCache.deleteObject(Constants.REDIS_FILE_LIST_PREFIX+ userId);
         }
         FileBean fileBean = fileService.selectFileById(fileId);
         if (fileBean.getFilePath().equals(filePath)) {
             return ResponseResult.error(500, "不能移动到原来的位置");
         }
         if (fileBean.getFilePath().equals("/")){
-            redisCache.deleteObject("fileList-uid:" + userId);
+            redisCache.deleteObject(Constants.REDIS_FILE_LIST_PREFIX+ userId);
         }
         fileService.moveFile(fileId, filePath, userId);
         return ResponseResult.success("移动成功");
@@ -178,8 +179,7 @@ public class FileController {
      */
     @ApiOperation(value = "删除文件")
     @PostMapping("/delete")
-    public ResponseResult deleteFile(@RequestParam Long id) {
-        Long userId = SecurityUtils.getUserId();
+    public ResponseResult deleteFile(@RequestParam Long userId, @RequestParam Long id) {
         FileBean deleteFile = fileService.selectFileById(id);
         boolean flag = false;
         Long totalSize = 0L;
@@ -204,7 +204,7 @@ public class FileController {
                 redisCache.set(Constants.REDIS_DELETE_SUFFIX+"-file-uid-"+userId+":"+id, id,
                         3600 * 24 * 10);
             }
-            String key = "fileList-uid:" + userId;
+            String key = Constants.REDIS_FILE_LIST_PREFIX + userId;
             redisCache.deleteCacheList(key, deleteFile);
         }
         if (flag) {
@@ -234,7 +234,7 @@ public class FileController {
     @PostMapping("/refresh")
     public ResponseResult refresh() {
         Long userId = SecurityUtils.getUserId();
-        String key = "fileList-uid:" + userId;
+        String key = Constants.REDIS_FILE_LIST_PREFIX + userId;
         List<FileBean> fl = null;
         fl = fileService.getFileList("/", userId, 0);
         if (redisCache.hasKey(key)) {
@@ -254,13 +254,13 @@ public class FileController {
      * 根据路径获取所有文件列表
      * @return
      */
-    @Limit(key = "limit1", permitsPerSecond = 1, timeout = 500, msg =
-            "请求过于频繁，请稍后再试！请求频率限制为1次/秒")
+    @Limit(key = "limit1", permitsPerSecond = 1, timeout = 500, msg = "请求过于频繁，请稍后再试！请求频率限制为1次/秒")
     @GetMapping("/list")
-    public ResponseResult fileList(@RequestParam(required = false, defaultValue = "/") String filePath, @RequestParam(required =
+    // @CacheEvict("'fileList-uid:' + #p0") //该注解用于删除缓存
+    public ResponseResult fileList(@RequestParam("userId") Long userId,
+                                   @RequestParam(required = false, defaultValue = "/") String filePath, @RequestParam(required =
             false, defaultValue = "0") Integer dir, @RequestParam Boolean refresh) {
-        Long userId = SecurityUtils.getUserId();
-        String key = "fileList-uid:" + userId;
+        String key = Constants.REDIS_FILE_LIST_PREFIX + userId;
         List<FileBean> fl = null;
         Integer auditFileCount= 0;
         Integer auditAccessCount = 0;
@@ -282,20 +282,19 @@ public class FileController {
                 } else {
                     fl = fileService.getFileList(filePath, userId, (Integer) dir);
                     // 文件列表不为空缓存到redis中
-                    if (fl.size() > 0) {
+                    if (!fl.isEmpty()) {
                         redisCache.deleteObject(key);
                         redisCache.setCacheList(key, fl);
                     }
                 }
             } else {
                 if (dir == null) {
-                    fl = fileService.getFileList(filePath, userId, (Integer) dir);
+                    fl = fileService.getFileList(filePath, userId, dir);
                 } else {
-                    fl = fileService.getFileList(filePath, userId, (Integer) dir);
+                    fl = fileService.getFileList(filePath, userId, dir);
                 }
             }
         }
-        //判断redis中是否有键为key的缓存
         map.put("list", fl);
         map.put("path", filePath);
         map.put("total", auditAccessCount);
@@ -314,23 +313,8 @@ public class FileController {
                                          long pageCount) {
         Long userId = SecurityUtils.getUserId();
 
-        List<FileListVo> fileList = new ArrayList<>();
-
-        // redis缓存
-        // String key = "fileList-type="+fileType+"-uid:"+userId ;
-        // List<FileBean> fl = null;
-        // //判断redis中是否有键为key的缓存
-        // boolean hasKey = redisCache.hasKey(key);
-        // if(hasKey && currentPage == 1) {
-        //     System.out.println("redisCachehasKey============"+key);
-        //     fl = redisCache.getCacheObject(key);
-        // } else {
-        //     fl = fileService.getFileList(filePath, userId);
-        //     redisCache.deleteObject(key);
-        //     redisCache.setCacheObject(key, fl);
-        // }
-
-        Long beginCount = 0L;
+        List<FileListVo> fileList;
+        Long beginCount;
         if (pageCount == 0 || currentPage == 0) {
             beginCount = 0L;
             pageCount = 10L;
@@ -347,18 +331,16 @@ public class FileController {
             arrList.addAll(Arrays.asList(FileTypeUtils.Audio_FILE));
 
             fileList = fileService.selectFileNotInExtendNames(arrList, beginCount, pageCount, userId);
-            // total = fileService.selectCountNotInExtendNames(arrList, beginCount, pageCount, userId);
+
         } else {
             fileList = fileService.selectFileByExtendName(FileTypeUtils.getFileExtendsByType(fileType), beginCount,
                     pageCount, userId);
-            // total = fileService.selectCountByExtendName(FileTypeUtils.getFileExtendsByType(fileType), beginCount,
-            //         pageCount, userId);
+
         }
 
         Map<String, Object> map = new HashMap<>();
         map.put("list",fileList);
         map.put("total", fileList.size());
-
         return ResponseResult.success("获取成功",map);
     }
     
@@ -384,8 +366,6 @@ public class FileController {
 
         list.add(extName);
         List<FileListVo> fileList = fileService.selectFileByExtendName(list, 1L, 100L, SecurityUtils.getUserId());
-        // Map map = new HashMap();
-        // map.put("list", fileList);
         return ResponseResult.success("获取成功",fileList);
     }
 
@@ -396,7 +376,8 @@ public class FileController {
     @PostMapping("/unzip")
     public ResponseResult unzipFile(@RequestBody UnzipFileDTO unzipFileDto) {
         Long userId = SecurityUtils.getUserId();
-        FileBean fileBean = fileService.selectFileById(unzipFileDto.getFileId());
+        String type = "unzip";
+        FileBean fileBean = fileService.selectFileById(unzipFileDto.getFid());
         Long fileSize = fileBean.getFileSize();
         Storage storage = storageService.getUserStorage(fileBean.getUserId());
         Long remainingSize = storage.getStorageSize() - storage.getStorageSizeUsed();
@@ -404,11 +385,21 @@ public class FileController {
         if (fileSize > remainingSize) {
             return ResponseResult.error(500, "空间不足,请先扩容或删除文件后再解压");
         }
+        redisCache.setCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId + "-file"+
+                ":" + unzipFileDto.getT(),fileBean);
+        redisCache.setCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId +
+                        ":" + unzipFileDto.getT(),
+                0);
         // 解压到以文件名命名的目录时 创建目录
         if (unzipFileDto.getUnzipMode() == 2) {
             FileBean unzipRoot = new FileBean();
             unzipRoot.setParentPathId(fileBean.getParentPathId());
             unzipRoot.setFileName(unzipFileDto.getFilePath().substring(unzipFileDto.getFilePath().lastIndexOf("/") + 1));
+            String folderPath = unzipFileDto.getFilePath().substring(0, unzipFileDto.getFilePath().lastIndexOf("/"));
+            if (folderPath.length() <=1) {
+                folderPath = "/";
+            }
+            unzipRoot.setFilePath(folderPath);
             unzipRoot.setUserId(userId);
             unzipRoot.setIsDir(1);
             unzipRoot.setFileCreateTime(new Date());
@@ -416,8 +407,8 @@ public class FileController {
             System.out.println("创建根文件夹:" + unzipRoot);
             fileService.createFolder(unzipRoot);
         }
-        boolean b = fileService.unzip(unzipFileDto.getFileId(), unzipFileDto.getUnzipMode(),
-                unzipFileDto.getFilePath());
+        boolean b = fileService.unzip(unzipFileDto.getFid(), unzipFileDto.getUnzipMode(),
+                unzipFileDto.getFilePath(),unzipFileDto.getT(),userId);
         Map map = new HashMap();
         map.put("filePath", unzipFileDto.getFilePath());
         return ResponseResult.success("任务创建成功",map);
@@ -438,11 +429,13 @@ public class FileController {
     }
 
 
+
     /**
      * 批量复制文件
      */
     @PostMapping("/batchcopy")
     public ResponseResult batchCopy(@RequestBody BatchCopyFileDTO batchCopyFileDTO) {
+
         Long userId = SecurityUtils.getUserId();
         List<FileBean> fileList = batchCopyFileDTO.getFileList();
         String filePath = batchCopyFileDTO.getFilePath();
@@ -453,9 +446,7 @@ public class FileController {
             System.out.println(fileBean);
             // 判断 批量复制是否是文件夹 ,文件夹批量复制需要更新文件夹下所有的子目录和文件的目录
             if (fileBean.getIsDir() == 1) {
-                // TODO 复制的是文件夹
                 return ResponseResult.error(500, "文件夹不能批量复制");
-
             } else {
                 fileService.copyFile(fileId, filePath, userId);
             }
@@ -570,13 +561,13 @@ public class FileController {
             String date = DateUtil.getDateByTimeStamp(updateFileDTO.getTimestamp());
             String realFileName = uuid + ".md";
             createFileBean.setFileUrl("/" + date + "/" + realFileName);
-            File folder = new File(fxUtils.getStaticPath() + "/" + date );
+            File folder = new File(com.fx.pan.factory.FxUtils.getStaticPath() + "/" + date );
             System.out.println("folder:" + folder.getAbsolutePath());
             if (!folder.exists()) {
                 folder.mkdirs();
             }            boolean b = fileService.insertFileInfo(createFileBean);
             // 创建文件
-            File file = new File(fxUtils.getStaticPath() + "/" + date + "/" + realFileName);    // 创建文件
+            File file = new File(FxUtils.getStaticPath() + "/" + date + "/" + realFileName);    // 创建文件
             if (!file.exists()) {
                 file.createNewFile();
             }
@@ -588,13 +579,9 @@ public class FileController {
         } else {
             fileBean = fileService.selectFileById(createFileBean.getId());
         }
-        // fileBean = fileService.selectFileById(updateFileDTO.getFileId());
         FileBean orginFileBean = BeanCopyUtils.copyBean(fileBean, FileBean.class);
         String identifier = fileBean.getIdentifier();
-        // Long pointCount = fileService.getFilePointCount(userFile.getFileId());
-        // if (pointCount > 1) {
-        //     return ResponseResult.error(550,"暂不支持修改");
-        // }
+
         String content = updateFileDTO.getFileContent();
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(content.getBytes());
         try {
@@ -609,23 +596,15 @@ public class FileController {
             DownloadFile downloadFile = new DownloadFile();
             downloadFile.setFileUrl(fileBean.getFileUrl());
             InputStream inputStream = fxFactory.getDownloader(fileBean.getStorageType()).getInputStream(downloadFile);
-            // String md5Str = DigestUtils.md5Hex(String.valueOf(inputStream));
-            // System.out.println("文件更新后MD5====" + md5Str);
-
             File newFile = new File(FileUtils.getLocalStorageFilePathByFileBean(orginFileBean));
-
             String md5HashCode32 = Md5Utils.md5HashCode32(new FileInputStream(newFile));
             System.out.println("新文件的md5===" + md5HashCode32);
             fileBean.setIdentifier(md5HashCode32);
             String newFileUrl = orginFileBean.getFileUrl().replace(identifier, md5HashCode32);
             fileBean.setFileUrl(newFileUrl);
             fileBean.setFileUpdateTime(new Date());
-            // fileBean.setModifyUserId(loginUser.getUserId());
             fileBean.setFileSize((long) fileSize);
             System.out.println(FileUtils.getLocalStorageFilePathByFileBean(orginFileBean).replace(orginFileBean.getIdentifier(), md5HashCode32));
-            // fileService.updateById(fileBean);
-            // File file = new File(FileUtils.getLocalStorageFilePathByFileBean(orginFileBean));
-            // file.delete();
         } catch (Exception e) {
             throw new FxException(999999, "修改文件异常");
         } finally {
@@ -665,39 +644,83 @@ public class FileController {
         return fileService.cleanFile(userId);
     }
 
+
     /**
      * 获取文件操作进度 如解压,离线下载
-     *
-     * @param fid  文件id
-     * @param type 操作类型
+     * @param progressDTO
      * @return
      */
-    @GetMapping("/progress")
+    @SneakyThrows
+    @PostMapping("/progress")
     @ResponseBody
-    public ResponseResult progress(@RequestParam(value = "fid", required = false) Long fid, @RequestParam String type,
-                                   @RequestParam(value = "requestId", required = false) String requestId,
-                                   @RequestParam("t") Long t) {
+    public ResponseResult progress(@RequestBody ProgressDTO progressDTO) {
         Long userId = SecurityUtils.getUserId();
-        Object cacheObject = redisCache.getCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId +
-                ":" + t);
+        Object cacheObject =
+                redisCache.getCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + progressDTO.getType() + "-" + userId +
+                ":" + progressDTO.getT());
         if (cacheObject != null) {
-            Map map = new HashMap();
-            map.put("progress", cacheObject);
-            return ResponseResult.success("ok",map);
+            if ((Integer) cacheObject == 100) {
+                FileBean fileBean =
+                        redisCache.getCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + progressDTO.getType() + "-" + userId + "-file"+
+                                ":" + progressDTO.getT());
+                if (progressDTO.getType().equals("conversion")) {
+                    if (cacheObject.equals(100)) {
+                        Long fileSize = 0L;
+                        FileBean newFileBean = new FileBean();
+                        String convertFilePath = absoluteFilePath + "/tmp/" + fileBean.getFileName().replace(fileBean.getFileExt(),
+                                progressDTO.getConvertExt());
+                        Date date = new Date();
+                        String dateStr = cn.hutool.core.date.DateUtil.format(date, "yyyyMMdd");
+                        File convertFile = new File(convertFilePath);
+                        String md5 = Md5Utils.md5HashCode32(convertFilePath);
+                        String fileUrl = dateStr + "/" + md5 + "." + progressDTO.getConvertExt();
+                        newFileBean = BeanCopyUtils.copyBean(FileUtils.getFileBeanByPath(convertFilePath, fileBean.getFilePath(),
+                                date, storageType, userId), FileBean.class);
+                        newFileBean.setAudit(1);
+                        fileService.save(newFileBean);
+                        redisCache.setCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + progressDTO.getType() + "-" + userId + "-file"+
+                                ":" + progressDTO.getT(), newFileBean);
+                        fileSize = newFileBean.getFileSize();
+                        boolean b = storageService.updateStorageUse(fileSize, userId);
+                        // 移动文件到文件存储路径
+                        File moveFolder = new File(com.fx.pan.factory.FxUtils.getStaticPath() + "/" + dateStr);
+                        System.out.println("moveFolder:" + moveFolder.getAbsolutePath());
+                        log.info("格式转换完成,文件最终地址为:{}", com.fx.pan.factory.FxUtils.getStaticPath() + "/" + dateStr);
+
+                        // 判断目录moveFolder是否存在，不存在则创建
+                        if (!moveFolder.exists()) {
+                            moveFolder.mkdirs();
+                        }
+                        convertFile.renameTo(new File(com.fx.pan.factory.FxUtils.getStaticPath() + "/" + fileUrl));
+                    }
+
+                } else if (progressDTO.getType().equals("unzip")) {
+                    int fileNum = fileService.saveUnzipFile(fileBean,progressDTO.getFilePath(),progressDTO.getT(),
+                            progressDTO.getUnzipMode());
+
+                }
+                Map map = new HashMap();
+                map.put("progress", 100);
+                map.put("finish", true);
+
+                map.put("file",fileBean);
+                storageService.updateStorageUse(fileBean.getFileSize(), userId);
+                redisCache.deleteObject(Constants.REDIS_DATA_SUFFIX + "-" + progressDTO.getType() + "-" + userId +
+                        ":" + progressDTO.getT());
+                redisCache.deleteObject(Constants.REDIS_DATA_SUFFIX + "-" + progressDTO.getType() + "-" + userId + "-file"+
+                        ":" + progressDTO.getT());
+                redisCache.deleteObject(Constants.REDIS_FILE_LIST_PREFIX + userId);
+                return ResponseResult.success("ok",map);
+            } else {
+                Map map = new HashMap();
+                map.put("progress", cacheObject);
+                return ResponseResult.success("ok",map);
+            }
+
         } else {
             Map map = new HashMap();
-            map.put("progress", 100);
-            FileBean fileBean =
-                    redisCache.getCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId + "-file"+
-                            ":" + t);
-            map.put("file",fileBean);
-            storageService.updateStorageUse(fileBean.getFileSize(), userId);
-            redisCache.deleteObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId +
-                    ":" + t);
-            redisCache.deleteObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId + "-file"+
-                    ":" + t);
-            redisCache.deleteObject("fileList-uid:" + userId);
-            return ResponseResult.success("ok",map);
+            map.put("finish", true);
+            return ResponseResult.success(map);
         }
     }
 

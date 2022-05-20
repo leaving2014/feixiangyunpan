@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "baidu.ocr")
 public class BaiduOcrProperties {
-    private String app_id;
-    private String api_key;
-    private String secret_key;
+    private String APP_ID;
+    private String API_KEY;
+    private String SECRET_KEY;
 }

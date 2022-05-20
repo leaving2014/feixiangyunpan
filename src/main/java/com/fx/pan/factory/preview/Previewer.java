@@ -1,9 +1,8 @@
 package com.fx.pan.factory.preview;
 
+import com.fx.pan.factory.FxUtils;
 import com.fx.pan.factory.domain.ThumbImage;
-import com.fx.pan.factory.fxUtils;
 import com.fx.pan.factory.operation.ImageOperation;
-import com.fx.pan.factory.operation.VideoOperation;
 import com.fx.pan.factory.preview.domain.PreviewFile;
 import com.fx.pan.factory.utils.CharsetUtils;
 import com.fx.pan.utils.FileUtils;
@@ -26,14 +25,14 @@ public abstract class Previewer {
 
     public void imageThumbnailPreview(HttpServletResponse httpServletResponse, PreviewFile previewFile) {
         String fileUrl = previewFile.getFileUrl();
-        boolean isVideo = fxUtils.isVideoFile(FileUtils.getFileExtendName(fileUrl));
+        boolean isVideo = FxUtils.isVideoFile(FileUtils.getFileExtendName(fileUrl));
         String thumbnailImgUrl = previewFile.getFileUrl();
         if (isVideo) {
             thumbnailImgUrl = fileUrl.replace("." + FileUtils.getFileExtendName(fileUrl), ".jpg");
         }
 
 
-        File saveFile = fxUtils.getCacheFile(thumbnailImgUrl);
+        File saveFile = com.fx.pan.factory.FxUtils.getCacheFile(thumbnailImgUrl);
 
         if (saveFile.exists()) {
             FileInputStream fis = null;
