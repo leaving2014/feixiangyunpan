@@ -294,7 +294,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implement
     }
 
     @Override
-    public FileBean selectFileById(long id) {
+    public FileBean selectFileById(Long id) {
         return fileMapper.selectById(id);
     }
 
@@ -442,12 +442,13 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implement
                         if (unzipMode == 1 || unzipMode == 3) {
                             path = (folderFilePath.isEmpty() ? "/" : folderFilePath);
                         } else if (unzipMode == 2) {
-                            path = (filePath.equals("/") ? "" : filePath) + folderFilePath.replace("/" + folderName,
-                                    "");
+                            path = filePath +  file.getAbsolutePath().replaceAll("\\\\", "/").replace(tmpPath, "").replace("/" + file.getName(), "");
+                            // path = (filePath.equals("/") ? "" : filePath) + folderFilePath.replace("/" + folderName,
+                            //         "");
                         }
                         folderFileBean.setFilePath(path);
                         System.out.println("保存文件夹到数据库：path===" + path + " name===" + folderFileBean.getFileName());
-                        if (!folderFileBean.getFileName().equals(t.toString())) {
+                        if (!folderFileBean.getFileName().equals(t.toString()) && !folderFileBean.getFilePath().equals("")) {
                             fileMapper.insert(folderFileBean);
                         }
 
@@ -464,13 +465,19 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, FileBean> implement
                     filesDirs(flies2, savePath, tmpPath, filePath, fileBean, dateStr, t, unzipMode);
                 }
             } else {
+                System.out.println("tmpPath===" + tmpPath);
                 System.out.println("当前是文件是===" + file.getAbsolutePath());
-                String fileBeanPath = file.getAbsolutePath().replaceAll("\\\\", "/").replace(tmpPath, "");
+                String fileBeanPath = file.getAbsolutePath().replaceAll("\\\\", "/").replace(tmpPath, "").replace("/" + file.getName(), "");
+                // if (fileBeanPath.equals("")) {
+                //     System.out.println("文件解压的目录为空===" + fileBeanPath);
+                //     fileBeanPath = filePath;
+                //     System.out.println("文件解压的目录为空,赋值为解压目录===" + fileBeanPath);
+                // }
                 FileBean fileBean1 = BeanCopyUtils.copyBean(fileBean, FileBean.class);
                 String fileName = file.getName();
-                // fileBean1.setFilePath(filePath + );
-                fileBean1.setFilePath((filePath.equals("/") ? "" : filePath) + fileBeanPath.replace("/" + fileName,
-                        ""));
+                fileBean1.setFilePath(filePath + fileBeanPath);
+                // fileBean1.setFilePath((filePath.equals("/") ? "" : filePath) + fileBeanPath.replace("/" + fileName,
+                //         ""));
                 fileBean1.setFileName(file.getName());
                 fileBean1.setFileSize(file.length());
                 fileBean1.setFileExt(file.getName().substring(file.getName().lastIndexOf(".") + 1));

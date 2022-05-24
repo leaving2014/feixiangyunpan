@@ -34,8 +34,13 @@ public class BaiduOcrServiceImpl implements BaiduOcrService {
         options.put("language_type", "CHN_ENG");
         options.put("detect_direction", "true");
         options.put("detect_language", "true");
+        JSONObject res;
+        if (imagePath.equals("")) {
+             res = aipOcr.basicGeneral(readImageFile, options);
+        } else {
+             res = aipOcr.basicGeneral(imagePath, options);
+        }
 
-        JSONObject res = aipOcr.basicGeneral(imagePath, options);
         // basicGeneral(bytesFile, options);
         String fmd = Md5Utils.md5HashCode32(new ByteArrayInputStream(readImageFile));
         Map map = new HashMap();

@@ -32,7 +32,8 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        String expiredKey = message.toString(); // 获取过期的key
+        // 获取过期的key
+        String expiredKey = message.toString();
         log.info("redis key过期：{}", expiredKey);
         Long id = null;
         Long userId = null;
@@ -40,7 +41,8 @@ public class RedisKeyExpirationListener extends KeyExpirationEventMessageListene
             id = Long.valueOf(expiredKey.substring(expiredKey.lastIndexOf(":")+1));
             userId = Long.valueOf(expiredKey.substring(expiredKey.lastIndexOf("-")+1,expiredKey.lastIndexOf(":")));
         }
-        if (expiredKey.contains("delete-share")) { // 判断是否是想要监听的过期key
+        // 判断是否是想要监听的过期key
+        if (expiredKey.contains("delete-share")) {
             shareService.deleteShare(id,userId);
         } else if (expiredKey.contains("delete-file")) {
             recycleService.deleteRecycleFileById(id,userId);

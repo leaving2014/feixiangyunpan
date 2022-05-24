@@ -63,11 +63,6 @@ public class OfflineDownloadServiceImpl implements OfflineDownloadService {
         wgetUtil.wgetProgressRation(downloadPath, fileSavePath, fileName, urlStr, t, userId, type,
                 progress -> {});
         // System.out.println(progress.toJSONString());
-
-
-        // 下载文件并实时打印下载进度,最后保存到本地
-
-        // OfflineDownloadUtil.downloadFileFromUrl(urlStr, savePath,t,type);
         Map<String, Object> map = new HashMap<>();
         map.put("fileName", fileName.replace("\"", ""));
         map.put("fileSize", fileSize);

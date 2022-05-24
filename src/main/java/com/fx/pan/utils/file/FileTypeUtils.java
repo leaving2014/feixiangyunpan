@@ -67,7 +67,6 @@ public class FileTypeUtils {
 
 
         }
-        System.out.println("分类文件扩展名集合=======" + fileExtends);
         return fileExtends;
     }
 

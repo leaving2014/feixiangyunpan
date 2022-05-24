@@ -12,9 +12,10 @@ import javax.annotation.PostConstruct;
 
 /**
  * @author leaving
+ * @version 1.0
+ * @date 2021/11/22 14:25
  */
 
-// @EnableAutoConfiguration
 @SpringBootApplication(
         // exclude = {SecurityAutoConfiguration.class}
         // exclude = { DataSourceAutoConfiguration.class }

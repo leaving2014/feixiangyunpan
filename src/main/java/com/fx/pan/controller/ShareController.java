@@ -92,9 +92,11 @@ public class ShareController {
         shareService.save(share);
         // 设置过期自动删除
         if (shareSecretDTO.getExpired() > 0) {
-            Long daySecond =  86400L;
-            Long totalSecond = (7 + shareSecretDTO.getExpired()) * daySecond;
-            redisCache.set(Constants.REDIS_DELETE_SUFFIX+"-share-uid-"+userId+":"+share.getId(), shareSecretDTO.getExpired(),totalSecond);
+            Long daySecond = 86400L;
+            // 分享失效7天后删除
+            Long totalSecond = (shareSecretDTO.getExpired()) * daySecond;
+            redisCache.set(Constants.REDIS_DELETE_SUFFIX + "-share-uid-" + userId + ":" + share.getId(),
+                    shareSecretDTO.getExpired(), totalSecond);
         }
         Map<String, Object> map = new HashMap<>();
         map.put("share", share);
@@ -144,7 +146,9 @@ public class ShareController {
         if (share == null) {
             return ResponseResult.error(500, "分享不存在");
         } else {
+            System.out.println("share.getFileId() = " + share.getFileId());
             FileBean fileBean = fileService.selectFileById(share.getFileId());
+            System.out.println("分享文件信息：" + fileBean);
             UserVo userVo = BeanCopyUtils.copyBean(userService.selectUserById(share.getUserId()), UserVo.class);
             Map<String, Object> map = new HashMap<>();
             map.put("share", share);
@@ -173,7 +177,7 @@ public class ShareController {
 
     }
 
-    @PostMapping("savesharefile")
+    @PostMapping("/save")
     public ResponseResult saveShareFile(@RequestBody ShareFileSaveDTO shareFileSaveDTO) {
         Long userId = SecurityUtils.getUserId();
         Long[] files = shareFileSaveDTO.getFiles();
@@ -202,8 +206,15 @@ public class ShareController {
                 // 计算分享文件的总大小
                 for (FileBean fileBean1 : saveShareFileList) {
                     FileBean saveFileBean1 = BeanCopyUtils.copyBean(fileBean1, FileBean.class);
+                    if (saveFileBean1.getIsDir() == 0) {
+                        saveFileBean1.setOrigin(1);
+                    }
                     saveFileBean1.setUserId(userId);
-                    saveFileBean1.setFilePath(savePath + fileBean1.getFilePath());
+                    if (savePath.equals("/")) {
+                        saveFileBean1.setFilePath(saveFileBean1.getFilePath());
+                    } else {
+                        saveFileBean1.setFilePath(savePath + saveFileBean1.getFilePath());
+                    }
                     fileService.save(saveFileBean1);
                     if (fileBean1.getIsDir() == 0) {
                         totalFileSize += fileBean1.getFileSize();
@@ -217,7 +228,6 @@ public class ShareController {
                 saveFile.setFilePath(shareFileSaveDTO.getFilePath());
                 fileService.save(saveFile);
                 totalFileSize += saveFile.getFileSize();
-
             }
             storageService.updateStorageUse(totalFileSize, userId);
 
@@ -252,12 +262,11 @@ public class ShareController {
     public ResponseResult clearInvalid() {
         Long userId = SecurityUtils.getUserId();
         List<Share> shareList = shareService.selectExpireShareFileList(userId);
-        System.out.println("shareList===========================" + shareList);
         int i = shareService.deleteExpireShareList(userId);
         if (i > 1) {
             Map<String, Object> map = new HashMap<>();
             map.put("total", i);
-            return ResponseResult.success("清除过期分享成功",map);
+            return ResponseResult.success("清除过期分享成功", map);
         } else {
             return ResponseResult.error(0, "没有过期分享");
         }

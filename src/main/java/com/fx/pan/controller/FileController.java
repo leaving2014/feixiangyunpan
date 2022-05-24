@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.io.*;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -404,8 +405,12 @@ public class FileController {
             unzipRoot.setIsDir(1);
             unzipRoot.setFileCreateTime(new Date());
             unzipRoot.setFileUpdateTime(new Date());
-            System.out.println("创建根文件夹:" + unzipRoot);
-            fileService.createFolder(unzipRoot);
+
+            boolean flag = fileService.isFolderExist(unzipRoot.getFilePath(), unzipRoot.getFileName(), userId);
+            if (!flag) {
+                System.out.println("文件夹不存在,创建根文件夹:" + unzipRoot);
+                fileService.createFolder(unzipRoot);
+            }
         }
         boolean b = fileService.unzip(unzipFileDto.getFid(), unzipFileDto.getUnzipMode(),
                 unzipFileDto.getFilePath(),unzipFileDto.getT(),userId);
@@ -537,28 +542,33 @@ public class FileController {
     @Operation(summary = "修改文件", description = "支持普通文本类文件的修改", tags = {"file"})
     @RequestMapping(value = "/update", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseResult updateFile(@RequestBody UpdateFileDTO updateFileDTO) throws ParseException, IOException {
+    public ResponseResult updateFile(@RequestBody UpdateFileDTO updateFileDTO) throws ParseException, IOException,
+            InterruptedException {
         // JwtUser sessionUserBean =  SessionUtil.getSession();
         Long userId = SecurityUtils.getUserId();
         LoginUser loginUser = SecurityUtils.getLoginUser();
         FileBean createFileBean = new FileBean();
         redisCache.deleteObject("fileList-uid:" + userId);
-
+        String date = DateUtil.getDateByTimeStamp(updateFileDTO.getTimestamp());
         if (updateFileDTO.getFileId() == 0) {
-            String fileName = "新建文档" + updateFileDTO.getTimestamp() + ".md";
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            // Date date = sdf.parse(updateFileDTO.getTimestamp());
+
+            String fileName = "新建笔记-" + date + ".md";
             createFileBean.setFileName(fileName);
             createFileBean.setFilePath("/");
             createFileBean.setFileExt("md");
             createFileBean.setUserId(userId);
             createFileBean.setIsDir(0);
             createFileBean.setFileType(2);
+            createFileBean.setAudit(1);
             createFileBean.setFileSize((long) updateFileDTO.getFileContent().getBytes().length);
             createFileBean.setFileCreateTime(new Date());
             createFileBean.setFileUpdateTime(new Date());
             // 生成文件唯一识别码
             String uuid = UUID.randomUUID().toString().replace("-", "");
             createFileBean.setIdentifier(uuid);
-            String date = DateUtil.getDateByTimeStamp(updateFileDTO.getTimestamp());
+
             String realFileName = uuid + ".md";
             createFileBean.setFileUrl("/" + date + "/" + realFileName);
             File folder = new File(com.fx.pan.factory.FxUtils.getStaticPath() + "/" + date );
@@ -579,6 +589,21 @@ public class FileController {
         } else {
             fileBean = fileService.selectFileById(createFileBean.getId());
         }
+        if (fileBean.getOrigin() == 1) {
+            String sourceFilePath = FxUtils.getStaticPath() + "/" + fileBean.getFileUrl();
+            // 文件是引用文件则把源文件复制一份
+            String identifier = UUID.randomUUID().toString().replace("-", "");
+            String fileUrl = date + "/" + identifier + "." +fileBean.getFileExt();
+            fileBean.setIdentifier(identifier);
+            fileBean.setFileUrl(fileUrl);
+            fileBean.setOrigin(0);
+            fileBean.setFileCreateTime(new Date());
+            String targetFilePath = FxUtils.getStaticPath() + "/" + fileUrl;
+            FileUtils.copyFileUsingStream(new File(sourceFilePath), new File(targetFilePath));
+            fileService.updateById(fileBean);
+            Thread.sleep(1000);
+        }
+
         FileBean orginFileBean = BeanCopyUtils.copyBean(fileBean, FileBean.class);
         String identifier = fileBean.getIdentifier();
 

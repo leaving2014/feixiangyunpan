@@ -30,10 +30,6 @@ import java.io.*;
 @Component
 public class FormatConversion {
 
-    @Value("${fx.absoluteFilePath}")
-    private String absoluteFilePath;
-
-    // 注入RedisCache
     private static RedisCache redisCache;
 
     @Autowired
@@ -178,30 +174,6 @@ public class FormatConversion {
         redisCache.setCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId +
                         ":" + t,
                 100);
-
-
-        // Date date = new Date();
-        // FileBean newFileBean = new FileBean();
-        // String dateStr = DateUtil.format(date, "yyyyMMdd");
-        // File convertFile = new File(savePath);
-        // String md5 = Md5Utils.md5HashCode32(savePath);
-        // String fileUrl = dateStr + "/" + md5 + "." + convertExt;
-        // newFileBean = BeanCopyUtils.copyBean(FileUtils.getFileBeanByPath(savePath, fileBean.getFilePath(),
-        //         date, storageType, userId), FileBean.class);
-        // fileService.save(newFileBean);
-        // redisCache.setCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId + "-file"+
-        //         ":" + t, newFileBean);
-        // fileSize = newFileBean.getFileSize();
-        // boolean b = storageService.updateStorageUse(fileSize, userId);
-        // // 移动文件到文件存储路径
-        // File moveFolder = new File(FxUtils.getStaticPath() + "/" + dateStr);
-        // System.out.println("moveFolder:" + moveFolder.getAbsolutePath());
-        // // 判断目录moveFolder是否存在，不存在则创建
-        // if (!moveFolder.exists()) {
-        //     moveFolder.mkdirs();
-        // }
-        // convertFile.renameTo(new File(FxUtils.getStaticPath() + "/" + fileUrl));
-
         return true;
     }
 
@@ -251,14 +223,4 @@ public class FormatConversion {
         }
 
     }
-
-    // public static boolean Excel2Pdf(InputStream inputStream, String filePath, String savePath) {
-    //     Workbook wb = new Workbook();
-    //     //引入Excel文件
-    //     wb.loadFromFile(filePath);
-    //     //导出PDF文件
-    //     // wb.saveToFile(savePath, FileFormat.PDF);
-    //     wb.saveToFile(savePath, String.valueOf(FileFormat.PDF));
-    //     return true;
-    // }
 }

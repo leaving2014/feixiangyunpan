@@ -1,10 +1,5 @@
 package com.fx.pan.service.impl;
 
-import com.aspose.cells.Workbook;
-import com.aspose.words.Document;
-import com.aspose.words.License;
-import com.aspose.words.PdfSaveOptions;
-import com.aspose.words.SaveFormat;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fx.pan.common.Constants;
@@ -31,13 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -58,7 +54,7 @@ public class FileTransferServiceImpl extends ServiceImpl<FileMapper, FileBean> i
     @Value("${fx.absoluteFilePath}")
     String absolutePath;
 
-    @Value("${fx.fileAudit")
+    @Value("${fx.fileAudit}")
     String fileAudit;
 
     @Resource
@@ -197,10 +193,6 @@ public class FileTransferServiceImpl extends ServiceImpl<FileMapper, FileBean> i
          * 507 服务器出错自动重试该文件块上传
          */
 
-        if (storageType == 1) {
-
-        }
-
         File folder = new File(absolutePath + "/" + formatDate);
         if (!folder.exists() && !folder.isDirectory()) {
             folder.mkdirs();
@@ -228,7 +220,6 @@ public class FileTransferServiceImpl extends ServiceImpl<FileMapper, FileBean> i
             while ((len = fos.read(buffer)) != -1) {
                 raf.write(buffer, 0, len);
             }
-            System.out.println("raf.length() = " + raf.length());
         } catch (IOException e) {
             e.printStackTrace();
             if (chunk.getChunkNumber() == 1) {
@@ -240,19 +231,17 @@ public class FileTransferServiceImpl extends ServiceImpl<FileMapper, FileBean> i
         if (chunk.getChunkNumber().equals(chunk.getTotalChunks())) {
             response.setStatus(200);
             FileBean fileBean = FileUtils.getUploadFileBean(chunk, date, storageType, userId);
-
-            if (fileBean.getFileType() == 1) {
-                ImageAuditingResponse res = cosFileService.fileAudit(fileBean,false);
-                System.out.println("审核结果 = " + res);
-                fileBean.setAudit(1);
+            if (fileAudit.equals("1")) {
+                if (fileBean.getFileType() == 1) {
+                    ImageAuditingResponse res = cosFileService.fileAudit(fileBean,false);
+                    fileBean.setAudit(1);
+                }
             }
-            System.out.println("上传的fileBean = " + fileBean);
             if (fileBean.getFilePath().equals("/")) {
                 fileBean.setParentPathId(-1L);
             } else {
                 fileBean.setParentPathId(fileService.selectParentPath(fileBean.getFilePath(),"",userId).getId());
             }
-
             fileMapper.insert(fileBean);
             storageService.updateStorageUse(chunk.getTotalSize(), userId);
             LambdaQueryWrapper<Storage> queryWrapper = new LambdaQueryWrapper();

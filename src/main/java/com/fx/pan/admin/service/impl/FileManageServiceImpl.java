@@ -93,7 +93,8 @@ public class FileManageServiceImpl extends ServiceImpl<FileMapper, FileBean> imp
     @Override
     public List<FileBean> fileListByType(Integer fileType, int pageNum, int pageSize) {
         LambdaQueryWrapper<FileBean> queryWrapper = new LambdaQueryWrapper();
-        queryWrapper.eq(fileType != null, FileBean::getFileType, fileType);
+        queryWrapper.eq(fileType < 6, FileBean::getFileType, fileType);
+        queryWrapper.notIn(fileType == 6,FileBean::getFileType, Arrays.asList(0, 1, 2, 3, 4, 5));
         // queryWrapper.in("deleted", Arrays.asList(0, 1));
         Page<FileBean> pageBean = new Page<>(pageNum, pageSize);
         IPage<FileBean> iPage = fileMapper.selectPage(pageBean, queryWrapper);

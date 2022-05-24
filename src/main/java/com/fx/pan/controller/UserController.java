@@ -3,6 +3,7 @@ package com.fx.pan.controller;
 import cn.hutool.captcha.CaptchaUtil;
 import cn.hutool.captcha.CircleCaptcha;
 import cn.hutool.captcha.LineCaptcha;
+import cn.hutool.jwt.JWTUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -13,11 +14,14 @@ import com.fx.pan.dto.user.LoginUserBody;
 import com.fx.pan.service.StorageService;
 import com.fx.pan.service.UserService;
 import com.fx.pan.utils.BeanCopyUtils;
+import com.fx.pan.utils.JwtUtil;
 import com.fx.pan.utils.RedisCache;
 import com.fx.pan.utils.SecurityUtils;
+import io.jsonwebtoken.Claims;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheConfig;
@@ -31,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -77,7 +82,7 @@ public class UserController {
     @ApiOperation(value = "用户注册")
     @PostMapping("/register")
     public ResponseResult register(@RequestBody User user) {
-        
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userService.register(user);
     }
 
@@ -98,7 +103,7 @@ public class UserController {
             if (cacheObject == null) {
                 return ResponseResult.error(500, "验证码已过期，请重新获取");
             } else {
-                if (!captcha.equals(cacheObject.toString())) {
+                if (!captcha.equalsIgnoreCase(cacheObject.toString())) {
                     return ResponseResult.error(500, "验证码错误");
                 } else {
                     redisCache.deleteObject(Constants.REDIS_DATA_SUFFIX + "-captcha:" + t);
@@ -147,6 +152,13 @@ public class UserController {
      */
     @PostMapping("/update")
     public ResponseResult updateUser(@RequestBody User user) {
+        if (user.getId() != SecurityUtils.getUserId()) {
+            return ResponseResult.error(500, "没有权限");
+        }
+        System.out.println("修改用户信息：" + user);
+        if (user.getRole() != null){
+            return ResponseResult.error(500, "不能修改用户角色");
+        }
         return userService.updateUser(user);
     }
 
@@ -156,13 +168,30 @@ public class UserController {
      * @return
      */
     @GetMapping("/userinfo")
-    public ResponseResult userInfo(@RequestParam(required = false) Long userId) {
+    public ResponseResult userInfo(@RequestParam(required = false) Long userId, HttpServletRequest request) throws Exception {
         Map map = new HashMap();
         if (userId == null) {
-            userId = SecurityUtils.getUserId();
+            Cookie[] cookies = request.getCookies();
+            // if (cookies == null) {
+            //     return ResponseResult.error(401, "请先登录");
+            // }
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("token")) {
+                    String token = cookie.getValue();
+                    System.out.println("用户获取用户信息token:" + token);
+                    if (StringUtils.isEmpty(token)) {
+                        return ResponseResult.error(401, "用户未登录");
+                    } else {
+                        Claims claims = JwtUtil.parseJWT(token);
+                        LoginUser user = JSON.parseObject(claims.getSubject(), LoginUser.class);
+                        userId = user.getUserId();
+                    }
+                }
+            }
         }
-        User user = userService.selectUserById(userId);
 
+
+        User user = userService.selectUserById(userId);
         map.put("userInfo", JSONObject.toJSON(user));
         return ResponseResult.success("获取成功", map);
     }
@@ -200,7 +229,7 @@ public class UserController {
      */
     @PostMapping("/upload/avatar")
     public ResponseResult updateSingerSong(HttpServletRequest request,
-                                           @RequestParam("file") MultipartFile multipartFile){
+                                           @RequestParam("file") MultipartFile multipartFile) {
         Long userId = SecurityUtils.getUserId();
         String filepath = userService.uploadAvatar(request, multipartFile);
         User user = userService.selectUserById(userId);
@@ -230,6 +259,7 @@ public class UserController {
 
     /**
      * 修改密码
+     *
      * @param oldPassword
      * @param newPassword
      * @return
@@ -253,6 +283,7 @@ public class UserController {
 
     /**
      * 获取登录图片验证码
+     *
      * @param response
      * @param t
      * @throws IOException
@@ -261,7 +292,7 @@ public class UserController {
     public void getCaptcha(HttpServletResponse response, @RequestParam("t") String t) throws IOException {
         //生成验证码图片
         CircleCaptcha circleCaptcha = CaptchaUtil.createCircleCaptcha(200, 100, 4, 25);
-        redisCache.set(Constants.REDIS_DATA_SUFFIX+"-captcha:"+t, circleCaptcha.getCode(), 60);
+        redisCache.set(Constants.REDIS_DATA_SUFFIX + "-captcha:" + t, circleCaptcha.getCode(), 60);
         //告诉浏览器输出内容为jpeg类型的图片
         response.setContentType("image/jpeg");
         //禁止浏览器缓存

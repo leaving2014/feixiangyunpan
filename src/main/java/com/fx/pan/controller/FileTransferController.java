@@ -499,7 +499,6 @@ public class FileTransferController {
         redisCache.setCacheObject(Constants.REDIS_DATA_SUFFIX + "-" + type + "-" + userId +
                         ":" + t,
                 0);
-        // 判断doc是否包含fileExt
         if (Arrays.asList(doc).contains(fileExt)) {
             if ("pdf".equals(convertExt)) {
                 FormatConversion.doc2pdf(orginFilePath, convertFilePath,fileBean,userId,type,t);
@@ -507,7 +506,7 @@ public class FileTransferController {
             }
         } else if (Arrays.asList(xls).contains(fileExt)) {
             FormatConversion.excel2pdf(orginFilePath, convertFilePath);
-            return ResponseResult.success("表格转PDF文件任务创建成功！");
+            return ResponseResult.success("xls文件转PDF文件任务创建成功！");
         } else if ("pdf".equals(fileExt)) {
             FormatConversion.pdf2Doc(orginFilePath, convertFilePath,fileBean,userId,type,t);
             return ResponseResult.success("PDF文件转Word文档任务创建成功！");

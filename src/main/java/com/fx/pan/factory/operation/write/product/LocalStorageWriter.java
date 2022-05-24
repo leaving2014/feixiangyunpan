@@ -28,6 +28,7 @@ public class LocalStorageWriter extends Writer {
     public void write(InputStream inputStream, WriteFile writeFile) {
         try {
             System.out.println("写文件路径-=======" + FxUtils.getStaticPath() + "/" + writeFile.getFileUrl());
+            System.out.println();
             FileOutputStream out = new FileOutputStream(com.fx.pan.factory.FxUtils.getStaticPath() + "/" + writeFile.getFileUrl());
             Throwable var4 = null;
 

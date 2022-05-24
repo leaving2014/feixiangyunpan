@@ -98,10 +98,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 Storage storage = new Storage();
                 storage.setUserId(user.getId());
                 //添加用户存储空间信息
-                // storageMapper.insert(storage);
                 boolean b = storageService.insertUserStorage(storage);
                 return ResponseResult.success(code, msg);
-
             } else {
                 msg = "注册失败";
                 return ResponseResult.error(500, msg);

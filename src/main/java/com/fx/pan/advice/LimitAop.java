@@ -73,7 +73,6 @@ public class LimitAop {
     private void responseFail(String msg)  {
         HttpServletResponse response=((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
         ResponseResult responseResult = ResponseResult.error(513, msg);
-                // ResultData.fail(ReturnCode.LIMIT_ERROR.getCode(), msg);
         WebUtil.renderString(response, String.valueOf(responseResult));
     }
 }

@@ -81,7 +81,7 @@ public interface FileService extends IService<FileBean>  {
 
     Long selectCountNotInExtendNames(List<String> fileNameList, Long beginCount, Long pageCount, long userId);
 
-    FileBean selectFileById(long longValue);
+    FileBean selectFileById(Long fileId);
 
     List selectChildFileListByPath(String s, Long userId);
 
