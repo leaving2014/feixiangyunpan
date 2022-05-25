@@ -15,10 +15,10 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.io.*;
 
 /**
@@ -32,7 +32,7 @@ public class FormatConversion {
 
     private static RedisCache redisCache;
 
-    @Autowired
+    @Resource
     private RedisCache rc;
 
     @PostConstruct
@@ -42,9 +42,6 @@ public class FormatConversion {
 
 
     public static void doc2pdf(String inPath, String outPath, FileBean fileBean, Long userId, String type, Long t) {
-        if (!getLicense()) { // 验证License
-            return;
-        }
         FileOutputStream os = null;
         try {
             long old = System.currentTimeMillis();
@@ -76,39 +73,9 @@ public class FormatConversion {
 
 
 
-    /**
-     * 获取license 去除水印
-     *
-     * @return
-     */
-    public static boolean getLicense() {
-        boolean result = false;
-        InputStream is = null;
-        try {
-            Resource resource = new ClassPathResource("license.xml");
-            if (resource.exists()) {
-                is = resource.getInputStream();
-            } else {
-                System.out.println("License not found!");
-                return false;
-            }
-            License aposeLic = new License();
-            aposeLic.setLicense(is);
-            result = true;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
-
-
-
 
     @SneakyThrows
     public static boolean pdf2Doc(String filePath, String savePath, FileBean fileBean, Long userId, String type, Long t) {
-        if (!getLicense()) { // 验证License 若不验证则转化出的pdf文档会有水印产生
-            return false;
-        }
         // spire实现
         File file = new File(filePath);
         // 创建Pdf工具类对象
@@ -191,9 +158,6 @@ public class FormatConversion {
      * @return
      */
     public static boolean excel2pdf(String sourceFilePath, String desFilePath) {
-        if (!getLicense()) { // 验证License 若不验证则转化出的pdf文档会有水印产生
-            return false;
-        }
         try {
             Workbook wb = new Workbook(sourceFilePath);// 原始excel路径
             System.out.println("原始excel路径：" + sourceFilePath);
