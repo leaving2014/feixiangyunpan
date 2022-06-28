@@ -34,8 +34,10 @@ import java.lang.reflect.Method;
 import java.util.Date;
 
 /**
- * @Description: 日志切面、重复请求验证 服务类
- * @Date 2021/9/10
+ * author leaving
+ * @date 2022/1/19 12:48
+ * @version 1.0
+ * @description: 日志切面、重复请求验证 服务类
  */
 @Aspect
 @Component

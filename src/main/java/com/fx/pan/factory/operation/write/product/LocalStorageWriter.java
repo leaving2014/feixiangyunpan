@@ -7,10 +7,7 @@ import com.fx.pan.factory.operation.write.domain.WriteFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 /**
  * @author leaving
@@ -28,8 +25,9 @@ public class LocalStorageWriter extends Writer {
     public void write(InputStream inputStream, WriteFile writeFile) {
         try {
             System.out.println("写文件路径-=======" + FxUtils.getStaticPath() + "/" + writeFile.getFileUrl());
-            System.out.println();
-            FileOutputStream out = new FileOutputStream(com.fx.pan.factory.FxUtils.getStaticPath() + "/" + writeFile.getFileUrl());
+            OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(FxUtils.getStaticPath() + "/" + writeFile.getFileUrl()),"utf-8");
+            // FileOutputStream out = new FileOutputStream(FxUtils.getStaticPath() + "/" + writeFile.getFileUrl());
+            // 设置编码格式为UTF-8
             Throwable var4 = null;
 
             try {
@@ -37,7 +35,7 @@ public class LocalStorageWriter extends Writer {
 
                 int read;
                 while ((read = inputStream.read(bytes)) != -1) {
-                    out.write(bytes, 0, read);
+                    out.write(String.valueOf(bytes), 0, read);
                 }
 
                 out.flush();
