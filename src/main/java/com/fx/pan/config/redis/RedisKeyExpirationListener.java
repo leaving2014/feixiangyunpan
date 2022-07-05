@@ -10,6 +10,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
 /**
+ * redis过期监听,自动清除过期的分享等信息
  * @author leaving
  * @date 2022/5/9 15:29
  * @version 1.0

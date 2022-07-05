@@ -7,6 +7,7 @@ package com.fx.pan.common;
  */
 
 public enum AppHttpCodeEnum {
+    
     // 成功
     SUCCESS(0,"操作成功"),
     // 登录

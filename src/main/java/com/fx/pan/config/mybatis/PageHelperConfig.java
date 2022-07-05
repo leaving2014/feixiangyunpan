@@ -24,6 +24,7 @@ public class PageHelperConfig {
     public PageHelper getPageHelper() {
         PageHelper pageHelper = new PageHelper();
         Properties properties = new Properties();
+        // TODO 根据自己使用的数据库配置
         properties.setProperty("helperDialect", "mariadb");
         // properties.setProperty("helperDialect", "mysql");
         properties.setProperty("reasonable", "true");

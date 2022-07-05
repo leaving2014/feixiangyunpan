@@ -16,10 +16,7 @@ import javax.annotation.PostConstruct;
  * @date 2021/11/22 14:25
  */
 
-@SpringBootApplication(
-        // exclude = {SecurityAutoConfiguration.class}
-        // exclude = { DataSourceAutoConfiguration.class }
-)
+@SpringBootApplication
 @MapperScan("com.fx.pan.mapper")
 @EnableAsync
 @EnableTransactionManagement

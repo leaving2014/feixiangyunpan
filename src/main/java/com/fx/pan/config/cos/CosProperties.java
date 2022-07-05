@@ -15,15 +15,14 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "tencent.cos")
 public class CosProperties {
 
-    // @Value("${tencent.cos.accessKey}")
     private  String accessKey;
-    // @Value("${tencent.cos.secretKey}")
+
     private  String secretKey;
-    // @Value("${tencent.cos.bucketRegion}")
+
     private  String bucketRegion;
-    // @Value("${tencent.cos.bucketName}")
+
     private  String bucketName;
-    // @Value("${tencent.cos.path}")
+
     private  String path;
 
 }
